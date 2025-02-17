@@ -28,6 +28,7 @@
                     //$dominiosActive = request()->routeIs('dominios.index') || request()->routeIs('dominios.create') || request()->routeIs('dominios.edit');
                     $projectActive = request()->routeIs('campania.*') ;
                     $servicesActive = request()->routeIs('servicios.*') || request()->routeIs('serviciosCategoria.*');
+                    $productosActive = request()->routeIs('productos.*') || request()->routeIs('productosCategoria.*');
                     $peticionesActive = request()->routeIs('peticion.*');
                     $personalActive = request()->routeIs('users.*') ;
                     $tareaActive = request()->routeIs('tareas.*') ;
@@ -657,6 +658,46 @@
                                         <i class="fa-solid fa-plus"></i>
                                         <span>
                                             Crear categoria de servicio
+                                        </span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="sidebar-item has-sub {{ $productosActive ? 'active' : '' }}">
+                            <a href="#" class='sidebar-link'>
+                                <i class="fa-solid fa-cash-register fs-5"></i>
+                                <span>Productos</span>
+                            </a>
+                            <ul class="submenu" style="{{ $productosActive ? 'display:block;' : 'display:none;' }}">
+                                <li class="submenu-item {{ request()->routeIs('productos.index') ? 'active' : '' }}">
+                                    <a href="{{route('productos.index')}}">
+                                        <i class="fa-solid fa-list"></i>
+                                        <span>
+                                            Ver todos
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('productos.create') ? 'active' : '' }}">
+                                    <a href="{{route('productos.create')}}">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>
+                                            Crear Producto
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('productosCategoria.index') ? 'active' : '' }}">
+                                    <a href="{{route('productosCategoria.index')}}">
+                                        <i class="fa-solid fa-list"></i>
+                                        <span>
+                                            Ver Categorias
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('productosCategoria.create') ? 'active' : '' }}">
+                                    <a href="{{route('productosCategoria.create')}}">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>
+                                            Crear categoria de producto
                                         </span>
                                     </a>
                                 </li>

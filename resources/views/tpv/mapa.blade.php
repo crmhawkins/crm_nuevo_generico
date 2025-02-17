@@ -93,24 +93,6 @@
     }
 
 
-    function getMesas(){
-        var mesas = @json($mesas);
-        fetch('/tpv/mesas', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            loadMesas(data);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-    }
-
 
 </script>
 @endsection
