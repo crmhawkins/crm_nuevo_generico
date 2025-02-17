@@ -21,15 +21,6 @@
         <div class="col-md-9">
             <div class="flex flex-row justify-end">
 
-                <div wire:ignore  class="mb-3 px-2 flex-fill" style="width: 200px">
-                    <label for="">Clientes</label>
-                    <select  wire:ignore  wire:model="selectedCliente" id="clientesChoices" class="form-select choices">
-                        <option value="">Clientes</option>
-                        @foreach ($clientes as $cliente)
-                            <option value="{{ $cliente->id }}">{{ $cliente->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
                 <div class="mb-3 px-2 flex-fill" style="width: 150px">
                     <label for="">Estados</label>
                     <select wire:model="selectedEstado" name="" id="" class="form-select ">
@@ -99,14 +90,12 @@
                             'title' => 'TITULO',
                             'prioridad' => 'PRIORIDAD',
                             'task_status_id' => 'ESTADO',
-                            'cliente' => 'CLIENTE',
                             'departamento' => 'DEPARTAMENTO',
                             'empleado' => 'EMPLEADO ASIGNADO',
                             'gestor' => 'GESTOR',
                             'estimated_time' => 'TIEMPO ESTIMADO',
                             'real_time' => 'TIEMPO REAL',
                             'created_at' => 'FECHA DE CREACION',
-                            // 'created_at' => 'FECHA DE ENTREGA',
                         ] as $field => $label)
                             <th class="px-3" style="font-size:0.75rem">
                                 <a href="#" wire:click.prevent="sortBy('{{ $field }}')">
@@ -127,7 +116,6 @@
                             <td class="px-3">{{$tarea->title}}</td>
                             <td class="">{{$tarea->prioridad ? $tarea->prioridad : 'Prioridad no asignada'}}</td>
                             <td class="">{{$tarea->estado ? $tarea->estado->name  : 'Estado no asignado'}}</td>
-                            <td class="">{{$tarea->presupuesto->cliente->name ?? 'No definido'}}</td>
                             <td class="">{{$tarea->split_master_task_id ? ($tarea->usuario ? ($tarea->departamento ?? 'Usuario sin departamento'  ) : 'Usuario no asignado') : ''}}</td>
                             <td class="">{{$tarea->split_master_task_id ? ($tarea->empleado ?? 'No definido') : 'Tarea Maestra'}}</td>
                             <td class="">{{$tarea->gestor ?? 'No definido'}}</td>

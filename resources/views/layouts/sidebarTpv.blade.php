@@ -16,41 +16,21 @@
 
                 <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <a href="{{route('dashboard')}}" class='sidebar-link'>
-                        <i class="bi bi-grid-fill fs-5"></i>
-                        <span>Dashboard</span>
+                        <i class="fa-solid fa-calculator fs-5"></i>
+                        <span>TPV</span>
                     </a>
                 </li>
-                <li class="sidebar-title">Empresa</li>
-
                 @php
                     $clientesActive = request()->routeIs('clientes.index') || request()->routeIs('clientes.create') || request()->routeIs('clientes.show') || request()->routeIs('cliente.createFromBudget') || request()->routeIs('clientes.edit');
                     $presupuestoActive = request()->routeIs('presupuestos.index') || request()->routeIs('presupuesto.create') || request()->routeIs('presupuesto.show');
                     $ContabilidadActive = request()->routeIs('cuentasContables.*') || request()->routeIs('subCuentasContables.*') || request()->routeIs('subCuentasHijaContables.*') || request()->routeIs('grupoContabilidad.*') || request()->routeIs('subGrupoContabilidad.*') || request()->routeIs('admin.planContable.index');
                     @endphp
 
-                <li class="sidebar-item has-sub {{ $clientesActive ? 'active' : '' }}">
-                    <a href="#" class='sidebar-link'>
-                        <i class="fa-solid fa-people-group fs-5"></i>
-                        <span>Clientes</span>
+                <li class="sidebar-item {{ request()->routeIs('tpv.index') ? 'active' : '' }}">
+                    <a href="{{route('tpv.index')}}" class='sidebar-link'>
+                        <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
+                        <span>Cuentas Abiertas</span>
                     </a>
-                    <ul class="submenu" style="{{ $clientesActive ? 'display:block;' : 'display:none' }}">
-                        <li class="submenu-item {{ request()->routeIs('clientes.index') ? 'active' : '' }} ">
-                            <a href="{{route('clientes.index')}}">
-                                <i class="fa-solid fa-list"></i>
-                                <span>
-                                    Ver todos
-                                </span>
-                            </a>
-                        </li>
-                        <li class="submenu-item {{ request()->routeIs('clientes.create') ? 'active' : '' }} {{ request()->routeIs('cliente.createFromBudget') ? 'active' : ''}}">
-                            <a href="{{route('clientes.create')}}">
-                                <i class="fa-solid fa-plus"></i>
-                                <span>
-                                    Crear cliente
-                                </span>
-                            </a>
-                        </li>
-                    </ul>
                 </li>
                 <li class="sidebar-item has-sub {{ $presupuestoActive ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>

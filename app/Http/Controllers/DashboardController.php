@@ -23,7 +23,9 @@ use App\Models\Services\Service;
 use App\Models\Services\ServiceCategories;
 use App\Models\Tasks\LogTasks;
 use App\Models\Tasks\Task;
+use App\Models\Tpv\Caja;
 use App\Models\Tpv\Category;
+use App\Models\Tpv\Order;
 use App\Models\Tpv\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -255,39 +257,43 @@ class DashboardController extends Controller
                     'to_dos_finalizados'
                 ));
             case(6):
-                $ayudas = KitDigital::where('comercial_id', $user->id)->get();
-                $fechaEmision = Carbon::now();
-                $fechaExpiracion = new Carbon('last day of this month');
-                $diasDiferencia = $fechaExpiracion->diffInDays($fechaEmision);
-                $pedienteCierre = 0;
-                $comisionCurso = 0;
-                $comisionPendiente = 0;
-                $comisionTramitadas = 0;
-                $comisionRestante = 0;
-                $estadosKit = KitDigitalEstados::all();
-
-                foreach ($ayudas as $key => $ayuda) {
-                    if ($ayuda->estado == 18 || $ayuda->estado == 17 || $ayuda->estado == 24) {
-                        $pedienteCierre += ($this->convertToNumber($ayuda->importe)* 0.05);
-                    } else if($ayuda->estado == 10){
-                        $comisionCurso += ($this->convertToNumber($ayuda->importe)* 0.05);
-                    } else if($ayuda->estado == 4 || $ayuda->estado == 7 || $ayuda->estado == 5 || $ayuda->estado == 8 || $ayuda->estado == 9){
-                        $comisionPendiente += ($this->convertToNumber($ayuda->importe)* 0.05);
-                    } else if($ayuda->estado == 2){
-                        $comisionTramitadas += ($this->convertToNumber($ayuda->importe)* 0.05);
-                    } else if($ayuda->estado == 25){
-                        $comisionRestante += ($this->convertToNumber($ayuda->importe)* 0.05);
-                    }
-                }
-                return view('dashboards.dashboard_comercial', compact('user','diasDiferencia','estadosKit','comisionRestante','ayudas','comisionTramitadas','comisionPendiente', 'comisionCurso', 'pedienteCierre','timeWorkedToday', 'jornadaActiva', 'pausaActiva'));
-
+                return view('cabinas.create');
             case(7):
-                // Obtener categorías activas
-                $categories = Category::where('inactive', 0)->get();
-                // Obtener productos activos
-                $products = Product::where('inactive', 0)->get();
 
-                return view('dashboards.dashboard_tpv', compact('categories', 'products'));
+                $salonid = auth()->user()->salon_id;
+                $caja = Caja::whereNull('cierre')->where('salon_id',$salonid)->get()->first();
+                if(!isset($caja)){
+                    // Obtener categorías activas
+                    $categories = Category::where('inactive', 0)->get();
+                    // Obtener productos activos
+                    $products = Product::where('inactive', 0)->get();
+                    return view('dashboards.dashboard_tpv', compact('categories', 'products','caja'));
+                }
+                $lastOrder = Order::where('caja_id', $caja->id)->whereNull('mesa_id')->latest()->first();
+                if(isset($lastOrder)){
+                    if($lastOrder->hasItems()){
+                        $nextNumber = Order::where('caja_id', $caja->id)->max('numero') + 1;
+                        $order = Order::create([
+                            'user_id' => Auth::user()->id,
+                            'numero' => $nextNumber, // Número incremental
+                            'status' => 1, // Estado inicial
+                            'caja_id' => $caja->id ?? null,
+                            'total' => 0 // Total inicial
+                        ]);
+                    }else{
+                        $order = $lastOrder;
+                    }
+                }else{
+                    $order = Order::create([
+                        'user_id' => Auth::user()->id,
+                        'numero' => 1, // Número incremental
+                        'status' => 1, // Estado inicial
+                        'caja_id' => $caja->id ?? null,
+                        'total' => 0 // Total inicial
+                    ]);
+                }
+                return redirect()->route('tpv.edit',$order->id);
+
         }
     }
     public function parseFlexibleTime($time) {

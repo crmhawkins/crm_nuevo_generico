@@ -13,8 +13,10 @@ use App\Models\Holidays\HolidaysPetitions;
 use App\Models\Llamadas\Llamada;
 use App\Models\Nominas\Nomina;
 use App\Models\Projects\Project;
+use App\Models\Salones\Salon;
 use App\Models\Todo\Todo;
 use App\Models\Todo\TodoUsers;
+use App\Models\Turnos\Turno;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,7 +51,10 @@ class User extends Authenticatable
         'seniority_months',
         'holidays_days',
         'inactive',
-        'is_dark'
+        'is_dark',
+        'salon_id',
+        'correturno',
+        'pin',
     ];
 
     /**
@@ -100,7 +105,7 @@ class User extends Authenticatable
         return $this->hasMany(Baja::class, 'admin_user_id');
     }
     public function vacacionesDias(){
-        return $this->hasMany(Holidays::class, 'admin_user_id');
+        return $this->hasOne(Holidays::class,'admin_user_id');
     }
     public function tareasGestor(){
         return $this->hasMany(\App\Models\Tasks\Task::class, 'gestor_id');
@@ -162,4 +167,18 @@ class User extends Authenticatable
         ->get();  // Asegúrate de seleccionar los campos de las órdenes de compra
     }
 
+    public function turnos()
+    {
+        return $this->hasMany(Turno::class, 'user_id');
+    }
+
+    public function lastLibre()
+    {
+        return $this->turnos()->where('fecha', '<', Carbon::today())->orderBy('fecha', 'desc')->first();
+    }
+
+    public function Salon()
+    {
+        return $this->belongsTo(Salon::class,'salon_id');
+    }
 }

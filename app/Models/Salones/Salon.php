@@ -3,6 +3,9 @@
 namespace App\Models\Salones;
 
 use App\Models\Clients\Client;
+use App\Models\Tpv\Caja;
+use App\Models\Turnos\Turno;
+use App\Models\Salones\Caja as Cabinas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,8 +39,19 @@ class Salon extends Model
     ];
 
 
+    public function turnos()
+    {
+        return $this->hasMany(Turno::class,'salon_id');
+    }
 
+    public function cabinas()
+    {
+        return $this->hasMany(Cabinas::class,'salon_id');
+    }
 
-
+    public function cajas()
+    {
+        $this->hasMany(Caja::class,'salon_id');
+    }
 
 }

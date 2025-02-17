@@ -14,9 +14,12 @@ class Order extends Model
     protected $table = 'order';
 
     protected $fillable = [
+        'caja_id',
         'numero',
         'status',
-        'total'
+        'total',
+        'mesa_id',
+        'nombre',
     ];
 
     protected $dates = [
@@ -27,5 +30,20 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function hasItems()
+    {
+        return $this->items()->exists();
+    }
+
+    public function mesa()
+    {
+        return $this->belongsTo(Mesa::class);
+    }
+    public function caja()
+    {
+        return $this->belongsTo(Caja::class, 'caja_id');
+    }
+
 }
 

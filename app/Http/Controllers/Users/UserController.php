@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Users;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\RequestStore;
 use App\Models\Holidays\Holidays;
+use App\Models\Salones\Salon;
 use Illuminate\Foundation\Auth\RegistersUsers;
 
 use Illuminate\Http\Request;
@@ -75,8 +76,9 @@ class UserController extends Controller
         $role = UserAccessLevel::all();
         $departamentos = UserDepartament::all();
         $posiciones = UserPosition::all();
+        $salones = Salon::all();
 
-        return view('users.create', compact('role','departamentos', 'posiciones'));
+        return view('users.create', compact('role','departamentos', 'posiciones','salones'));
 
     }
 
@@ -95,6 +97,7 @@ class UserController extends Controller
             'access_level_id' => 'required|exists:admin_user_access_level,id',
             'admin_user_department_id' => 'required|exists:admin_user_department,id',
             'admin_user_position_id' => 'required|exists:admin_user_position,id',
+            'salon_id' => 'nullable',
         ], [
             'name.required' => 'El nombre es requerido para continuar',
             'surname.required' => 'Los apellidos son requeridos para continuar',
@@ -109,19 +112,23 @@ class UserController extends Controller
             'admin_user_position_id.exists' => 'La posicion debe ser valido y es requerido para continuar',
         ]);
 
-          $data = $request->all();
+        $data = $request->all();
 
-          $data['role'] = 'Admin';
-          $data['inactive'] = 0;
-          $data['password'] = Hash::make($data['password']);
+        $data['role'] = 'Admin';
+        $data['inactive'] = 0;
+        $data['password'] = Hash::make($data['password']);
+        do {
+            $pin = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        } while (User::where('pin', $pin)->exists());
 
-        //   dd($data);
-          $usuarioCreado = User::create($data);
-          $usuariovacaciones = Holidays::create([
-            'admin_user_id' => $usuarioCreado->id,
-            'quantity' => 0,
-            'first_period' => 0,
-          ]);
+        $data['pin'] = $pin;
+        //dd($data);
+        $usuarioCreado = User::create($data);
+        $usuariovacaciones = Holidays::create([
+        'admin_user_id' => $usuarioCreado->id,
+        'quantity' => 0,
+        'first_period' => 0,
+        ]);
 
         session()->flash('toast', [
             'icon' => 'success',
@@ -161,7 +168,9 @@ class UserController extends Controller
         $role = UserAccessLevel::all();
         $departamentos = UserDepartament::all();
         $posiciones = UserPosition::all();
-        return view('users.edit', compact('usuario', 'role', 'departamentos', 'posiciones'));
+        $salones = Salon::all();
+
+        return view('users.edit', compact('usuario', 'role', 'departamentos', 'posiciones','salones'));
 
     }
 
@@ -179,6 +188,7 @@ class UserController extends Controller
             'access_level_id' => 'required|exists:admin_user_access_level,id',
             'admin_user_department_id' => 'required|exists:admin_user_department,id',
             'admin_user_position_id' => 'required|exists:admin_user_position,id',
+            'salon_id' => 'nullable',
         ], [
             'name.required' => 'El nombre es requerido para continuar',
             'surname.required' => 'Los apellidos son requeridos para continuar',
@@ -194,7 +204,6 @@ class UserController extends Controller
         ]);
 
         $user = User::findOrFail($id); // Buscar el usuario existente
-
         $data = $request->all();
 
         // Solo actualizar la contraseña si se proporciona una nueva
@@ -206,7 +215,13 @@ class UserController extends Controller
 
         $data['role'] = 'Admin';
         $data['inactive'] = 0;
+        if(!isset($user->pin)){
+            do {
+                $pin = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+            } while (User::where('pin', $pin)->exists());
 
+            $data['pin'] = $pin;
+        }
         $user->update($data);
 
         session()->flash('toast', [
@@ -275,7 +290,7 @@ class UserController extends Controller
 
     public function saveThemePreference(Request $request)
     {
-        $user = auth()->user();
+        $user = User::find(auth()->user()->id);
         $user->is_dark = $request->input('is_dark');
         // dd($request->input('is_dark'));
         $user->save();

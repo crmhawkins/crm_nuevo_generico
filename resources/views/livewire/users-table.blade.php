@@ -54,6 +54,8 @@
                             'acceso' => 'NIVEL DE ACCESO',
                             'departamento' => 'DEPARTAMENTO',
                             'cargo' => 'CARGO',
+                            'salon_id' => 'SALON',
+                            'correturnos' => 'Correturnos',
                         ] as $field => $label)
                             <th class="px-3" style="font-size:0.75rem">
                                 <a href="#" wire:click.prevent="sortBy('{{ $field }}')">
@@ -77,6 +79,12 @@
                             <td>{{$user->acceso}}</td>
                             <td>{{$user->departamento}}</td>
                             <td>{{$user->cargo}}</td>
+                            <td>{{optional($user->Salon)->nombre}}</td>
+                            <td>
+                                @if ($user->correturno)
+                                <i class="fa-solid fa-check"></i>
+                                 @endif
+                            </td>
                             <td class="flex flex-row justify-evenly align-middle" style="min-width: 120px">
                                 <a class="" href="{{route('users.show', $user->id)}}"><img src="{{asset('assets/icons/eye.svg')}}" alt="Mostrar usuario"></a>
                                 <a class="" href="{{route('users.edit', $user->id)}}"><img src="{{asset('assets/icons/edit.svg')}}" alt="Mostrar usuario"></a>

@@ -1,132 +1,125 @@
 <?php
 
-namespace App\Http\Controllers\Dominios;
+namespace App\Http\Controllers\Salones;
 
 use App\Http\Controllers\Controller;
 use App\Models\Clients\Client;
-use App\Models\Dominios\Dominio;
 use App\Models\Dominios\estadosDominios;
+use App\Models\Salones\Salon;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class DominiosController extends Controller
+class SalonesController extends Controller
 {
     public function index()
     {
-        $dominios = Dominio::paginate(2);
-        return view('dominios.index', compact('dominios'));
+        return view('salones.index');
     }
 
     public function edit($id)
     {
-        $dominio = Dominio::find($id);
-        $clientes = Client::all();
-        $estados = estadosDominios::all();
-
-        return view('dominios.edit', compact('dominio','clientes','estados'));
+        $salon = Salon::find($id);
+        return view('salones.edit', compact('salon'));
     }
     public function create()
     {
-        $clientes = Client::all();
-        return view('dominios.create', compact('clientes'));
+        return view('salones.create');
     }
 
     public function store(Request $request)
     {
         // Validamos los campos
-        $this->validate($request, [
-            'dominio' => 'required|max:200',
-            'client_id' => 'required',
-            'date' => 'required',
+        $data =  $this->validate($request, [
+            'nombre' => 'required|max:200',
+            'direccion' => 'required',
+            'Apertura' => 'required',
+            'Cierre' => 'required',
 
         ], [
-            'dominio.required' => 'El nombre es requerido para continuar',
-            'client_id.required' => 'El cliente es requerido para continuar',
-            'date.required' => 'La fecha de contratación es requerido para continuar',
+            'nombre.required' => 'El nombre es requerido para continuar',
+            'direccion.required' => 'La dirrección es requerida para continuar',
+            'Apertura.required' => 'La hora de apertura es requerida para continuar',
+            'Cierre.required' => 'La hora de cierre es requerida para continuar',
 
         ]);
 
-        $data = $request->all();
+        // $data = $request->all();
 
-        // Crear una instancia de Carbon para la fecha de inicio
-        $dateStart = Carbon::parse($request->input('date'));
+        $crearDominio = Salon::create($data);
 
-        // Calcular la fecha de finalización agregando un año
-        // $data['data_start'] = $dateStart->format('Y-m-d');
-        // Calcular la fecha de finalización agregando un año
-        $data['date_end'] = $dateStart->addYear()->format('Y-m-d H:i:s'); // Formato DATETIME
+        if (!$crearDominio) {
 
-        // Formatear date_start para asegurarse que sea en el formato correcto
-        $data['date_start'] = Carbon::parse($request->input('date_start'))->format('Y-m-d H:i:s');
-        $data['estado_id'] = 2;
+            return redirect()->back()->with('toast',[
+                'icon' => 'error',
+                'mensaje' => 'Error al crear el salon'
+            ]);
+        }else{
 
-        $crearDominio = Dominio::create($data);
+            return redirect()->route('salones.index')->with('toast',[
+                'icon' => 'success',
+                'mensaje' => 'El salon se creo correctamente'
+            ]);
+        }
 
-
-        session()->flash('toast', [
-            'icon' => 'success',
-            'mensaje' => 'El dominio se creo correctamente'
-        ]);
-
-        return redirect()->route('dominios.index');
     }
 
     public function update(Request $request, $id)
     {
 
-        $dominio = Dominio::find($id);
+        $salon = Salon::find($id);
         // Validamos los campos
-        $this->validate($request, [
-            'dominio' => 'required|max:200',
-            'client_id' => 'required',
-            'date' => 'required',
+        $data =  $this->validate($request, [
+            'nombre' => 'required|max:200',
+            'direccion' => 'required',
+            'Apertura' => 'required',
+            'Cierre' => 'required',
 
         ], [
-            'dominio.required' => 'El nombre es requerido para continuar',
-            'client_id.required' => 'El cliente es requerido para continuar',
-            'date.required' => 'La fecha de contratación es requerido para continuar',
+            'nombre.required' => 'El nombre es requerido para continuar',
+            'direccion.required' => 'La dirrección es requerida para continuar',
+            'Apertura.required' => 'La hora de apertura es requerida para continuar',
+            'Cierre.required' => 'La hora de cierre es requerida para continuar',
 
         ]);
 
-        $data = $request->all();
+        $salonSaved=$salon->update(attributes: $data);
 
-        // Crear una instancia de Carbon para la fecha de inicio
-        $dateStart = Carbon::parse($request->input('date'));
-        // dd($dateStart);
+        if (!$salonSaved) {
 
-        // Calcular la fecha de finalización agregando un año
-        // $data['data_start'] = $dateStart->format('Y-m-d');
-        // Calcular la fecha de finalización agregando un año
-        $data['date_end'] = $dateStart->addYear()->format('Y-m-d H:i:s'); // Formato DATETIME
+            return redirect()->back()->with('toast',[
+                'icon' => 'error',
+                'mensaje' => 'Error al actualizar el salon'
+            ]);
+        }else{
 
-        // Formatear date_start para asegurarse que sea en el formato correcto
-        $data['date_start'] = Carbon::parse($request->input('date_start'))->format('Y-m-d H:i:s');
-        $dominio->update(attributes: $data);
-
-
-        session()->flash('toast', [
-            'icon' => 'success',
-            'mensaje' => 'El dominio se creo correctamente'
-        ]);
-
-        return redirect()->route('dominios.index');
+            return redirect()->route('salones.index')->with('toast',[
+                'icon' => 'success',
+                'mensaje' => 'El salon se actualizo correctamente'
+            ]);
+        }
     }
 
     public function destroy(Request $request)
     {
-        $domino = Dominio::find($request->id);
+        $salon = Salon::find($request->id);
 
-        if (!$domino) {
+        if (!$salon) {
             return response()->json([
                 'error' => true,
                 'mensaje' => "Error en el servidor, intentelo mas tarde."
             ]);
         }
 
-        $domino->delete();
+        $salon->delete();
         return response()->json([
             'error' => false,
-            'mensaje' => 'El usuario fue borrado correctamente'
+            'mensaje' => 'El salon fue borrado correctamente'
         ]);
+    }
+
+    public function show($id)
+    {
+        $salon = Salon::find($id);
+        return view('salones.show', compact('salon'));
     }
 }

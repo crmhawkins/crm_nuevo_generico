@@ -370,7 +370,6 @@
                             <a href="" id="enviarEmail" data-id="{{$presupuesto->id}}" class="btn btn-dark btn-block mb-3">Enviar por email</a>
                             <a href="" id="generateInvoice" class="btn btn-dark btn-block mb-3">Generar factura</a>
                             <a href="" id="generateInvoicePartial" class="btn btn-dark btn-block mb-3">Generar factura parcial</a>
-                            <a href="" id="generateTask" class="btn btn-dark btn-block mb-3">Generar tareas</a>
                             <a href="" id="deletePresupuesto" data-id="{{$presupuesto->id}}" class="btn btn-outline-danger btn-block mb-3">Eliminar</a>
                         </div>
                     </div>
@@ -626,78 +625,6 @@
                         icon: 'error',
                         title: 'Error',
                         text: 'Ocurrió un error al generar la factura. Por favor, inténtalo de nuevo.',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                        }
-                    });
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-
-        //Boton de generar tareas
-        $('#generateTask').click(function(e){
-            e.preventDefault(); // Esto previene que el enlace navegue a otra página.
-
-            const idPresupuesto = @json($presupuesto->id);
-
-            $.ajax({
-                url: '{{ route("presupuesto.generarTarea")}}', // Asegúrate de que la URL es correcta
-                type: 'POST',
-                data: {
-                    id: idPresupuesto
-                },
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Obtén el token CSRF
-                },
-                success: function(response) {
-                    if (response.status) {
-                        // Mostrar mensaje de éxito
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Tarea creada correctamente.',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.onmouseenter = Swal.stopTimer;
-                                toast.onmouseleave = Swal.resumeTimer;
-                            },
-                            didClose: () => {
-                                location.reload();
-                            }
-                        });
-                    } else {
-                        // Mostrar mensaje de error
-                        Swal.fire({
-                            icon: 'error',
-                            title: response.mensaje,
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.onmouseenter = Swal.stopTimer;
-                                toast.onmouseleave = Swal.resumeTimer;
-                            }
-                        });
-                    }
-                },
-                error: function(xhr) {
-                    // Manejo de errores
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Ocurrió un error al generar la tarea. Por favor, inténtalo de nuevo.',
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,

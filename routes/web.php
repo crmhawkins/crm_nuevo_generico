@@ -51,11 +51,15 @@ use App\Http\Controllers\Portal\PortalClientesController;
 use App\Http\Controllers\Product\ProductsCategoriesController;
 use App\Http\Controllers\Productividad\ProductividadController;
 use App\Http\Controllers\Product\ProductsController;
+use App\Http\Controllers\Salones\CabinasController;
+use App\Http\Controllers\Salones\SalonesController;
 use App\Http\Controllers\Settings\UserSettingsController;
 use App\Http\Controllers\Statistics\StatisticsController;
 use App\Http\Controllers\Tesoreria\CategoriaAsociadosController;
 use App\Http\Controllers\Tesoreria\CategoriaGastosController;
 use App\Http\Controllers\Tesoreria\IvaController;
+use App\Http\Controllers\Tpv\TpvController;
+use App\Http\Controllers\Turnos\TurnosController;
 use App\Http\Controllers\Users\DepartamentController;
 use App\Http\Controllers\Users\PositionController;
 use App\Http\Controllers\Whatsapp\WhatsappController;
@@ -247,7 +251,7 @@ Route::post('/budget/accept-budget/', [BudgetController::class, 'aceptarPresupue
 Route::post('/budget/cancel-budget/', [BudgetController::class, 'cancelarPresupuesto'])->name('presupuesto.cancelarPresupuesto');
 Route::post('/budget/generate-invoice', [BudgetController::class, 'generateInvoice'])->name('presupuesto.generarFactura');
 Route::post('/budget/generate-partia-invoice', [BudgetController::class, 'generateInvoicePartial'])->name('presupuesto.generarFacturaParcial');
-Route::post('/budget/generate-task', [BudgetController::class, 'createTask'])->name('presupuesto.generarTarea');
+//Route::post('/budget/generate-task', [BudgetController::class, 'createTask'])->name('presupuesto.generarTarea');
 Route::post('/budgets-by-client', [BudgetController::class, 'getBudgetsByClientId']);
 Route::post('/budgets-by-project', [BudgetController::class, 'getBudgetsByprojectId']);
 Route::post('/budget-by-id', [BudgetController::class, 'getBudgetById']);
@@ -327,17 +331,24 @@ Route::get('/products-categories/edit/{id}', [ProductsCategoriesController::clas
 Route::post('/products-categories/update/{id}', [ProductsCategoriesController::class, 'update'])->name('productosCategoria.update');
 Route::post('/products-categories/destroy', [ProductsCategoriesController::class, 'destroy'])->name('productosCategoria.delete');
 
-//TPV ENdpoints
-Route::get('/categories', function () {
-    return \App\Models\Tpv\Category::where('inactive', 0)->get();
-});
-Route::get('/categories/{id}/products', function ($id) {
-    return \App\Models\Tpv\Product::where('category_id', $id)
-        ->where('inactive', 0)
-        ->get();
-});
-Route::get('/orders/open', function () {
-    return \App\Models\Tpv\Order::where('status', 'open')->get();
+//TPV
+Route::prefix('tpv')->group(function () {
+    Route::get('/distribucion/{salonId}', [TpvController::class, 'distribucionMesas'])->name('tpv.distribucion');
+    Route::get('/mapa', [TpvController::class, 'mapa'])->name('tpv.mapa');
+    Route::get('/edit/{id}', [TpvController::class, 'edit'])->name('tpv.edit');
+    Route::post('/add-item', [TpvController::class, 'addItem']);
+    Route::post('/remove-item', [TpvController::class, 'removeItem']);
+    Route::post('/checkout', [TpvController::class, 'checkout']);
+    Route::post('/delete-order', [TpvController::class, 'delete'])->name('tpv.delete');
+    Route::post('/setName', [TpvController::class, 'setNombre'])->name('tpv.nombre');
+    Route::get('/data', [TpvController::class,'getData']);
+    Route::get('/mesas', [TpvController::class,'getMesas']);
+    Route::post('/mesas/add', [TpvController::class,'addMesa']);
+    Route::post('/mesas/update', [TpvController::class,'updateMesa']);
+    Route::delete('/mesas/delete/{id}', [TpvController::class,'deleteMesa']);
+    Route::post('/mesas/abrir-caja', [TpvController::class,'AbrirCaja'])->name('tpv.abrirCaja');
+    Route::post('/mesas/cierre-caja', [TpvController::class,'CerraCaja'])->name('tpv.cerrarCaja');
+    Route::get('/mesa/{id}', [TpvController::class,'mesa'])->name('tpv.mesa');
 });
 
 // Suppliers (PROVEEDORES)
@@ -599,6 +610,31 @@ Route::get('/diario-caja/{id}/edit', [DiarioCajaController::class, 'edit'])->nam
 Route::post('/diario-caja/{id}/update', [DiarioCajaController::class, 'update'])->name('diarioCaja.update');
 Route::post('/diario-caja/{id}/destroy', [DiarioCajaController::class, 'destroy'])->name('diarioCaja.destroy');
 Route::post('/diario-caja/{id}/destroy-linea', [DiarioCajaController::class, 'destroyDiarioCaja'])->name('diarioCaja.destroyDiarioCaja');
+
+//Salones
+Route::get('/salones', [SalonesController::class, 'index'])->name('salones.index');
+Route::get('/salones/create', [SalonesController::class, 'create'])->name('salones.create');
+Route::post('/salones/store', [SalonesController::class, 'store'])->name('salones.store');
+Route::get('/salones/{id}/edit', [SalonesController::class, 'edit'])->name('salones.edit');
+Route::get('/salones/{id}/show', [SalonesController::class, 'show'])->name('salones.show');
+Route::post('/salones/{id}/update', [SalonesController::class, 'update'])->name('salones.update');
+Route::post('/salones/destroy', [SalonesController::class, 'destroy'])->name('salones.delete');
+
+//Turnos
+Route::get('/turnos', [TurnosController::class, 'index'])->name('turnos.index');
+Route::get('/turnos-generate', [TurnosController::class, 'generarTurnos'])->name('turnos.generar');
+Route::get('/turnos/create', [TurnosController::class, 'create'])->name('turnos.create');
+Route::post('/turnos/store', [TurnosController::class, 'store'])->name('turnos.store');
+Route::get('/turnos/{id}/edit', [TurnosController::class, 'edit'])->name('turnos.edit');
+Route::get('/turnos/{id}/show', [TurnosController::class, 'show'])->name('turnos.show');
+Route::post('/turnos/{id}/update', [TurnosController::class, 'update'])->name('turnos.update');
+Route::post('/turnos/destroy', [TurnosController::class, 'destroy'])->name('turnos.delete');
+
+//Cabina
+Route::get('/cabina',[CabinasController::class,'index'])->name('cabinas.index');
+Route::get('/cabina/create',[CabinasController::class,'create'])->name('cabinas.create');
+Route::post('/cabina/store',[CabinasController::class,'store'])->name('cabinas.store');
+Route::get('/cabina/{id}/show', [CabinasController::class, 'show'])->name('cabinas.show');
 
 
 Route::post('/save-order', [BudgetController::class, 'saveOrder'])->name('save.order');

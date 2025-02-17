@@ -31,20 +31,7 @@
     <link rel="stylesheet" href="{{ asset('build/assets/app-d2e38ed8.css') }}" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="{{ asset('build/assets/app-bf7e6802.js') }}"></script>
     @laravelViewsStyles
-    <style>
-        .navbar {
-            margin: 0 !important;
-            border-radius: 0px !important;
-        }
-        .sidebar-wrapper{
-            margin: 0 !important;
-            border-radius: 0px !important;
-            height: 100vh;
-        }
-        #main{
-            margin-left: 18rem ;
-        }
-    </style>
+
 </head>
 <body class="" style="overflow-x: hidden">
     <div id="app">
@@ -57,10 +44,10 @@
         </div>
         <div class="css-96uzu9"></div>
 
-        @include('layouts.sidebarTpv')
+        {{-- @include('layouts.sidebarTpv') --}}
 
         <main id="main">
-            @include('layouts.topBarTpv')
+            {{-- @include('layouts.topBarTpv') --}}
             <div class="contenedor">
                 @yield('content')
             </div>

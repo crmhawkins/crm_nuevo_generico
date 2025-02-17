@@ -44,6 +44,7 @@
                     $BajaActive = request()->routeIs('bajas.*');
                     $StadisticsActive = request()->routeIs('estadistica.*');
                     $ContabilidadActive = request()->routeIs('cuentasContables.*') || request()->routeIs('subCuentasContables.*') || request()->routeIs('subCuentasHijaContables.*') || request()->routeIs('grupoContabilidad.*') || request()->routeIs('subGrupoContabilidad.*') || request()->routeIs('admin.planContable.index');
+                    $SalonesActive = request()->routeIs('salones.*');
                     $admin = (Auth::user()->access_level_id == 1);
                     $gerente = (Auth::user()->access_level_id == 2);
                     $contable = (Auth::user()->access_level_id == 3);
@@ -71,6 +72,30 @@
                                 <i class="fa-solid fa-plus"></i>
                                 <span>
                                     Crear cliente
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item has-sub {{ $SalonesActive ? 'active' : '' }}">
+                    <a href="#" class='sidebar-link'>
+                        <i class="fa-solid fa-house fs-5"></i>
+                        <span>Salones</span>
+                    </a>
+                    <ul class="submenu" style="{{ $SalonesActive ? 'display:block;' : 'display:none' }}">
+                        <li class="submenu-item {{ request()->routeIs('salones.index') ? 'active' : '' }} ">
+                            <a href="{{route('salones.index')}}">
+                                <i class="fa-solid fa-list"></i>
+                                <span>
+                                    Ver todos
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('salones.create') ? 'active' : '' }} {{ request()->routeIs('cliente.createFromBudget') ? 'active' : ''}}">
+                            <a href="{{route('salones.create')}}">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>
+                                    Crear salon
                                 </span>
                             </a>
                         </li>

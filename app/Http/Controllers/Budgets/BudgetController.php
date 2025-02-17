@@ -1647,52 +1647,52 @@ class BudgetController extends Controller
         }
     }
 
-    public function createTask(Request $request){
-        $taskSaved = false;
-        $budget = Budget::find($request->id);
-        //Crear Tarea
-        $budgetConcept = BudgetConcept::where('budget_id', $budget->id)->get();
-        $empresa = CompanyDetails::find(1);
-        foreach($budgetConcept as $con){
-            $time_hour = $this->calcNewHoursPrice($con->total, $empresa->price_hour);
-            if($con->concept_type_id == 2){
-                $budgetCon =  Task::where('budget_concept_id', $con->id)->count();
-                if($budgetCon == 0){
-                    $dataTask['admin_user_id'] = null;
-                    $dataTask['gestor_id'] = Auth::user()->id ?? 1;
-                    $dataTask['priority_id'] = null;
-                    $dataTask['project_id'] = $budget->project_id;
-                    $dataTask['budget_id'] = $budget->id;
-                    $dataTask['budget_concept_id'] = $con->id;
-                    $dataTask['task_status_id'] = 2;
-                    $dataTask['title'] = $con->title;
-                    $dataTask['description'] = $con->concept;
-                    $dataTask['total_time_budget'] = $time_hour;
-                    $dataTask['estimated_time'] = $time_hour;
-                    $dataTask['real_time'] = '00:00:00';
-                    $task = Task::create($dataTask);
-                    $taskSaved = $task->save();
-                }else{
-                    return response()->json([
-                        'status' => false,
-                        'mensaje' => "Tareas ya generadas anteriormente."
-                    ]);
-                }
-            }
-        }
-        if($taskSaved){
-            return response()->json([
-                'status' => true,
-                'mensaje' => "Tareas generadas con exito"
-            ]);
-        }else{
-            return response()->json([
-                'status' => false,
-                'mensaje' => "Fallo al generar las tareas"
-            ]);
-        }
+    // public function createTask(Request $request){
+    //     $taskSaved = false;
+    //     $budget = Budget::find($request->id);
+    //     //Crear Tarea
+    //     $budgetConcept = BudgetConcept::where('budget_id', $budget->id)->get();
+    //     $empresa = CompanyDetails::find(1);
+    //     foreach($budgetConcept as $con){
+    //         $time_hour = $this->calcNewHoursPrice($con->total, $empresa->price_hour);
+    //         if($con->concept_type_id == 2){
+    //             $budgetCon =  Task::where('budget_concept_id', $con->id)->count();
+    //             if($budgetCon == 0){
+    //                 $dataTask['admin_user_id'] = null;
+    //                 $dataTask['gestor_id'] = Auth::user()->id ?? 1;
+    //                 $dataTask['priority_id'] = null;
+    //                 $dataTask['project_id'] = $budget->project_id;
+    //                 $dataTask['budget_id'] = $budget->id;
+    //                 $dataTask['budget_concept_id'] = $con->id;
+    //                 $dataTask['task_status_id'] = 2;
+    //                 $dataTask['title'] = $con->title;
+    //                 $dataTask['description'] = $con->concept;
+    //                 $dataTask['total_time_budget'] = $time_hour;
+    //                 $dataTask['estimated_time'] = $time_hour;
+    //                 $dataTask['real_time'] = '00:00:00';
+    //                 $task = Task::create($dataTask);
+    //                 $taskSaved = $task->save();
+    //             }else{
+    //                 return response()->json([
+    //                     'status' => false,
+    //                     'mensaje' => "Tareas ya generadas anteriormente."
+    //                 ]);
+    //             }
+    //         }
+    //     }
+    //     if($taskSaved){
+    //         return response()->json([
+    //             'status' => true,
+    //             'mensaje' => "Tareas generadas con exito"
+    //         ]);
+    //     }else{
+    //         return response()->json([
+    //             'status' => false,
+    //             'mensaje' => "Fallo al generar las tareas"
+    //         ]);
+    //     }
 
-    }
+    // }
 
     public function calcNewHoursPrice($total, $precio_hora){
         $toMin = $total / $precio_hora;

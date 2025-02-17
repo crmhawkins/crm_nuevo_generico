@@ -148,7 +148,7 @@
                                                           <p class="mb-0">Nivel de Acceso</p>
                                                         </div>
                                                         <div class="col-sm-9">
-                                                          <p class="text-muted mb-0">{{$usuario->acceso->name}}</p>
+                                                          <p class="text-muted mb-0">{{optional($usuario->acceso)->name}}</p>
                                                         </div>
                                                     </div>
                                                     <hr>
@@ -157,7 +157,7 @@
                                                           <p class="mb-0">Departamento</p>
                                                         </div>
                                                         <div class="col-sm-9">
-                                                          <p class="text-muted mb-0">{{$usuario->departamento->name}}</p>
+                                                          <p class="text-muted mb-0">{{optional($usuario->departamento)->name}}</p>
                                                         </div>
                                                     </div>
                                                     <hr>
@@ -166,7 +166,7 @@
                                                           <p class="mb-0">Cargo</p>
                                                         </div>
                                                         <div class="col-sm-9">
-                                                          <p class="text-muted mb-0">{{$usuario->posicion->name}}</p>
+                                                          <p class="text-muted mb-0">{{optional($usuario->posicion)->name}}</p>
                                                         </div>
                                                     </div>
                                                     <hr>
@@ -175,7 +175,7 @@
                                                           <p class="mb-0">Vacaciones</p>
                                                         </div>
                                                         <div class="col-sm-9">
-                                                          <p class="text-muted mb-0">0 dias restantes</p>
+                                                          <p class="text-muted mb-0">{{optional($usuario->vacacionesDias)->quantity}} dias restantes</p>
                                                         </div>
                                                     </div>
                                                     <hr>
@@ -191,10 +191,10 @@
                                                     <hr>
                                                     <div class="row my-2">
                                                         <div class="col-sm-3">
-                                                          <p class="mb-0">Estado de animo</p>
+                                                          <p class="mb-0">Pin</p>
                                                         </div>
                                                         <div class="col-sm-9">
-                                                          <p class="text-muted mb-0"></p>
+                                                          <p class="text-muted mb-0">{{$usuario->pin}}</p>
                                                         </div>
                                                     </div>
                                                     <hr>

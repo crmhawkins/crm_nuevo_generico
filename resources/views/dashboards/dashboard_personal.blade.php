@@ -304,18 +304,20 @@
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <div class="row justify-content-end">
-                        <h2 id="timer" class="display-6 fw-bolder col-4 text-center">00:00:00</h2>
-                        <button id="startPauseBtn" class="btn jornada btn-secondary col-3 mx-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
-                        <button id="endPauseBtn" class="btn jornada btn-dark col-3 mx-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
+                        <h2 id="timer" class="display-6 font-weight-bold col-3">00:00:00</h2>
+                        <button id="startJornadaBtn" class="btn jornada btn-primary mx-2 col-2" onclick="startJornada()">Inicio Jornada</button>
+                        <button id="startPauseBtn" class="btn jornada btn-secondary mx-2 col-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
+                        <button id="endPauseBtn" class="btn jornada btn-dark mx-2 col-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
+                        <button id="endJornadaBtn" class="btn jornada btn-danger mx-2 col-2" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card mt-4">
-            <div class="card-body">
+        <div class="card2 mt-4">
+            <div class="card-body2" >
                 <div class="row">
                     <div class="col-md-7 mb-3">
-                        <div class="side-column d-flex flex-column h-100">
+                        <div class="side-column d-flex flex-column h-100 ">
                             <div class="card mb-3 flex-grow-1">
                                 <div class="card-body">
                                     <h3 class="card-title h4">Tareas</h3>
@@ -349,9 +351,6 @@
                                                             </div>
                                                             <div class="col-10">
                                                                 <span class="d-block tarea-cliente status_{{ $tasks['taskPlay']->estado->name }}">
-                                                                    Cliente: @if ($tasks['taskPlay']->presupuesto && $tasks['taskPlay']->presupuesto->cliente)
-                                                                        {{ $tasks['taskPlay']->presupuesto->cliente->name }}
-                                                                    @endif
                                                                 </span>
                                                                 <span class="d-block tarea-nombre fw-bolder fs-4">{{ $tasks['taskPlay']->title }}</span>
                                                                 <span class="d-block tarea-gestor">
@@ -378,12 +377,7 @@
                                                     @if ($tasks['tasksPause'])
                                                         @foreach ($tasks['tasksPause'] as $taskSingle)
                                                             <option value="{{ $taskSingle->id }}">
-                                                                @if ($taskSingle->presupuesto)
-                                                                    @if ($taskSingle->presupuesto->cliente)
-                                                                        {{ $taskSingle->presupuesto->cliente->name }}
-                                                                    @endif
-                                                                @endif
-                                                                | {{ $taskSingle->title }} |
+                                                                {{ $taskSingle->title }} |
                                                                 @if ($taskSingle->gestor)
                                                                         {{ $taskSingle->gestor->name }}
                                                                 @endif
@@ -402,11 +396,7 @@
                                                                     <span class="tarea-numero">{{ $numero }}ª</span>
                                                                 </div>
                                                                 <div class="col-10">
-                                                                    <span class="d-block tarea-cliente status_{{ $tarea->priority_id }}">
-                                                                        Cliente: @if ($tarea->presupuesto && $tarea->presupuesto->cliente)
-                                                                            {{ $tarea->presupuesto->cliente->name }}
-                                                                        @endif
-                                                                    </span>
+                                                                    <span class="d-block tarea-cliente status_{{ $tarea->priority_id }}"></span>
                                                                     <span class="d-block tarea-nombre fw-bolder fs-4">{{ $tarea->title }}</span>
                                                                     <span class="d-block tarea-gestor">
                                                                         Gestor: @if ($tarea->gestor)
@@ -442,11 +432,7 @@
                                                                         <span class="tarea-numero">{{ $nombre }}ª</span>
                                                                     </div>
                                                                     <div class="col-10">
-                                                                        <span class="d-block tarea-cliente status_{{ $tarea->estado->name }}">
-                                                                            Cliente: @if ($tarea->presupuesto && $tarea->presupuesto->cliente)
-                                                                                {{ $tarea->presupuesto->cliente->name }}
-                                                                            @endif
-                                                                        </span>
+                                                                        <span class="d-block tarea-cliente status_{{ $tarea->estado->name }}"></span>
                                                                         <span class="d-block tarea-nombre fw-bolder fs-4">{{ $tarea->title }}</span>
                                                                         <span class="d-block tarea-gestor">
                                                                             Gestor: @if ($tarea->gestor)
@@ -481,11 +467,12 @@
                                             <div class="mx-4 text-center">
                                                 <h5 class="my-3">{{$user->name}}&nbsp;{{$user->surname}}</h5>
                                                 <p class="text-muted mb-1">{{$user->departamento->name}}</p>
-                                                <p class="text-muted mb-4">{{$user->acceso->name}}</p>
-                                                <div class="d-flex align-items-center my-2">
+                                                <p class="text-muted mb-1">{{$user->acceso->name}}</p>
+                                                <p class="text-muted mb-4">Pin: {{$user->pin}}</p>
+                                                {{-- <div class="d-flex align-items-center my-2">
                                                     <input type="color" class="form-control form-control-color" style="padding: 0.4rem" id="color">
                                                     <label for="color" class="form-label m-2">Color</label>
-                                                </div>
+                                                </div> --}}
                                             </div>
                                             <div class="mx-4">
                                                 @if ($user->image == null)
@@ -494,7 +481,7 @@
                                                     <img alt="avatar" class="rounded-circle img-fluid m-auto" style="width: 150px;" src="{{ asset('/storage/avatars/'.$user->image) }}" />
                                                 @endif
                                             </div>
-                                            <div>
+                                            {{-- <div>
                                                 <div class="d-flex justify-content-center align-items-center">
                                                     <div class="mx-4 text-center">
                                                         <h1 class="fs-5">Productividad</h1>
@@ -514,7 +501,7 @@
                                                     <p style="color:#4D989E">Horas Producidas Mensual</p>
                                                     <p style="font-weight: bold;font-size: 2rem;">{{ $horasMes }}</p>
                                                 </div>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                     <div class="col-12 d-flex flex-wrap justify-content-center">
@@ -528,6 +515,162 @@
                                             <a class="btn btn-outline-secondary active" id="list-todo-list" data-bs-toggle="list" href="#list-todo" role="tab">TO-DO</a>
                                             <a class="btn btn-outline-danger" id="list-todo-list-finalizados" data-bs-toggle="list" href="#list-todo-finalizados" role="tab">Finalizados</a>
                                             <a class="btn btn-outline-secondary" id="list-agenda-list" data-bs-toggle="list" href="#list-agenda" role="tab">Agenda</a>
+                                        </div>
+                                    </div>
+                                    <div class="tab-content text-justify" id="nav-tabContent">
+                                        <div class="tab-pane show active" id="list-todo" role="tabpanel"
+                                            aria-labelledby="list-todo-list">
+                                            <div class="card2 mt-4">
+                                                <div class="card-body2">
+                                                    <div id="to-do-container" class="d-flex flex-column"  style="" >
+                                                        <button class="btn btn-outline-secondary mt-4 mx-3" onclick="showTodoModal()">
+                                                            <i class="fa-solid fa-plus"></i>
+                                                        </button>
+                                                        <div id="to-do" class="p-3">
+                                                            @foreach ($to_dos as $to_do)
+                                                                <div class="card mt-2" id="todo-card-{{$to_do->id}}">
+                                                                    <div class="card-body d-flex justify-content-between clickable" id="todo-card-body-{{$to_do->id}}" data-todo-id="{{$to_do->id}}" style="{{$to_do->isCompletedByUser($user->id) ? 'background-color: #CDFEA4' : '' }}">
+                                                                        <div style="flex: 0 0 60%;">
+                                                                            <h3>{{ $to_do->titulo }}</h3>
+                                                                        </div>
+                                                                        <div class="d-flex align-items-center justify-content-around" style="flex: 0 0 40%;">
+                                                                            @if(!($to_do->isCompletedByUser($user->id)))
+                                                                            <button onclick="completeTask(event,{{ $to_do->id }})" id="complete-button-{{$to_do->id}}" class="btn btn-success btn-sm">Completar</button>
+                                                                            @endif
+                                                                            @if ($to_do->admin_user_id == $user->id)
+                                                                            <button onclick="finishTask(event,{{ $to_do->id }})" class="btn btn-danger btn-sm">Finalizar</button>
+                                                                            @endif
+                                                                            <div id="todo-card-{{ $to_do->id }}"  class="pulse justify-center align-items-center" style="{{ $to_do->unreadMessagesCountByUser($user->id) > 0 ? 'display: flex;' : 'display: none;' }}">
+                                                                                {{ $to_do->unreadMessagesCountByUser($user->id) }}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="info">
+                                                                        <div class="d-flex justify-content-evenly flex-wrap">
+                                                                            @if($to_do->project_id)<a class="btn btn-outline-secondary mb-2" href="{{route('campania.edit',$to_do->project_id)}}"> Campaña {{$to_do->proyecto ? $to_do->proyecto->name : 'borrada'}}</a>@endif
+                                                                            @if($to_do->client_id)<a class="btn btn-outline-secondary mb-2" href="{{route('clientes.show',$to_do->client_id)}}"> Cliente {{$to_do->cliente ? $to_do->cliente->name : 'borrado'}}</a>@endif
+                                                                            @if($to_do->budget_id)<a class="btn btn-outline-secondary mb-2" href="{{route('presupuesto.edit',$to_do->budget_id)}}"> Presupuesto {{$to_do->presupuesto ? $to_do->presupuesto->concept : 'borrado'}}</a>@endif
+                                                                            @if($to_do->task_id) <a class="btn btn-outline-secondary mb-2" href="{{route('tarea.edit',$to_do->task_id)}}"> Tarea {{$to_do->tarea ? $to_do->tarea->title : 'borrada'}}</a> @endif
+                                                                        </div>
+                                                                        <div class="participantes d-flex flex-wrap mt-2">
+                                                                            <h3 class="m-2">Participantes</h3>
+                                                                            @foreach ($to_do->TodoUsers as $usuario )
+                                                                                <span class="badge m-2 {{$usuario->completada ? 'bg-success' :'bg-secondary'}}">
+                                                                                    {{$usuario->usuarios->name}}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                        <h3 class="m-2">Descripcion </h3>
+                                                                        <p class="m-2">{{ $to_do->descripcion }}</p>
+                                                                        <div class="chat mt-4">
+                                                                            <div class="chat-container" >
+                                                                                @foreach ($to_do->mensajes as $mensaje)
+                                                                                    <div class="p-3 message {{ $mensaje->admin_user_id == $user->id ? 'mine' : 'theirs' }}">
+                                                                                        @if ($mensaje->archivo)
+                                                                                            <div class="file-icon">
+                                                                                                <a href="{{ asset('storage/' . $mensaje->archivo) }}" target="_blank"><i class="fa-regular fa-file-lines fa-2x"></i></a>
+                                                                                            </div>
+                                                                                        @endif
+                                                                                        <strong>{{ $mensaje->user->name }}:</strong> {{ $mensaje->mensaje }}
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                            <form id="mensaje" action="{{ route('message.store') }}" method="post" enctype="multipart/form-data">
+                                                                                @csrf
+                                                                                <input type="hidden" name="todo_id" value="{{ $to_do->id }}">
+                                                                                <input type="hidden" name="admin_user_id" value="{{ $user->id }}">
+                                                                                <div class="input-group my-2">
+                                                                                    <input type="text" class="form-control" name="mensaje" placeholder="Escribe un mensaje...">
+                                                                                    <label class="input-group-text" style="background: white; ">
+                                                                                        <i class="fa-solid fa-paperclip" id="file-clip"></i>
+                                                                                        <input type="file" class="form-control" style="display: none;" id="file-input" name="archivo">
+                                                                                        <i class="fa-solid fa-check" id="file-icon" style="display: none; color: green;"></i>
+                                                                                    </label>
+                                                                                    <button id="enviar" class="btn btn-primary" type="button"><i class="fa-regular fa-paper-plane"></i></button>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane show" id="list-todo-finalizados" role="tabpanel"
+                                            aria-labelledby="list-todo-finalizados-list">
+                                            <div class="card2 mt-4">
+                                                <div class="card-body2">
+                                                    <div id="to-do-container" class="d-flex flex-column"  style="" >
+                                                        <div id="to-do" class="p-3">
+                                                            @foreach ($to_dos_finalizados as $to_do_finalizado)
+                                                                <div class="card mt-2" id="todo-card-{{$to_do_finalizado->id}}">
+                                                                    <div class="card-body d-flex justify-content-between clickable" id="todo-card-body-{{$to_do_finalizado->id}}" data-todo-id="{{$to_do_finalizado->id}}" style="{{$to_do_finalizado->isCompletedByUser($user->id) ? 'background-color: #CDFEA4' : '' }}">
+                                                                        <h3>{{ $to_do_finalizado->titulo }}</h3>
+                                                                    </div>
+                                                                    <div class="info">
+                                                                        <div class="d-flex justify-content-evenly flex-wrap">
+                                                                            @if($to_do_finalizado->project_id)<a class="btn btn-outline-secondary mb-2"> Campaña {{$to_do_finalizado->proyecto ? $to_do_finalizado->proyecto->name : 'borrada'}}</a>@endif
+                                                                            @if($to_do_finalizado->client_id)<a class="btn btn-outline-secondary mb-2"> Cliente {{$to_do_finalizado->cliente ? $to_do_finalizado->cliente->name : 'borrado'}}</a>@endif
+                                                                            @if($to_do_finalizado->budget_id)<a class="btn btn-outline-secondary mb-2"> Presupuesto {{$to_do_finalizado->presupuesto ? $to_do_finalizado->presupuesto->concept : 'borrado'}}</a>@endif
+                                                                            @if($to_do_finalizado->task_id) <a class="btn btn-outline-secondary mb-2"> Tarea {{$to_do_finalizado->tarea ? $to_do_finalizado->tarea->title : 'borrada'}}</a> @endif
+                                                                        </div>
+                                                                        <div class="participantes d-flex flex-wrap mt-2">
+                                                                            <h3 class="m-2">Participantes</h3>
+                                                                            @foreach ($to_do_finalizado->TodoUsers as $usuario )
+                                                                                <span class="badge m-2 {{$usuario->completada ? 'bg-success' :'bg-secondary'}}">
+                                                                                    {{$usuario->usuarios->name}}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                        <h3 class="m-2">Descripcion </h3>
+                                                                        <p class="m-2">{{ $to_do_finalizado->descripcion }}</p>
+                                                                        <div class="chat mt-4">
+                                                                            <div class="chat-container" >
+                                                                                @foreach ($to_do_finalizado->mensajes as $mensaje)
+                                                                                    <div class="p-3 message {{ $mensaje->admin_user_id == $user->id ? 'mine' : 'theirs' }}">
+                                                                                        @if ($mensaje->archivo)
+                                                                                            <div class="file-icon">
+                                                                                                <a href="{{ asset('storage/' . $mensaje->archivo) }}" target="_blank"><i class="fa-regular fa-file-lines fa-2x"></i></a>
+                                                                                            </div>
+                                                                                        @endif
+                                                                                        <strong>{{ $mensaje->user->name }}:</strong> {{ $mensaje->mensaje }}
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                            <form id="mensaje" action="{{ route('message.store') }}" method="post" enctype="multipart/form-data">
+                                                                                @csrf
+                                                                                <input type="hidden" name="todo_id" value="{{ $to_do_finalizado->id }}">
+                                                                                <input type="hidden" name="admin_user_id" value="{{ $user->id }}">
+                                                                                <div class="input-group my-2">
+                                                                                    <input type="text" class="form-control" name="mensaje" placeholder="Escribe un mensaje..." disabled>
+                                                                                    <label class="input-group-text" style="background: white; ">
+                                                                                        <i class="fa-solid fa-paperclip" id="file-clip"></i>
+                                                                                        <input type="file" class="form-control" style="display: none;" id="file-input" name="archivo" disabled>
+                                                                                        <i class="fa-solid fa-check" id="file-icon" style="display: none; color: green;"></i>
+                                                                                    </label>
+                                                                                    <button id="enviar" class="btn btn-primary" type="button" disabled><i class="fa-regular fa-paper-plane"></i></button>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane" id="list-agenda" role="tabpanel"
+                                            aria-labelledby="list-agenda-list">
+                                            <div class="card2 mt-4">
+                                                <div class="card-body2 text-center">
+                                                    <div id="calendar" class="p-4" style="min-height: 600px; margin-top: 0.75rem; margin-bottom: 0.75rem; overflow-y: auto; border-color:black; border-width: thin; border-radius: 20px;" >
+                                                        <!-- Aquí se renderizarán las tareas según la vista seleccionada -->
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -545,8 +688,8 @@
     <script src="{{asset('assets/vendors/choices.js/choices.min.js')}}"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales-all.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var multipleCancelButton = new Choices('#admin_user_ids', {
@@ -557,31 +700,26 @@
         });
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            updateTime(); // Initialize the timer display
-
-            setInterval(function() {
-                getTime();
-            }, 120000);
-
-            // Initialize button states based on jornada and pause
-            if ('{{ $jornadaActiva }}') {
-                if ('{{ $pausaActiva }}') {
-                    document.getElementById('startPauseBtn').style.display = 'none';
-                    document.getElementById('endPauseBtn').style.display = 'block';
-                } else {
-                    document.getElementById('startPauseBtn').style.display = 'block';
-                    document.getElementById('endPauseBtn').style.display = 'none';
-                    startTimer(); // Start timer if not in pause
-                }
-            } else {
-                document.getElementById('startPauseBtn').style.display = 'none';
-                document.getElementById('endPauseBtn').style.display = 'none';
-            }
-        });
-
         let timerState = '{{ $jornadaActiva ? "running" : "stopped" }}'
         let timerTime = {{ $timeWorkedToday }}; // In seconds, initialized with the time worked today
+        function getTime() {
+            fetch('/dashboard/timeworked', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        timerTime = data.time
+                        updateTime()
+                    }
+                });
+        }
+
 
         function updateTime() {
             let hours = Math.floor(timerTime / 3600);
@@ -621,56 +759,15 @@
                 .then(data => {
                     if (data.success) {
                         startTimer();
+                        document.getElementById('startJornadaBtn').style.display = 'none';
                         document.getElementById('startPauseBtn').style.display = 'block';
+                        document.getElementById('endJornadaBtn').style.display = 'block';
                     }
                 });
         }
 
         function endJornada() {
-            // Obtener el tiempo actualizado
-            getTime();
-
-            let now = new Date();
-            let currentHour = now.getHours();
-            let currentMinute = now.getMinutes();
-
-            // Convertir los segundos trabajados a horas
-            let workedHours = timerTime / 3600;
-
-            // Verificar si es antes de las 18:00 o si ha trabajado menos de 8 horas
-            if (currentHour < 18 || workedHours < 8) {
-                let title = '';
-                let text = '';
-
-                if (currentHour < 18) {
-                    title = 'Horario de Salida Prematuro';
-                    text = 'Es menos de las 18:00.  ';
-                }else{
-                    if(workedHours < 8) {
-                    title = ('Jornada Incompleta');
-                    text = 'Has trabajado menos de 8 horas. Si no compensas el tiempo faltante,';
-                    }
-                }
-
-                text += 'Se te descontará de tus vacaciones al final del mes.';
-
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Finalizar Jornada',
-                    cancelButtonText: 'Continuar Jornada'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        finalizarJornada();
-                    }
-                    // Si elige continuar, no hacemos nada, simplemente mantiene la jornada activa
-                });
-            } else {
-                // Si el tiempo es mayor o igual a 8 horas y es después de las 18:00, finalizamos directamente la jornada
-                finalizarJornada();
-            }
+        finalizarJornada();
         }
 
         function finalizarJornada() {
@@ -686,7 +783,9 @@
             .then(data => {
                 if (data.success) {
                     stopTimer();
+                    document.getElementById('startJornadaBtn').style.display = 'block';
                     document.getElementById('startPauseBtn').style.display = 'none';
+                    document.getElementById('endJornadaBtn').style.display = 'none';
                     document.getElementById('endPauseBtn').style.display = 'none';
                 }
             });
@@ -730,8 +829,8 @@
                 });
         }
 
-        function getTime() {
-            fetch('/dashboard/timeworked', {
+        function endLlamada() {
+            fetch('/dashboard/llamadafin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -742,11 +841,48 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        timerTime = data.time
-                        updateTime()
+                        document.getElementById('endllamadaBtn').style.display = 'none';
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.mensaje, // Aquí se muestra el mensaje del JSON
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 });
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateTime(); // Initialize the timer display
+
+            setInterval(function() {
+                getTime();
+            }, 120000);
+
+            // Initialize button states based on jornada and pause
+            if ('{{ $jornadaActiva }}') {
+                document.getElementById('startJornadaBtn').style.display = 'none';
+                document.getElementById('endJornadaBtn').style.display = 'block';
+                if ('{{ $pausaActiva }}') {
+                    document.getElementById('startPauseBtn').style.display = 'none';
+                    document.getElementById('endPauseBtn').style.display = 'block';
+                } else {
+                    document.getElementById('startPauseBtn').style.display = 'block';
+                    document.getElementById('endPauseBtn').style.display = 'none';
+                    startTimer(); // Start timer if not in pause
+                }
+            } else {
+                document.getElementById('startJornadaBtn').style.display = 'block';
+                document.getElementById('endJornadaBtn').style.display = 'none';
+                document.getElementById('startPauseBtn').style.display = 'none';
+                document.getElementById('endPauseBtn').style.display = 'none';
+            }
+
+
+            });
     </script>
     <script>
             document.querySelectorAll('#enviar').forEach(function(button) {

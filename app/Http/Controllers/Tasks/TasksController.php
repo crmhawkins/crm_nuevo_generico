@@ -11,6 +11,7 @@ use App\Models\Tasks\TaskStatus;
 use App\Models\Users\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TasksController extends Controller
@@ -37,10 +38,68 @@ class TasksController extends Controller
         return view('tasks.asignar', compact('tareas'));
     }
 
+    public function create()
+    {
+        $employees = User::where('inactive', 0)->where('access_level_id',5)->get();
+        $prioritys = Priority::all();
+        $status = TaskStatus::all();
+        $data = [];
+        return view('tasks.create',compact('employees','status','prioritys','data'));
+    }
+
+    public function store(Request $request)
+    {
+        $taskSaved = false;
+        $dataTask['admin_user_id'] = null;
+        $dataTask['gestor_id'] = Auth::user()->id ?? 1;
+        $dataTask['priority_id'] = null;
+        $dataTask['task_status_id'] = 2;
+        $dataTask['title'] = $request->title;
+        $dataTask['description'] = $request->description;
+        $dataTask['total_time_budget'] = $request->time_hour;
+        $dataTask['estimated_time'] = $request->time_hour;
+        $dataTask['real_time'] = '00:00:00';
+        $task = Task::create($dataTask);
+        $taskSaved = $task->save();
+
+        for ($i = 1; $i <= $request['numEmployee']; $i++) {
+            if ($request['employeeId' . $i]) {
+                $data['admin_user_id'] = $request['employeeId' . $i];
+                $data['gestor_id'] = $task->gestor_id;
+                $data['priority_id'] = $request['priority'];
+                $data['task_status_id'] = $request['status' . $i] ?? 2;
+                $data['split_master_task_id'] = $task->id;
+                $data['duplicated'] = 0;
+                $data['description'] = $request['description'];
+                $data['title'] = $request['title'];
+                $data['estimated_time'] = $request['estimatedTime' . $i];
+                $data['real_time'] = $request['realTime' . $i] ?? '00:00:00';
+                $newtask = Task::create($data);
+                $NewtaskSaved = $newtask->save();
+            }
+        }
+
+        $task->duplicated = 1;
+        $task->save();
+
+        if($taskSaved){
+            return response()->json([
+                'status' => true,
+                'mensaje' => "Tareas generadas con exito"
+            ]);
+        }else{
+            return response()->json([
+                'status' => false,
+                'mensaje' => "Fallo al generar las tareas"
+            ]);
+        }
+
+    }
+
     public function edit(string $id)
     {
         $task = Task::find($id);
-        $employees = User::where('inactive', 0)->get();
+        $employees = User::where('inactive', 0)->where('access_level_id',5)->get();
         $prioritys = Priority::all();
         $status = TaskStatus::all();
         $data = [];
@@ -125,6 +184,7 @@ class TasksController extends Controller
                 $exist->task_status_id = $request['status' . $i];
 
                 $exist->save();
+
             } else {
                 if ($request['employeeId' . $i]) {
                     $data['admin_user_id'] = $request['employeeId' . $i];

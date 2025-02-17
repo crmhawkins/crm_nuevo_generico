@@ -36,8 +36,8 @@
                 <div class="card-body">
                     <form action="{{route('user.update',$usuario->id)}}" method="POST">
                         @csrf
-                        <div class="form-group">
-                            <label for="name">Nombre:</label>
+                        <div class="form-group mt-2">
+                            <label class="form-label" for="name">Nombre:</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" value="{{$usuario->name}}" name="name">
                             @error('name')
                                     <span class="invalid-feedback" role="alert">
@@ -45,8 +45,8 @@
                                     </span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="surname">Apellidos:</label>
+                        <div class="form-group mt-2">
+                            <label class="form-label" for="surname">Apellidos:</label>
                             <input type="text" class="form-control @error('surname') is-invalid @enderror" id="surname" value="{{$usuario->surname}}" name="surname">
                             @error('surname')
                                     <span class="invalid-feedback" role="alert">
@@ -54,8 +54,8 @@
                                     </span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="username">Nombre de Usuario:</label>
+                        <div class="form-group mt-2">
+                            <label class="form-label" for="username">Nombre de Usuario:</label>
                             <input type="text" class="form-control @error('username') is-invalid @enderror" id="username" value="{{$usuario->username}}" name="username">
                             @error('username')
                                     <span class="invalid-feedback" role="alert">
@@ -63,8 +63,8 @@
                                     </span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="email">Email:</label>
+                        <div class="form-group mt-2">
+                            <label class="form-label" for="email">Email:</label>
                             <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" value="{{$usuario->email}}" name="email">
                             @error('email')
                                     <span class="invalid-feedback" role="alert">
@@ -72,8 +72,8 @@
                                     </span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="password">Password:</label>
+                        <div class="form-group mt-2">
+                            <label class="form-label" for="password">Password:</label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" autocomplete="new-password" value="{{ old('password') }}" name="password">
                             @error('password')
                                     <span class="invalid-feedback" role="alert">
@@ -81,8 +81,8 @@
                                     </span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                                <label for="access_level_id">{{ __('Rol de la App') }}</label>
+                        <div class="form-group mt-2">
+                                <label class="form-label" for="access_level_id">{{ __('Rol de la App') }}</label>
                                 <select class="form-select @error('access_level_id') is-invalid @enderror" id="access_level_id" name="access_level_id">
                                     <option>Seleccione el rol del usuario</option>
                                     @foreach ( $role as $rol )
@@ -95,8 +95,8 @@
                                     </span>
                                 @enderror
                         </div>
-                        <div class="form-group">
-                                <label for="admin_user_department_id">{{ __('Departamento del Empleado') }}</label>
+                        <div class="form-group mt-2">
+                                <label class="form-label" for="admin_user_department_id">{{ __('Departamento del Empleado') }}</label>
                                 <select class="form-select @error('admin_user_department_id') is-invalid @enderror" id="admin_user_department_id" name="admin_user_department_id">
                                     <option>Seleccione el departamento del usuario</option>
                                     @foreach ( $departamentos as $departamento )
@@ -109,8 +109,8 @@
                                     </span>
                                 @enderror
                         </div>
-                        <div class="form-group">
-                                <label for="admin_user_position_id">{{ __('Posicion del Usuario') }}</label>
+                        <div class="form-group mt-2">
+                                <label class="form-label" for="admin_user_position_id">{{ __('Posicion del Usuario') }}</label>
                                 <select class="form-select @error('admin_user_position_id') is-invalid @enderror" id="admin_user_position_id" name="admin_user_position_id">
                                     <option>Seleccione la posicion del usuario</option>
                                     @foreach ( $posiciones as $posicion )
@@ -123,6 +123,30 @@
                                     </span>
                                 @enderror
                         </div>
+                        <div class="form-group mt-2" id="salon-container" style="display: none;">
+                            <label class="form-label" for="salon_id">Salon</label>
+                            <select class="form-select @error('salon_id') is-invalid @enderror" id="salon_id" name="salon_id" disabled>
+                                <option value="{{null}}">Seleccione el salon</option>
+                                @foreach ( $salones as $salon )
+                                    <option @if($salon->id == old('salon_id',$usuario->salon_id)) selected @endif value="{{$salon->id}}">{{$salon->nombre}}</option>
+                                @endforeach
+                            </select>
+                            @error('salon_id')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                        <div class="form-group mt-2" id="correturno-container" style="display: none;">
+                            <label class="form-check-label" for="correturno">Correturnos</label>
+                            <input type="hidden" name="correturno" value="0">
+                            <input class="form-check-input" type="checkbox" id="correturno" value="1" name="correturno" {{ old('correturno', $usuario->correturno) == 1 ? 'checked' : '' }} disabled>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label class="form-check-label" for="pin">Pin</label>
+                            <input class="form-control" type="text" value="{{$usuario->pin}}" disabled>
+                        </div>
+
                         <div class="form-group mt-5">
                             <button type="submit" class="btn btn-primary">
                                 {{ __('Actualiar') }}
@@ -137,6 +161,46 @@
 @endsection
 
 @section('scripts')
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const accessLevelSelect = document.getElementById("access_level_id");
+        const salonContainer = document.getElementById("salon-container");
+        const salonSelect = document.getElementById("salon_id");
+        const correturnoContainer = document.getElementById("correturno-container");
+        const correturnocheck = document.getElementById("correturno");
+
+        function toggleSalonSelect() {
+            const selectedValue = parseInt(accessLevelSelect.value, 10);
+            if (selectedValue >= 5) {
+                salonContainer.style.display = "block";
+                salonSelect.removeAttribute("disabled"); // Habilita el select
+            } else {
+                salonContainer.style.display = "none";
+                salonSelect.setAttribute("disabled", "disabled"); // Deshabilita el select
+            }
+        }
+
+        function toggleCorreturnos() {
+            const selectedValue = parseInt(accessLevelSelect.value, 10);
+            if (selectedValue == 5) {
+                correturnoContainer.style.display = "block";
+                correturnocheck.removeAttribute("disabled"); // Habilita el select
+            } else {
+                correturnoContainer.style.display = "none";
+                correturnocheck.setAttribute("disabled", "disabled"); // Deshabilita el select
+            }
+        }
+
+        // Ejecutar la función al cambiar el select
+        accessLevelSelect.addEventListener("change", toggleSalonSelect);
+        accessLevelSelect.addEventListener("change", toggleCorreturnos);
+
+        // Ejecutar al cargar la página para mantener la consistencia con valores preseleccionados
+        toggleSalonSelect();
+        toggleCorreturnos();
+    });
+</script>
 
 @endsection
 
