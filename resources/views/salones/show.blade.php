@@ -60,24 +60,24 @@
                                           </div>
                                         </div>
                                         <div class="mb-4 list-group" role="tablist">
-                                            <a class="list-group-item list-group-item-action active"
+                                            {{-- <a class="list-group-item list-group-item-action active"
                                                 id="list-cabina-list" data-bs-toggle="list" href="#list-cabina"
-                                                role="tab">Cabina</a>
+                                                role="tab">Cabina</a> --}}
                                             <a class="list-group-item list-group-item-action"
                                                 id="list-caja-list" data-bs-toggle="list" href="#list-caja"
                                                  role="tab">Caja Tpv</a>
-                                            <a class="list-group-item list-group-item-action"
+                                            {{-- <a class="list-group-item list-group-item-action"
                                                 id="list-turnos-list" data-bs-toggle="list" href="#list-turnos"
-                                                role="tab">Turnos</a>
+                                                role="tab">Turnos</a> --}}
                                         </div>
                                     </div>
                                     <div class="col-12 col-sm-12 col-md-8 mt-1">
                                         <div class="tab-content text-justify" id="nav-tabContent">
-                                            <div class="tab-pane show active" id="list-cabina" role="tabpanel"
+                                            {{-- <div class="tab-pane show active" id="list-cabina" role="tabpanel"
                                                 aria-labelledby="list-cabina-list">
                                                 <h3 class="mb-2 fs-4 text-uppercase">Cabinas del Salon</h3>
                                                 <hr class="border mb-4" >
-                                                {{-- @if (count($salon->cabina) > 0)
+                                                @if (count($salon->cabina) > 0)
                                                     <div class="table-responsive">
                                                          <table class="table table-hover">
                                                             <thead class="header-table-other">
@@ -102,13 +102,13 @@
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                @else --}}
+                                                @else
                                                 <div class="text-center py-4">
                                                     <h3 class="text-center fs-4">No se encontraron registros de <strong>Facturas</strong></h3>
                                                 </div>
-                                                {{-- @endif --}}
+                                                @endif --}}
                                             </div>
-                                            <div class="tab-pane" id="list-caja" role="tabpanel"
+                                            <div class="tab-pane show active" id="list-caja" role="tabpanel"
                                                 aria-labelledby="list-caja-list">
                                                 <h3 class="mb-2 fs-4 text-uppercase">Cajas del salon</h3>
                                                 <hr class="border mb-4" >
@@ -150,11 +150,11 @@
                                                 </div>
                                                 @endif
                                             </div>
-                                            <div class="tab-pane" id="list-turnos" role="tabpanel"
+                                            {{-- <div class="tab-pane" id="list-turnos" role="tabpanel"
                                                 aria-labelledby="list-turnos-list">
                                                 <h3 class="mb-2 fs-4 text-uppercase">Turnos del salon</h3>
                                                 <hr class="border mb-4" >
-                                                {{-- @if (count($salon->turno) > 0)
+                                                @if (count($salon->turno) > 0)
                                                     <div class="table-responsive">
                                                          <table class="table table-hover">
                                                             <thead class="header-table-other">
@@ -179,12 +179,12 @@
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                @else --}}
+                                                @else
                                                 <div class="text-center py-4">
                                                     <h3 class="text-center fs-4">No se encontraron registros de <strong>Facturas</strong></h3>
                                                 </div>
-                                                {{-- @endif --}}
-                                            </div>
+                                                @endif
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
@@ -195,9 +195,7 @@
             </div>
         </section>
     </div>
-    @php
-        $usuario = $salon;
-    @endphp
+    @
     @include('partials.modalAvatar')
 
 @endsection
