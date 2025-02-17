@@ -112,36 +112,43 @@
                                                 aria-labelledby="list-caja-list">
                                                 <h3 class="mb-2 fs-4 text-uppercase">Cajas del salon</h3>
                                                 <hr class="border mb-4" >
-                                                {{-- @if (count($salon->caja) > 0)
+                                                @if (count($salon->cajas) > 0)
                                                     <div class="table-responsive">
                                                          <table class="table table-hover">
                                                             <thead class="header-table-other">
-                                                                <th class="px-3" style="font-size:0.75rem">CAMPAÑA</th>
-                                                                <th class="" style="font-size:0.75rem">ESTADO</th>
-                                                                <th class="" style="font-size:0.75rem">TOTAL</th>
-                                                                <th class="" style="font-size:0.75rem">GESTOR</th>
+                                                                <th class="px-3" style="font-size:0.75rem">APERTURA</th>
+                                                                <th class="" style="font-size:0.75rem">CIERRE</th>
+                                                                <th class="" style="font-size:0.75rem">PREVISTO</th>
+                                                                <th class="" style="font-size:0.75rem">DIFERENCIA</th>
+                                                                <th class="" style="font-size:0.75rem">CAMBIO</th>
+                                                                <th class="" style="font-size:0.75rem">H.APERTURA</th>
+                                                                <th class="" style="font-size:0.75rem">H.CIERRE</th>
                                                                 <th class="text-center" style="font-size:0.75rem">ACCIONES</th>
                                                             </thead>
                                                             <tbody>
-                                                                @foreach ( $salon->presupuestos as $budget )
+                                                                @foreach ( $salon->cajas as $caja )
                                                                     <tr>
-                                                                        <td>{{$budget->proyecto->name ?? ($budget->project_id ? 'Campaña borrada' : 'Sin campaña asignada')}}</td>
-                                                                        <td>{{$budget->estadoPresupuesto->name ?? ($budget->budget_status_id ? 'Estado borrado' : 'Sin estado asignado')}}</td>
-                                                                        <td>{{$budget->total}} €</td>
-                                                                        <td>{{$budget->usuario->name ?? ($budget->admin_user_id ? 'Gestor borrado' : 'Sin gestor asignado')}}</td>
+                                                                        <td>{{$caja->apertura}} €</td>
+                                                                        <td>{{$caja->cierre}} €</td>
+                                                                        <td>{{$caja->previsto}} €</td>
+                                                                        <td style="{{$caja->diferencia < 0 ? 'color:red' : ''}}">{{$caja->diferencia}} €</td>
+                                                                        <td>{{$caja->cambio }} €</td>
+                                                                        <td>{{Carbon\Carbon::parse($caja->created_at)->format('d/m/Y H:i')}}</td>
+                                                                        <td>{{Carbon\Carbon::parse($caja->updated_at)->format('d/m/Y H:i')}}</td>
+
                                                                         <td class="">
-                                                                            <a class="" href="{{route('presupuesto.show', $budget->id)}}"><img class="m-auto" src="{{asset('assets/icons/eye.svg')}}" alt="Mostrar usuario"></a>
+                                                                            <a class="" href="{{route('presupuesto.show', $caja->id)}}"><img class="m-auto" src="{{asset('assets/icons/eye.svg')}}" alt="Mostrar usuario"></a>
                                                                         </td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                @else --}}
+                                                @else
                                                 <div class="text-center py-4">
-                                                    <h3 class="text-center fs-4">No se encontraron registros de <strong>Presupuestos</strong></h3>
+                                                    <h3 class="text-center fs-4">No se encontraron registros de <strong>CAJAS</strong></h3>
                                                 </div>
-                                                {{-- @endif --}}
+                                                @endif
                                             </div>
                                             <div class="tab-pane" id="list-turnos" role="tabpanel"
                                                 aria-labelledby="list-turnos-list">

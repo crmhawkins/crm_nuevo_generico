@@ -51,7 +51,7 @@ class Salon extends Model
 
     public function cajas()
     {
-        $this->hasMany(Caja::class,'salon_id');
+       return $this->hasMany(Caja::class,'salon_id');
     }
 
 }
