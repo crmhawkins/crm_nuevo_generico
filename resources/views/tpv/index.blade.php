@@ -147,13 +147,16 @@
     }
 
     function getMesas(){
+        var salon_id = @json($salonId);
+        data={salon_id:salon_id }
         var mesas = @json($mesas);
         fetch('/tpv/mesas', {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {

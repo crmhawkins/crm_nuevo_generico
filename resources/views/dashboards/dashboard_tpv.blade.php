@@ -123,7 +123,7 @@
                     @else
                     <div class="form-group d-flex align-items-center" style="gap: 10px;">
                         <label class="form-label mb-0" for="Cuenta" style="white-space: nowrap;">Cuenta:</label>
-                        <input type="text" class="form-control form-control-sm py-0 keyboard-full" id="mesa-nombre" value="{{ $order->nombre ?? $order->numero }}" placeholder="Ingrese nombre de la mesa">
+                        <input autocomplete="off"  type="text" class="form-control form-control-sm py-0 keyboard-full" id="mesa-nombre" value="{{ $order->nombre ?? $order->numero }}" placeholder="Ingrese nombre de la mesa">
                     </div>
                     @endif
                 </h5>
@@ -192,7 +192,7 @@
                     <p>Total a pagar: <strong id="totalToPay">0.00€</strong></p>
                     <p>Cantidad recibida:</p>
                     <div class="d-flex mb-3">
-                        <input type="text" id="amountReceived" class="form-control text-center" readonly>
+                        <input autocomplete="off"  type="text" id="amountReceived" class="form-control text-center" readonly>
                         <button class="btn btn-danger ms-2" id="clearAmount">C</button>
                     </div>
                     <p>Cambio: <strong id="changeAmount">0.00€</strong></p>
@@ -231,13 +231,13 @@
                     <div class="modal-body">
                         <div class="mb-2 form-group">
                             <label class="form-label" for="cierre">Cierre</label>
-                            <input class="form-control keyboard-init" value="{{old('cierre')}}" name="cierre" type="text" id="cierrecaja">
+                            <input autocomplete="off"  class="form-control keyboard-init" value="{{old('cierre')}}" name="cierre" type="text" id="cierrecaja">
                         </div>
                     </div>
                     <div class="modal-body">
                         <div class="mb-2 form-group">
                             <label class="form-label" for="cambio">Cambio</label>
-                            <input class="form-control keyboard-init ui-widget-content ui-corner-all" value="{{old('cambio')}}" name="cambio" type="text" id="cambio">
+                            <input autocomplete="off"  class="form-control keyboard-init ui-widget-content ui-corner-all" value="{{old('cambio')}}" name="cambio" type="text" id="cambio">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -260,7 +260,7 @@
                     <div class="modal-body">
                         <div class="mb-2 form-group">
                             <label class="form-label" for="apertura">Cambio en caja</label>
-                            <input class="form-control keyboard-init ui-widget-content ui-corner-all" name="apertura" value="{{old('apertura')}}" type="text" id="apertura">
+                            <input autocomplete="off"  class="form-control keyboard-init ui-widget-content ui-corner-all" name="apertura" value="{{old('apertura')}}" type="text" id="apertura">
                         </div>
                     </div>
                     <div class="modal-footer">

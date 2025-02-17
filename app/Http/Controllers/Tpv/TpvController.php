@@ -22,7 +22,6 @@ class TpvController extends Controller
     }
 
     public function getMesas(Request $request){
-
         $mesas = Mesa::where('salon_id',$request->salon_id)->get();
 
         return response()->json($mesas);

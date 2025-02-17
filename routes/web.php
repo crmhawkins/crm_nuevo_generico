@@ -342,7 +342,7 @@ Route::prefix('tpv')->group(function () {
     Route::post('/delete-order', [TpvController::class, 'delete'])->name('tpv.delete');
     Route::post('/setName', [TpvController::class, 'setNombre'])->name('tpv.nombre');
     Route::get('/data', [TpvController::class,'getData']);
-    Route::get('/mesas', [TpvController::class,'getMesas']);
+    Route::post('/mesas', [TpvController::class,'getMesas']);
     Route::post('/mesas/add', [TpvController::class,'addMesa']);
     Route::post('/mesas/update', [TpvController::class,'updateMesa']);
     Route::delete('/mesas/delete/{id}', [TpvController::class,'deleteMesa']);
