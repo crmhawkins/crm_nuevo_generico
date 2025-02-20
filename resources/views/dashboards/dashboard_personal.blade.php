@@ -304,9 +304,11 @@
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <div class="row justify-content-end">
-                        <h2 id="timer" class="display-6 fw-bolder col-4 text-center">00:00:00</h2>
-                        <button id="startPauseBtn" class="btn jornada btn-secondary col-3 mx-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
-                        <button id="endPauseBtn" class="btn jornada btn-dark col-3 mx-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
+                        <h2 id="timer" class="display-6 font-weight-bold col-3">00:00:00</h2>
+                        <button id="startJornadaBtn" class="btn jornada btn-primary mx-2 col-2" onclick="startJornada()">Inicio Jornada</button>
+                        <button id="startPauseBtn" class="btn jornada btn-secondary mx-2 col-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
+                        <button id="endPauseBtn" class="btn jornada btn-dark mx-2 col-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
+                        <button id="endJornadaBtn" class="btn jornada btn-danger mx-2 col-2" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
                     </div>
                 </div>
             </div>
@@ -545,8 +547,8 @@
     <script src="{{asset('assets/vendors/choices.js/choices.min.js')}}"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales-all.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var multipleCancelButton = new Choices('#admin_user_ids', {
@@ -557,31 +559,26 @@
         });
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            updateTime(); // Initialize the timer display
-
-            setInterval(function() {
-                getTime();
-            }, 120000);
-
-            // Initialize button states based on jornada and pause
-            if ('{{ $jornadaActiva }}') {
-                if ('{{ $pausaActiva }}') {
-                    document.getElementById('startPauseBtn').style.display = 'none';
-                    document.getElementById('endPauseBtn').style.display = 'block';
-                } else {
-                    document.getElementById('startPauseBtn').style.display = 'block';
-                    document.getElementById('endPauseBtn').style.display = 'none';
-                    startTimer(); // Start timer if not in pause
-                }
-            } else {
-                document.getElementById('startPauseBtn').style.display = 'none';
-                document.getElementById('endPauseBtn').style.display = 'none';
-            }
-        });
-
         let timerState = '{{ $jornadaActiva ? "running" : "stopped" }}'
         let timerTime = {{ $timeWorkedToday }}; // In seconds, initialized with the time worked today
+        function getTime() {
+            fetch('/dashboard/timeworked', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        timerTime = data.time
+                        updateTime()
+                    }
+                });
+        }
+
 
         function updateTime() {
             let hours = Math.floor(timerTime / 3600);
@@ -621,56 +618,15 @@
                 .then(data => {
                     if (data.success) {
                         startTimer();
+                        document.getElementById('startJornadaBtn').style.display = 'none';
                         document.getElementById('startPauseBtn').style.display = 'block';
+                        document.getElementById('endJornadaBtn').style.display = 'block';
                     }
                 });
         }
 
         function endJornada() {
-            // Obtener el tiempo actualizado
-            getTime();
-
-            let now = new Date();
-            let currentHour = now.getHours();
-            let currentMinute = now.getMinutes();
-
-            // Convertir los segundos trabajados a horas
-            let workedHours = timerTime / 3600;
-
-            // Verificar si es antes de las 18:00 o si ha trabajado menos de 8 horas
-            if (currentHour < 18 || workedHours < 8) {
-                let title = '';
-                let text = '';
-
-                if (currentHour < 18) {
-                    title = 'Horario de Salida Prematuro';
-                    text = 'Es menos de las 18:00.  ';
-                }else{
-                    if(workedHours < 8) {
-                    title = ('Jornada Incompleta');
-                    text = 'Has trabajado menos de 8 horas. Si no compensas el tiempo faltante,';
-                    }
-                }
-
-                text += 'Se te descontará de tus vacaciones al final del mes.';
-
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Finalizar Jornada',
-                    cancelButtonText: 'Continuar Jornada'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        finalizarJornada();
-                    }
-                    // Si elige continuar, no hacemos nada, simplemente mantiene la jornada activa
-                });
-            } else {
-                // Si el tiempo es mayor o igual a 8 horas y es después de las 18:00, finalizamos directamente la jornada
-                finalizarJornada();
-            }
+        finalizarJornada();
         }
 
         function finalizarJornada() {
@@ -686,7 +642,9 @@
             .then(data => {
                 if (data.success) {
                     stopTimer();
+                    document.getElementById('startJornadaBtn').style.display = 'block';
                     document.getElementById('startPauseBtn').style.display = 'none';
+                    document.getElementById('endJornadaBtn').style.display = 'none';
                     document.getElementById('endPauseBtn').style.display = 'none';
                 }
             });
@@ -730,8 +688,8 @@
                 });
         }
 
-        function getTime() {
-            fetch('/dashboard/timeworked', {
+        function endLlamada() {
+            fetch('/dashboard/llamadafin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -742,11 +700,48 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        timerTime = data.time
-                        updateTime()
+                        document.getElementById('endllamadaBtn').style.display = 'none';
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.mensaje, // Aquí se muestra el mensaje del JSON
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 });
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateTime(); // Initialize the timer display
+
+            setInterval(function() {
+                getTime();
+            }, 120000);
+
+            // Initialize button states based on jornada and pause
+            if ('{{ $jornadaActiva }}') {
+                document.getElementById('startJornadaBtn').style.display = 'none';
+                document.getElementById('endJornadaBtn').style.display = 'block';
+                if ('{{ $pausaActiva }}') {
+                    document.getElementById('startPauseBtn').style.display = 'none';
+                    document.getElementById('endPauseBtn').style.display = 'block';
+                } else {
+                    document.getElementById('startPauseBtn').style.display = 'block';
+                    document.getElementById('endPauseBtn').style.display = 'none';
+                    startTimer(); // Start timer if not in pause
+                }
+            } else {
+                document.getElementById('startJornadaBtn').style.display = 'block';
+                document.getElementById('endJornadaBtn').style.display = 'none';
+                document.getElementById('startPauseBtn').style.display = 'none';
+                document.getElementById('endPauseBtn').style.display = 'none';
+            }
+
+
+            });
     </script>
     <script>
             document.querySelectorAll('#enviar').forEach(function(button) {
