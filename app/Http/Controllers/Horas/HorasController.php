@@ -141,8 +141,9 @@ class HorasController extends Controller
 
     public function exportHoras(Request $request)
     {
-        $week = $request->input('week', now()->format('Y-\WW'));
-        return Excel::download(new JornadasExport($week), 'jornadas_semanales.xlsx');
+        $fechaInicio = Carbon::parse($request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d')));
+        $fechaFin = Carbon::parse($request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d')));
+        return Excel::download(new JornadasExport($fechaInicio, $fechaFin), 'jornadas_semanales.xlsx');
     }
 
     public function vacaciones($ini, $fin, $id){

@@ -95,7 +95,7 @@
                                     <input type="email" class="form-control" id="email" name="email" value="{{ $configuracion->email ?? '' }}" >
                                 </div>
 
-                                <div class="mb-3">
+                                {{-- <div class="mb-3">
                                     <label for="certificado" class="form-label">Certificado</label>
                                     <input type="file" class="form-control" id="certificado" name="certificado">
                                     @if(isset($configuracion->certificado))
@@ -106,7 +106,7 @@
                                 <div class="mb-3">
                                     <label for="contrasena" class="form-label">Contraseña</label>
                                     <input type="password" class="form-control" id="contrasena" name="contrasena" value="{{ $configuracion->contrasena ?? '' }}">
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
