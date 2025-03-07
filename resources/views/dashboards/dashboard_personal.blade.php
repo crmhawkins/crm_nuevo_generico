@@ -299,21 +299,31 @@
     <div class="page-heading card" style="box-shadow: none !important" >
         <div class="page-title card-body">
             <div class="row">
-                <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Dashboard</h3>
+                <div class="col-12 col-md-6 order-md-1 text-center text-md-left">
+                    <h2 class="display-6 font-weight-bold">Jornada</h2>
                 </div>
-                <div class="col-12 col-md-6 order-md-2 order-first">
-                    <div class="row justify-content-end">
-                        <h2 id="timer" class="display-6 font-weight-bold col-3">00:00:00</h2>
-                        <button id="startJornadaBtn" class="btn jornada btn-primary mx-2 col-2" onclick="startJornada()">Inicio Jornada</button>
-                        <button id="startPauseBtn" class="btn jornada btn-secondary mx-2 col-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
-                        <button id="endPauseBtn" class="btn jornada btn-dark mx-2 col-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
-                        <button id="endJornadaBtn" class="btn jornada btn-danger mx-2 col-2" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
-                    </div>
+                <div class="col-12 col-md-6 order-md-2 text-center text-md-right">
+                    <h2 id="timer" class="display-6 font-weight-bold">00:00:00</h2>
+                </div>
+            </div>
+
+        </div>
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="text-center " >
+                    <h2 class="display-6 font-weight-bold">Control de Jornada</h2>
+                </div>
+                <div class="row my-3 ">
+                    <button id="startJornadaBtn" class="btn jornada btn-primary" onclick="startJornada()">Inicio Jornada</button>
+                    <button id="endJornadaBtn" class="btn jornada btn-danger" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
+                </div>
+                <div class="row my-3">
+                    <button id="startPauseBtn" class="btn jornada btn-secondary" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
+                    <button id="endPauseBtn" class="btn jornada btn-dark" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
                 </div>
             </div>
         </div>
-        <div class="card mt-4">
+        {{-- <div class="card mt-4">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-7 mb-3">
@@ -538,7 +548,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 @endsection
 
@@ -549,7 +559,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales-all.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function() {
             var multipleCancelButton = new Choices('#admin_user_ids', {
                 removeItemButton: true, // Permite a los usuarios eliminar una selección
@@ -557,7 +567,7 @@
                 paste: false          // Deshabilita la capacidad de pegar texto en el campo
             });
         });
-    </script>
+    </script> --}}
     <script>
         let timerState = '{{ $jornadaActiva ? "running" : "stopped" }}'
         let timerTime = {{ $timeWorkedToday }}; // In seconds, initialized with the time worked today
@@ -743,7 +753,7 @@
 
             });
     </script>
-    <script>
+    {{-- <script>
             document.querySelectorAll('#enviar').forEach(function(button) {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -849,7 +859,6 @@
             });
 
     </script>
-
     <script>
         function showTodoModal() {
             var todoModal = new bootstrap.Modal(document.getElementById('todoModal'));
@@ -1106,14 +1115,14 @@
 
     </script>
     <script>
-    var enRutaEspecifica = true;
+        var enRutaEspecifica = true;
 
-        $(document).on("click", '.tarea-sing', function() {
-                    var id = $(this).attr("id");
-                    showTaskInfoNew(id);
-        });
+            $(document).on("click", '.tarea-sing', function() {
+                        var id = $(this).attr("id");
+                        showTaskInfoNew(id);
+            });
 
-        function revisarTarea(id) {
+            function revisarTarea(id) {
                 console.log(id);
                 $.when(getDataTask(id)).then(function(data, textStatus, jqXHR) {
                     estado = "Revision";
@@ -1138,9 +1147,9 @@
                         }
                     });
                 });
-        }
+            }
 
-        function renaudarTarea(id) {
+            function renaudarTarea(id) {
                 console.log(id);
                 $.when(getDataTask(id)).then(function(data, textStatus, jqXHR) {
 
@@ -1164,9 +1173,9 @@
                         }
                     });
                 });
-        }
+            }
 
-        function pausarTarea(id) {
+            function pausarTarea(id) {
                 console.log(id);
                 $.when(getDataTask(id)).then(function(data, textStatus, jqXHR) {
                     estado = "Pausada";
@@ -1189,57 +1198,57 @@
                         }
                     });
                 });
-        }
+            }
 
 
-        $(document).ready(function() {
+            $(document).ready(function() {
 
-            $.when(getTasksRefresh()).then(function(data, textStatus, jqXHR) {
-                if (data.taskPlay != null) {
-                    var id = data.taskPlay.id;
-                    $('.infotask').hide();
+                $.when(getTasksRefresh()).then(function(data, textStatus, jqXHR) {
+                    if (data.taskPlay != null) {
+                        var id = data.taskPlay.id;
+                        $('.infotask').hide();
 
-                    $('.tarea-sing').off('click').on('click', function() {
-                        var infoContainer = $(this).next('.infotask');
-                        if (infoContainer.is(':visible')){
-                            infoContainer.slideUp();
-                        } else {
-                            $('.infotask').slideUp(); // Cierra otros contenedores abiertos
-                            infoContainer.slideDown();
-                        }
-                    });
-                }else{
-                    $('.infotask').hide();
-                    $('.tarea-sing').off('click').on('click', function() {
-                        var infoContainer = $(this).next('.infotask');
-                        if (infoContainer.is(':visible')){
-                            infoContainer.slideUp();
-                        } else {
-                            $('.infotask').slideUp(); // Cierra otros contenedores abiertos
-                            infoContainer.slideDown();
-                        }
-                    });
-                }
-            });
+                        $('.tarea-sing').off('click').on('click', function() {
+                            var infoContainer = $(this).next('.infotask');
+                            if (infoContainer.is(':visible')){
+                                infoContainer.slideUp();
+                            } else {
+                                $('.infotask').slideUp(); // Cierra otros contenedores abiertos
+                                infoContainer.slideDown();
+                            }
+                        });
+                    }else{
+                        $('.infotask').hide();
+                        $('.tarea-sing').off('click').on('click', function() {
+                            var infoContainer = $(this).next('.infotask');
+                            if (infoContainer.is(':visible')){
+                                infoContainer.slideUp();
+                            } else {
+                                $('.infotask').slideUp(); // Cierra otros contenedores abiertos
+                                infoContainer.slideDown();
+                            }
+                        });
+                    }
+                });
 
-            // Evento change para el select2
-            $('#selectTask').on('change', function() {
-                var selectedTaskId = $(this).val();
-                // Oculta todas las tareas
-                $('.task-item').hide();
-                // Muestra la tarea seleccionada
-                if (selectedTaskId > 0) {
-                    $('#task-' + selectedTaskId).show();
-                } else {
-                    // Si no hay tarea seleccionada, muestra todas
-                    $('.task-item').show();
-                }
-            });
-            // Inicializa select2
-            $('.js-select2').select2();
+                // Evento change para el select2
+                $('#selectTask').on('change', function() {
+                    var selectedTaskId = $(this).val();
+                    // Oculta todas las tareas
+                    $('.task-item').hide();
+                    // Muestra la tarea seleccionada
+                    if (selectedTaskId > 0) {
+                        $('#task-' + selectedTaskId).show();
+                    } else {
+                        // Si no hay tarea seleccionada, muestra todas
+                        $('.task-item').show();
+                    }
+                });
+                // Inicializa select2
+                $('.js-select2').select2();
 
 
-        })
+            })
 
             function decodeHTML(str) {
                 return str.replace(/&#([0-9]+);/g, function(full, int) {
@@ -1412,6 +1421,5 @@
                     dataType: "json"
                 });
             }
-
-    </script>
+    </script> --}}
 @endsection

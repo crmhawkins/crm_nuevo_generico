@@ -1,16 +1,18 @@
 <nav id="topbar" class="navbar">
     <header class="top-burguer">
+        @if (Auth::user()->access_level_id != 5)
         <a href="#" class="burger-btn d-block d-lg-none">
             <i class="bi bi-list"></i>
         </a>
+        @endif
     </header>
     <ul class="topbar-menu d-flex align-items-center gap-3">
-        <li class="dropdown notification-list">
+        {{-- <li class="dropdown notification-list">
             <a href="{{ route('admin.emailConfig.settings') }}" type="button" class="nav-link position-relative">
                 <i class="fas fa-cogs"></i>
             </a>
-        </li>
-        <li class="dropdown notification-list">
+        </li> --}}
+        {{-- <li class="dropdown notification-list">
             <a href="{{ route('admin.emails.index') }}" type="button" class="nav-link position-relative">
                 <i class="fa-regular fa-envelope"></i>
                 <span class="position-absolute top-10 start-80 translate-middle px-2 bg-info rounded-pill">
@@ -18,138 +20,8 @@
                 </span>
             </a>
 
-            {{-- <a class="nav-link dropdown-toggle arrow-none" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-            </a> --}}
-            {{-- <div class="dropdown-menu dropdown-menu-end dropdown-menu-animated dropdown-lg py-0">
-                <div class="p-2 border-top-0 border-start-0 border-end-0 border-dashed border">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h6 class="m-0 fs-16 fw-semibold">Messages</h6>
-                        </div>
-                        <div class="col-auto">
-                            <a href="javascript:void(0);" class="text-dark text-decoration-underline">
-                                <small>Clear All</small>
-                            </a>
-                        </div>
-                    </div>
-                </div>
 
-                <div style="max-height: 300px;" data-simplebar="init">
-                    <div class="simplebar-wrapper" style="margin: 0px;">
-                        <div class="simplebar-height-auto-observer-wrapper">
-                            <div class="simplebar-height-auto-observer"></div>
-                        </div>
-                        <div class="simplebar-mask">
-                            <div class="simplebar-offset" style="right: 0px; bottom: 0px;">
-                                <div class="simplebar-content-wrapper" tabindex="0" role="region" aria-label="scrollable content" style="height: auto; overflow: hidden;">
-                                    <div class="simplebar-content" style="padding: 0px;">
-
-                                        <!-- item-->
-                                        <a href="javascript:void(0);" class="dropdown-item p-0 notify-item read-noti card m-0 shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="notify-icon">
-                                                            <img src="assets/images/users/avatar-1.jpg" class="img-fluid rounded-circle" alt="">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 text-truncate ms-2">
-                                                        <h5 class="noti-item-title fw-semibold fs-14">Cristina Pride <small class="fw-normal text-muted float-end ms-1">1 day ago</small></h5>
-                                                        <small class="noti-item-subtitle text-muted">Hi, How are you? What about our next meeting</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                        <!-- item-->
-                                        <a href="javascript:void(0);" class="dropdown-item p-0 notify-item read-noti card m-0 shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="notify-icon">
-                                                            <img src="assets/images/users/avatar-2.jpg" class="img-fluid rounded-circle" alt="">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 text-truncate ms-2">
-                                                        <h5 class="noti-item-title fw-semibold fs-14">Sam Garret <small class="fw-normal text-muted float-end ms-1">2 day ago</small></h5>
-                                                        <small class="noti-item-subtitle text-muted">Yeah everything is fine</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                        <!-- item-->
-                                        <a href="javascript:void(0);" class="dropdown-item p-0 notify-item read-noti card m-0 shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="notify-icon">
-                                                            <img src="assets/images/users/avatar-3.jpg" class="img-fluid rounded-circle" alt="">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 text-truncate ms-2">
-                                                        <h5 class="noti-item-title fw-semibold fs-14">Karen Robinson <small class="fw-normal text-muted float-end ms-1">2 day ago</small></h5>
-                                                        <small class="noti-item-subtitle text-muted">Wow that's great</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                        <!-- item-->
-                                        <a href="javascript:void(0);" class="dropdown-item p-0 notify-item read-noti card m-0 shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="notify-icon">
-                                                            <img src="assets/images/users/avatar-4.jpg" class="img-fluid rounded-circle" alt="">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 text-truncate ms-2">
-                                                        <h5 class="noti-item-title fw-semibold fs-14">Sherry Marshall <small class="fw-normal text-muted float-end ms-1">3 day ago</small></h5>
-                                                        <small class="noti-item-subtitle text-muted">Hi, How are you? What about our next meeting</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                        <!-- item-->
-                                        <a href="javascript:void(0);" class="dropdown-item p-0 notify-item read-noti card m-0 shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="notify-icon">
-                                                            <img src="assets/images/users/avatar-5.jpg" class="img-fluid rounded-circle" alt="">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 text-truncate ms-2">
-                                                        <h5 class="noti-item-title fw-semibold fs-14">Shawn Millard <small class="fw-normal text-muted float-end ms-1">4 day ago</small></h5>
-                                                        <small class="noti-item-subtitle text-muted">Yeah everything is fine</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="simplebar-placeholder" style="width: 0px; height: 0px;"></div>
-                    </div>
-                    <div class="simplebar-track simplebar-horizontal" style="visibility: hidden;">
-                        <div class="simplebar-scrollbar" style="width: 0px; display: none;"></div>
-                    </div>
-                    <div class="simplebar-track simplebar-vertical" style="visibility: hidden;">
-                        <div class="simplebar-scrollbar" style="height: 0px; display: none;"></div>
-                    </div>
-                </div>
-
-                <!-- All-->
-                <a href="javascript:void(0);" class="dropdown-item text-center text-primary text-decoration-underline fw-bold notify-item border-top border-light py-2">
-                    View All
-                </a>
-
-            </div> --}}
-        </li>
+        </li> --}}
 
         <!-- Campana de notificaciones -->
 
@@ -160,6 +32,17 @@
                     <span class="text-white countAlertas" style="font-size: 0.85rem">0</span>
                 </span>
             </a>
+        </li>
+        <li class="d-inline-block">
+            <div class="nav-link" >
+                <a class="dropdown-item" href="{{ route('logout') }}"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fa-solid fa-arrow-right-from-bracket "></i>
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
+            </div>
         </li>
 {{--
       <!-- Modal para seleccionar el stage -->
@@ -206,17 +89,7 @@
                 <i id="light-dark-mode" class="bi @if($isDarkMode) bi-brightness-high @else bi-moon @endif" style="cursor: pointer;"></i>
             </div>
         </li> --}}
-        <li class="d-none d-sm-inline-block">
-            <div class="nav-link" >
-                <a class="dropdown-item" href="{{ route('logout') }}"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fa-solid fa-arrow-right-from-bracket "></i>
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                    @csrf
-                </form>
-            </div>
-        </li>
+
 
         {{-- <li class="dropdown">
             <a class="nav-link dropdown-toggle arrow-none nav-user" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">

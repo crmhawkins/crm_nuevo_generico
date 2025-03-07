@@ -590,51 +590,18 @@
     }
 
     function endJornada() {
-    // Obtener el tiempo actualizado
-    getTime();
+        // Obtener el tiempo actualizado
+        getTime();
 
-    let now = new Date();
-    let currentHour = now.getHours();
-    let currentMinute = now.getMinutes();
+        let now = new Date();
+        let currentHour = now.getHours();
+        let currentMinute = now.getMinutes();
 
-    // Convertir los segundos trabajados a horas
-    let workedHours = timerTime / 3600;
+        // Convertir los segundos trabajados a horas
+        let workedHours = timerTime / 3600;
 
-    // Verificar si es antes de las 18:00 o si ha trabajado menos de 8 horas
-    if (currentHour < 18 || workedHours < 8) {
-        let title = '';
-        let text = '';
-
-        if (currentHour < 18) {
-            title = 'Horario de Salida Prematuro';
-            text = 'Es menos de las 18:00.  ';
-        }else{
-            if(workedHours < 8) {
-            title = ('Jornada Incompleta');
-            text = 'Has trabajado menos de 8 horas. Si no compensas el tiempo faltante,';
-            }
-        }
-
-        text += 'Se te descontará de tus vacaciones al final del mes.';
-
-        Swal.fire({
-            title: title,
-            text: text,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Finalizar Jornada',
-            cancelButtonText: 'Continuar Jornada'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                finalizarJornada();
-            }
-            // Si elige continuar, no hacemos nada, simplemente mantiene la jornada activa
-        });
-    } else {
-        // Si el tiempo es mayor o igual a 8 horas y es después de las 18:00, finalizamos directamente la jornada
         finalizarJornada();
     }
-}
 
     function finalizarJornada() {
         fetch('/end-jornada', {
@@ -854,130 +821,6 @@
             calendar.render();
         });
 
-</script>
-<script>
-    //     document.addEventListener('DOMContentLoaded', function() {
-    //         const clientSelect = document.getElementById('client_id');
-    //         const budgetSelect = document.getElementById('budget_id');
-    //         const projectSelect = document.getElementById('project_id');
-
-    //         // Función para actualizar presupuestos basados en el cliente seleccionado
-    //         function updateBudgets(clientId) {
-    //             fetch('/budgets-by-client', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    //                 },
-    //                 body: JSON.stringify({ client_id: clientId })
-    //             })
-    //             .then(response => response.json())
-    //             .then(budgets => {
-    //                 budgetSelect.innerHTML = '<option value="">Seleccione presupuesto</option>';
-    //                 budgets.forEach(budget => {
-    //                     budgetSelect.innerHTML += `<option value="${budget.id}">${budget.reference}</option>`;
-    //                 });
-    //                 budgetSelect.disabled = false;
-    //             });
-    //         }
-    //         // Función para actualizar presupuestos basados en el cliente seleccionado
-    //         function updateBudgetsbyprojects(projectId) {
-    //             fetch('/budgets-by-project', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    //                 },
-    //                 body: JSON.stringify({ project_id: projectId })
-    //             })
-    //             .then(response => response.json())
-    //             .then(budgets => {
-    //                 budgetSelect.innerHTML = '<option value="">Seleccione presupuesto</option>';
-    //                 budgets.forEach(budget => {
-    //                     budgetSelect.innerHTML += `<option value="${budget.id}">${budget.reference}</option>`;
-    //                 });
-    //                 budgetSelect.disabled = false;
-    //             });
-    //         }
-
-    //         // Función para actualizar campañas basadas en el cliente seleccionado
-    //         function updateProjects(clientId) {
-    //             fetch('/projects-from-client', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    //                 },
-    //                 body: JSON.stringify({ client_id: clientId })
-    //             })
-    //             .then(response => response.json())
-    //             .then(projects => {
-    //                 projectSelect.innerHTML = '<option value="">Seleccione campaña</option>';
-    //                 projects.forEach(project => {
-    //                     projectSelect.innerHTML += `<option value="${project.id}">${project.name}</option>`;
-    //                 });
-    //                 projectSelect.disabled = false;
-    //             });
-    //         }
-
-    //         // Cuando se selecciona un cliente, actualiza presupuestos y campañas
-    //         clientSelect.addEventListener('change', function() {
-    //             const clientId = this.value;
-    //             if (clientId) {
-    //                 updateBudgets(clientId);
-    //                 updateProjects(clientId);
-    //             } else {
-    //                 budgetSelect.innerHTML = '<option value="">Seleccione presupuesto</option>';
-    //                 projectSelect.innerHTML = '<option value="">Seleccione campaña</option>';
-    //                 budgetSelect.disabled = true;
-    //                 projectSelect.disabled = true;
-    //             }
-    //         });
-
-    //         // Cuando se selecciona un presupuesto, actualiza el cliente y la campaña
-    //         budgetSelect.addEventListener('change', function() {
-    //             const budgetId = this.value;
-    //             if (budgetId) {
-    //                 fetch('/budget-by-id', {
-    //                     method: 'POST',
-    //                     headers: {
-    //                         'Content-Type': 'application/json',
-    //                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    //                     },
-    //                     body: JSON.stringify({ budget_id: budgetId })
-    //                 })
-    //                 .then(response => response.json())
-    //                 .then(budget => {
-    //                     clientSelect.value = budget.client_id;
-    //                     //updateProjects(budget.client_id);
-    //                     projectSelect.value = budget.project_id;
-    //                     //console.log(budget.project_id;);
-
-    //                 });
-    //             }
-    //         });
-
-    //         // Cuando se selecciona una campaña, actualiza el cliente y el presupuesto
-    //         projectSelect.addEventListener('change', function() {
-    //             const projectId = this.value;
-    //             if (projectId) {
-    //                 fetch('/project-by-id', {
-    //                     method: 'POST',
-    //                     headers: {
-    //                         'Content-Type': 'application/json',
-    //                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    //                     },
-    //                     body: JSON.stringify({ project_id: projectId })
-    //                 })
-    //                 .then(response => response.json())
-    //                 .then(project => {
-    //                     clientSelect.value = project.client_id;
-    //                     updateBudgetsbyprojects(project.id);
-    //                     budgetSelect.value = ''; // O puedes poner una lógica para seleccionar un presupuesto por defecto
-    //                 });
-    //             }
-    //         });
-    //     });
 </script>
 <script>
     function showTodoModal() {

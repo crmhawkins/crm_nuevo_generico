@@ -120,7 +120,8 @@ Route::get('/productividad', [ProductividadController::class, 'index'])->name('p
 
 //Jornadas
 Route::get('/jornadas', [HorasController::class, 'indexHoras'])->name('horas.index');
-Route::get('/exportarjornadas', [HorasController::class, 'exportHoras'])->name('horas.export');
+    Route::get('/jornadas/calendar/{id}', [HorasController::class, 'calendar'])->name('horas.calendar');
+    Route::get('/exportarjornadas', [HorasController::class, 'exportHoras'])->name('horas.export');
 
 //Events(Eventos del to-do)
 Route::post('/event/store', [EventController::class, 'store'])->name('event.store');
