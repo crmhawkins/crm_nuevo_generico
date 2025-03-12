@@ -291,7 +291,7 @@
                             <div class="col-12">
                                 <div class="form-group mb-3">
                                     <label for="pin">Pin:</label>
-                                    <input placeholder="Pin de usuario" type="text" class="form-control @error('pin') is-invalid @enderror" id="pin" value="{{ old('pin') }}" name="pin">
+                                    <input placeholder="Recuento de cabina" type="text" class="form-control @error('pin') is-invalid @enderror" id="pin" value="{{ old('pin') }}" name="pin">
                                     @error('pin')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>

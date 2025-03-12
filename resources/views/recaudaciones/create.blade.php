@@ -1,6 +1,6 @@
 @extends('layouts.appTpv')
 
-@section('titulo', 'Crear Recuento Cabina')
+@section('titulo', 'Crear Recuento maquina')
 
 @section('css')
 <link rel="stylesheet" href="{{asset('assets/vendors/choices.js/choices.min.css')}}" />
@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
                 <h3>Crear Recuento</h3>
-                <p class="text-subtitle text-muted">Formulario para registrar un Recuento de cabina</p>
+                <p class="text-subtitle text-muted">Formulario para registrar un Recuento de maquina</p>
             </div>
 
             <div class="col-12 col-md-6 order-md-2 order-first">
@@ -291,7 +291,7 @@
                             <div class="col-12">
                                 <div class="form-group mb-3">
                                     <label for="pin">Pin:</label>
-                                    <input placeholder="Pin de usuario" type="text" class="form-control @error('pin') is-invalid @enderror" id="pin" value="{{ old('pin') }}" name="pin">
+                                    <input placeholder="Recuento de cabina" type="text" class="form-control @error('pin') is-invalid @enderror" id="pin" value="{{ old('pin') }}" name="pin">
                                     @error('pin')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -299,7 +299,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-12">
+                            <div class="col-6">
                                 <div class="form-group mb-3">
                                     <label for="monto">Cantidad Total:</label>
                                     <input placeholder="Recuento de cabina" type="text" class="form-control @error('monto') is-invalid @enderror" id="monto" value="{{ old('monto') }}" name="monto" disabled>
@@ -311,7 +311,20 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-6">
+                                <div class="form-group mb-3">
+                                    <label for="recaudado">Recaudado:</label>
+                                    <input placeholder="Recuento de cabina" type="text" class="form-control @error('recaudado') is-invalid @enderror" id="monto" value="{{ old('recaudado') }}" name="recaudado">
+                                    @error('recaudado')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
+                        <input type="hidden" name="maquina_id" value="{{ $id }}">
+                        <input type="hidden" name="cliente_id" value="{{ $cliente_id}}">
                     </div>
                     <div class="form-group mt-5">
                         <button type="submit" class="btn btn-success w-100 text-uppercase">

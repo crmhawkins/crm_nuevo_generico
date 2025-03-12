@@ -31,7 +31,7 @@
                     $productosActive = request()->routeIs('productos.*') || request()->routeIs('productosCategoria.*');
                     $peticionesActive = request()->routeIs('peticion.*');
                     $personalActive = request()->routeIs('users.*') ;
-                    $tareaActive = request()->routeIs('tareas.*') ;
+                    $tareaActive = request()->routeIs('tareas.*') || request()->routeIs('tarea.*') ;
                     $vacacionesActive = request()->routeIs('holiday.admin.*') ;
                     $nominasActive = request()->routeIs('nominas.*') ;
                     $contratosActive = request()->routeIs('contratos.*') ;
@@ -46,6 +46,9 @@
                     $StadisticsActive = request()->routeIs('estadistica.*');
                     $ContabilidadActive = request()->routeIs('cuentasContables.*') || request()->routeIs('subCuentasContables.*') || request()->routeIs('subCuentasHijaContables.*') || request()->routeIs('grupoContabilidad.*') || request()->routeIs('subGrupoContabilidad.*') || request()->routeIs('admin.planContable.index');
                     $SalonesActive = request()->routeIs('salones.*');
+                    $AlmacenesActive = request()->routeIs('almacenes.*');
+                    $maquinasActive = request()->routeIs('maquinas.*') || request()->routeIs('maquinasCategoria.*');
+                    $ActiveCabinas = request()->routeIs('cabinas.*');
                     $admin = (Auth::user()->access_level_id == 1);
                     $gerente = (Auth::user()->access_level_id == 2);
                     $contable = (Auth::user()->access_level_id == 3);
@@ -92,7 +95,7 @@
                                 </span>
                             </a>
                         </li>
-                        <li class="submenu-item {{ request()->routeIs('salones.create') ? 'active' : '' }} {{ request()->routeIs('cliente.createFromBudget') ? 'active' : ''}}">
+                        <li class="submenu-item {{ request()->routeIs('salones.create') ? 'active' : '' }}">
                             <a href="{{route('salones.create')}}">
                                 <i class="fa-solid fa-plus"></i>
                                 <span>
@@ -102,6 +105,101 @@
                         </li>
                     </ul>
                 </li>
+                <li class="sidebar-item has-sub {{ request()->routeIs('turnos.*') ? 'active' : '' }}">
+                    <a href="#" class='sidebar-link'>
+                        <i class="fa-solid fa-house fs-5"></i>
+                        <span>Turnos</span>
+                    </a>
+                    <ul class="submenu" style="{{ request()->routeIs('turnos.*') ? 'display:block;' : 'display:none' }}">
+                        <li class="submenu-item {{ request()->routeIs('turnos.index') ? 'active' : '' }} ">
+                            <a href="{{route('salones.index')}}">
+                                <i class="fa-solid fa-list"></i>
+                                <span>
+                                    Ver todos
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('turnos.generar') ? 'active' : '' }}">
+                            <a href="{{route('turnos.generar')}}">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>
+                                    Autogenerar turnos
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item {{ request()->routeIs('cabinas.index') ? 'active' : '' }}">
+                    <a href="{{route('cabinas.index')}}" class='sidebar-link'>
+                        <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
+                        <span>Cabinas</span>
+                    </a>
+                </li>
+                <li class="sidebar-item has-sub {{ $AlmacenesActive ? 'active' : '' }}">
+                    <a href="#" class='sidebar-link'>
+                        <i class="fa-solid fa-house fs-5"></i>
+                        <span>Almacenes</span>
+                    </a>
+                    <ul class="submenu" style="{{ $AlmacenesActive ? 'display:block;' : 'display:none' }}">
+                        <li class="submenu-item {{ request()->routeIs('almacenes.index') ? 'active' : '' }} ">
+                            <a href="{{route('almacenes.index')}}">
+                                <i class="fa-solid fa-list"></i>
+                                <span>
+                                    Ver todos
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('almacenes.create') ? 'active' : '' }}">
+                            <a href="{{route('almacenes.create')}}">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>
+                                    Crear almacen
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item has-sub {{ $maquinasActive ? 'active' : '' }}">
+                    <a href="#" class='sidebar-link'>
+                        <i class="fa-solid fa-sliders fs-5"></i>
+                        <span>Maquinas</span>
+                    </a>
+                    <ul class="submenu" style="{{ $maquinasActive ? 'display:block;' : 'display:none;' }}">
+                        <li class="submenu-item {{ request()->routeIs('maquinas.index') ? 'active' : '' }}">
+                            <a href="{{route('maquinas.index')}}">
+                                <i class="fa-solid fa-list"></i>
+                                <span>
+                                    Ver todos
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('maquinas.create') ? 'active' : '' }}">
+                            <a href="{{route('maquinas.create')}}">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>
+                                    Crear maquina
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('maquinasCategoria.index') ? 'active' : '' }}">
+                            <a href="{{route('maquinasCategoria.index')}}">
+                                <i class="fa-solid fa-list"></i>
+                                <span>
+                                    Ver Categorias
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('maquinasCategoria.create') ? 'active' : '' }}">
+                            <a href="{{route('maquinasCategoria.create')}}">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>
+                                    Crear categoria de maquina
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="sidebar-item has-sub {{ $presupuestoActive ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
@@ -189,6 +287,7 @@
                                 </span>
                             </a>
                         </li>
+
                         <li class="submenu-item {{ request()->routeIs('tareas.asignar') ? 'active' : '' }}">
                             <a href="{{route('tareas.asignar')}}">
                                 <i class="fa-solid fa-list"></i>
@@ -210,6 +309,14 @@
                                 <i class="fa-solid fa-list"></i>
                                 <span>
                                     En Revisión
+                                </span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('tarea.create') ? 'active' : '' }}">
+                            <a href="{{route('tarea.create')}}">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>
+                                    Crear tarea
                                 </span>
                             </a>
                         </li>

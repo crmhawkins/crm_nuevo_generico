@@ -293,7 +293,82 @@ class DashboardController extends Controller
                     ]);
                 }
                 return redirect()->route('tpv.edit',$order->id);
+            case(8):
+                $tareas = $user->tareas->whereIn('task_status_id', [1, 2, 5]);
+                $tiempoProducidoHoy = $this->tiempoProducidoHoy();
+                $tasks = $this->getTasks($user->id);
 
+                $tareasFinalizadas = Task::where('admin_user_id', $user->id)
+                    ->where('task_status_id', 3)
+                    ->whereMonth('updated_at', Carbon::now()->month)
+                    ->whereYear('updated_at', Carbon::now()->year)
+                    ->get();
+
+                $totalProductividad = 0;
+                $totalTareas = $tareasFinalizadas->count();
+                $totalEstimatedTime = 0;
+                $totalRealTime = 0;
+
+
+                foreach ($tareasFinalizadas as $tarea) {
+                    // Parse estimated and real times into total minutes
+                    $totalEstimatedTime += $this->parseFlexibleTime($tarea->estimated_time);
+                    $totalRealTime += $this->parseFlexibleTime($tarea->real_time);
+                }
+
+                // Calculate the total productivity as a percentage
+                if ($totalRealTime > 0) {
+                    $totalProductividad = ($totalEstimatedTime / $totalRealTime) * 100;
+                } else {
+                    $totalProductividad = 0; // Set to 0 if no real time to avoid division by zero
+                }
+
+                // Set productivity to 0 if no tasks
+                $totalProductividad = $totalTareas > 0 ? $totalProductividad : 0;
+
+                // Save or update monthly productivity with month and year
+                $currentMonth = Carbon::now()->month;
+                $currentYear = Carbon::now()->year;
+
+                $productividadMensual = ProductividadMensual::where('admin_user_id', $user->id)
+                    ->where('mes', $currentMonth)
+                    ->where('año', $currentYear)
+                    ->first();
+
+                if (!$productividadMensual) {
+                    ProductividadMensual::create([
+                        'admin_user_id' => $user->id,
+                        'mes' => $currentMonth,
+                        'año' => $currentYear,
+                        'productividad' => $totalProductividad,
+                    ]);
+                }else {
+                        // Actualizar el registro existente
+                    $productividadMensual->update([
+                        'productividad' => $totalProductividad,
+                    ]);
+                }
+
+                $productividadIndividual = $totalTareas > 0 ? $totalProductividad : 0;
+                $horasMes = $this->tiempoProducidoMes($user->id);
+
+                return view('dashboards.dashboard_taller', compact(
+                    'user',
+                    'tiempoProducidoHoy',
+                    'tasks',
+                    'tareas',
+                    'to_dos',
+                    'users',
+                    'events',
+                    'timeWorkedToday',
+                    'jornadaActiva',
+                    'pausaActiva',
+                    'productividadIndividual',
+                    'totalEstimatedTime',
+                    'totalRealTime',
+                    'horasMes',
+                    'to_dos_finalizados'
+                ));
         }
     }
     public function parseFlexibleTime($time) {

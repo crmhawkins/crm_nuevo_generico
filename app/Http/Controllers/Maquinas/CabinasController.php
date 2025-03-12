@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Salones;
+namespace App\Http\Controllers\Maquinas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Clients\Client;
@@ -13,17 +13,17 @@ use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class CabinasController extends Controller
+class RecaudacionController extends Controller
 {
     public function index()
     {
-        return view('cabinas.index');
+        return view('recaudaciones.index');
     }
 
     public function create()
     {
         $salones = Salon::all();
-        return view('cabinas.create',compact('salones'));
+        return view('recaudaciones.create',compact('salones'));
     }
 
     public function store(Request $request)
@@ -37,12 +37,6 @@ class CabinasController extends Controller
         }
         $user = User::where('pin',$request->pin)->first();
 
-        if(!$user){
-            return redirect()->back()->with('toast',[
-                'icon' => 'error',
-                'mensaje' => 'El pin es incorrecto'
-            ]);
-        }
 
         $data =  $this->validate($request, [
             'monto' => 'required',
@@ -79,7 +73,7 @@ class CabinasController extends Controller
             ]);
         }else{
 
-            return redirect()->route('cabinas.index')->with('toast',[
+            return redirect()->route('recaudaciones.index')->with('toast',[
                 'icon' => 'success',
                 'mensaje' => 'El salon se creo correctamente'
             ]);
@@ -116,7 +110,7 @@ class CabinasController extends Controller
             ]);
         }else{
 
-            return redirect()->route('cabinas.index')->with('toast',[
+            return redirect()->route('recaudaciones.index')->with('toast',[
                 'icon' => 'success',
                 'mensaje' => 'El salon se actualizo correctamente'
             ]);
@@ -145,6 +139,6 @@ class CabinasController extends Controller
     {
         $cabina = Cabina::find($id);
         $salon = Salon::find($cabina->salon_id);
-        return view('cabinas.show', compact('salon','cabina'));
+        return view('recaudaciones.show', compact('salon','cabina'));
     }
 }

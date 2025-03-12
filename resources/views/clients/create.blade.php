@@ -287,6 +287,18 @@
                         <div class="row">
                             <div class="col-md-6 col-sm-12">
                                 <div class="w-100">
+                                    <div class="d-flex align-items-center mt-4">
+                                        <button type="button" name="addlocal" id="addExtraLocal" class="btn btn-color-1 mr-4"><i class="fas fa-plus"></i></button>
+                                        <h3 class="text-center uppercase">
+                                            {{-- <i class="bi bi-globe-americas text-info fs-4 mr-2"></i> --}}
+                                            Locales asociados
+                                        </h3>
+
+                                    </div>
+                                    <div class="col-12 form-group mt-4" id="dynamic_field_locales">
+                                    </div>
+                                </div>
+                                <div class="w-100">
                                     <div class=" w-100 d-flex align-items-center mt-4 justify-start">
                                         <button id="newAssociatedContact" type="button" class="btn btn-color-1 mr-4" style="height: fit-content">
                                             <i class="fa-solid fa-plus"></i>
@@ -332,6 +344,7 @@
                                     </div>
 
                                 </div>
+
                                 <div class="w-100">
                                     <div class="d-flex align-items-center mt-4">
                                         <button type="button" name="addWebs" id="addExtraWeb" class="btn btn-color-1 mr-4"><i class="fas fa-plus"></i></button>
@@ -582,6 +595,18 @@
         $(document).on('click', '.btn_remove_web', function(){
             var button_id = $(this).attr("id");
             $('#rowWeb'+button_id+'').remove();
+        });
+    });
+    $(document).ready(function() {
+        var i=1;
+        $('#addExtraLocal').click(function(){
+            i++;
+            $('#dynamic_field_locales').append('<div id="rowLocal'+i+'" class="dynamic-added row"><div class="col-md-10"><input type="text" style="margin-bottom:2%" name="locales[]" placeholder="" class="form-control name_list" /></div><div class="col-md-2"><button type="button" name="remove" id="'+i+'" class="btn btn-danger btn_remove_local">X</button></div></div>');
+
+        });
+        $(document).on('click', '.btn_remove_local', function(){
+            var button_id = $(this).attr("id");
+            $('#rowLocal'+button_id+'').remove();
         });
     });
 

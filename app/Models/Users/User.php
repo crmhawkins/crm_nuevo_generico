@@ -13,6 +13,7 @@ use App\Models\Holidays\HolidaysPetitions;
 use App\Models\Llamadas\Llamada;
 use App\Models\Nominas\Nomina;
 use App\Models\Projects\Project;
+use App\Models\Rutas\Ruta;
 use App\Models\Salones\Salon;
 use App\Models\Todo\Todo;
 use App\Models\Todo\TodoUsers;
@@ -180,5 +181,10 @@ class User extends Authenticatable
     public function Salon()
     {
         return $this->belongsTo(Salon::class,'salon_id');
+    }
+
+    public function rutas()
+    {
+        return $this->belongsToMany(Ruta::class, 'rutas_usuario','ruta_id','usuario_id');
     }
 }

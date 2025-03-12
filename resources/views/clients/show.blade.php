@@ -150,6 +150,22 @@
                                                     <hr>
                                                     <div class="row p-2">
                                                         <div class="col-sm-4">
+                                                          <p class="mb-0">Locales:</p>
+                                                        </div>
+                                                        <div class="col-sm-8">
+                                                            <ul>
+                                                                @foreach ($cliente->locales as $local )
+                                                                    <li>
+                                                                        {{$local->local}}
+                                                                    </li>
+                                                                @endforeach
+
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="row p-2">
+                                                        <div class="col-sm-4">
                                                           <p class="mb-0">Gestor:</p>
                                                         </div>
                                                         <div class="col-sm-8">

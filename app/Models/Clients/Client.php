@@ -84,6 +84,9 @@ class Client extends Model
     public function emails() {
         return $this->hasMany(\App\Models\Clients\ClientEmail::class);
     }
+    public function locales() {
+        return $this->hasMany(\App\Models\Clients\ClientLocal::class);
+    }
     public function phones() {
         return $this->hasMany(\App\Models\Clients\ClientPhone::class);
     }

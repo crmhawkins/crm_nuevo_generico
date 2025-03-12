@@ -3,6 +3,7 @@
 use App\Events\RecargarPagina;
 use App\Http\Controllers\AccionesController;
 use App\Http\Controllers\Alert\AlertController;
+use App\Http\Controllers\Almacen\AlmacenController;
 use App\Http\Controllers\Archivos\FileController;
 use App\Http\Controllers\Bajas\BajaController;
 use App\Http\Controllers\CrmActivities\CrmActivityMeetingController;
@@ -44,6 +45,8 @@ use App\Http\Controllers\Horas\HorasController;
 use App\Http\Controllers\Incidence\IncidenceController;
 use App\Http\Controllers\KitDigitalController;
 use App\Http\Controllers\Logs\LogActionsController;
+use App\Http\Controllers\Maquinas\MaquinasCategoriesController;
+use App\Http\Controllers\Maquinas\MaquinasController;
 use App\Http\Controllers\Message\MessageController;
 use App\Http\Controllers\Nominas\NominasController;
 use App\Http\Controllers\Ordenes\OrdenesController;
@@ -52,6 +55,7 @@ use App\Http\Controllers\Product\ProductsCategoriesController;
 use App\Http\Controllers\Productividad\ProductividadController;
 use App\Http\Controllers\Product\ProductsController;
 use App\Http\Controllers\Salones\CabinasController;
+use App\Http\Controllers\Salones\CajasController;
 use App\Http\Controllers\Salones\SalonesController;
 use App\Http\Controllers\Settings\UserSettingsController;
 use App\Http\Controllers\Statistics\StatisticsController;
@@ -620,21 +624,49 @@ Route::get('/salones/{id}/show', [SalonesController::class, 'show'])->name('salo
 Route::post('/salones/{id}/update', [SalonesController::class, 'update'])->name('salones.update');
 Route::post('/salones/destroy', [SalonesController::class, 'destroy'])->name('salones.delete');
 
+//Almacenes
+Route::get('/almacenes', [AlmacenController::class, 'index'])->name('almacenes.index');
+Route::get('/almacenes/create', [AlmacenController::class, 'create'])->name('almacenes.create');
+Route::post('/almacenes/store', [AlmacenController::class, 'store'])->name('almacenes.store');
+Route::get('/almacenes/{id}/edit', [AlmacenController::class, 'edit'])->name('almacenes.edit');
+Route::get('/almacenes/{id}/show', [AlmacenController::class, 'show'])->name('almacenes.show');
+Route::post('/almacenes/{id}/update', [AlmacenController::class, 'update'])->name('almacenes.update');
+Route::post('/almacenes/destroy', [AlmacenController::class, 'destroy'])->name('almacenes.delete');
+
+//Maquinas
+Route::get('/maquinas', [MaquinasController::class, 'index'])->name('maquinas.index');
+Route::get('/maquinas/create', [MaquinasController::class, 'create'])->name('maquinas.create');
+Route::post('/maquinas/store', [MaquinasController::class, 'store'])->name('maquinas.store');
+Route::get('/maquinas/{id}/edit', [MaquinasController::class, 'edit'])->name('maquinas.edit');
+Route::post('/maquinas/{id}/update', [MaquinasController::class, 'update'])->name('maquinas.update');
+Route::post('/maquinas/destroy', [MaquinasController::class, 'destroy'])->name('maquinas.delete');
+
+//Categorias de maquinas
+Route::get('/categorias-maquinas', [MaquinasCategoriesController::class, 'index'])->name('maquinasCategoria.index');
+Route::get('/categorias-maquinas/create', [MaquinasCategoriesController::class, 'create'])->name('maquinasCategoria.create');
+Route::post('/categorias-maquinas/store', [MaquinasCategoriesController::class, 'store'])->name('maquinasCategoria.store');
+Route::get('/categorias-maquinas/edit/{id}', [MaquinasCategoriesController::class, 'edit'])->name('maquinasCategoria.edit');
+Route::post('/categorias-maquinas/update/{id}', [MaquinasCategoriesController::class, 'update'])->name('maquinasCategoria.update');
+Route::post('/categorias-maquinas/destroy', [MaquinasCategoriesController::class, 'destroy'])->name('maquinasCategoria.delete');
+
 //Turnos
 Route::get('/turnos', [TurnosController::class, 'index'])->name('turnos.index');
 Route::get('/turnos-generate', [TurnosController::class, 'generarTurnos'])->name('turnos.generar');
-Route::get('/turnos/create', [TurnosController::class, 'create'])->name('turnos.create');
-Route::post('/turnos/store', [TurnosController::class, 'store'])->name('turnos.store');
-Route::get('/turnos/{id}/edit', [TurnosController::class, 'edit'])->name('turnos.edit');
-Route::get('/turnos/{id}/show', [TurnosController::class, 'show'])->name('turnos.show');
-Route::post('/turnos/{id}/update', [TurnosController::class, 'update'])->name('turnos.update');
-Route::post('/turnos/destroy', [TurnosController::class, 'destroy'])->name('turnos.delete');
+// Route::get('/turnos/create', [TurnosController::class, 'create'])->name('turnos.create');
+// Route::post('/turnos/store', [TurnosController::class, 'store'])->name('turnos.store');
+// Route::get('/turnos/{id}/edit', [TurnosController::class, 'edit'])->name('turnos.edit');
+// Route::get('/turnos/{id}/show', [TurnosController::class, 'show'])->name('turnos.show');
+// Route::post('/turnos/{id}/update', [TurnosController::class, 'update'])->name('turnos.update');
+// Route::post('/turnos/destroy', [TurnosController::class, 'destroy'])->name('turnos.delete');
 
 //Cabina
 Route::get('/cabina',[CabinasController::class,'index'])->name('cabinas.index');
 Route::get('/cabina/create',[CabinasController::class,'create'])->name('cabinas.create');
 Route::post('/cabina/store',[CabinasController::class,'store'])->name('cabinas.store');
 Route::get('/cabina/{id}/show', [CabinasController::class, 'show'])->name('cabinas.show');
+
+//Caja
+Route::get('/caja',[CajasController::class,'index'])->name('cajas.index');
 
 
 Route::post('/save-order', [BudgetController::class, 'saveOrder'])->name('save.order');

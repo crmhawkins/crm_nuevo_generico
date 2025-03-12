@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clients;
 use App\Http\Controllers\Controller;
 use App\Models\Clients\Client;
 use App\Models\Clients\ClientEmail;
+use App\Models\Clients\ClientLocal;
 use App\Models\Clients\ClientPhone;
 use App\Models\Clients\ClientWeb;
 use App\Models\Contacts\Contact;
@@ -154,6 +155,21 @@ class ClientController extends Controller
                 }
             }
         }
+
+        if($request->input('locales')){
+            foreach($request->input('locales') as $key => $value) {
+                if($value != ''){
+                    $clientlocales = ClientLocal::create(['client_id'=> $clienteCreado->id,'local'=>$value]);
+                    $clientlocalesSaved = $clientlocales->save();
+                    if (!$clientlocalesSaved) {
+                        return session()->flash('toast', [
+                            'icon' => 'error',
+                            'mensaje' => "Error en el servidor, intentelo mas tarde."
+                        ]);
+                    }
+                }
+            }
+        }
         // dd($data);
 
         session()->flash('toast', [
@@ -208,7 +224,7 @@ class ClientController extends Controller
 
         $data = $request->all();
         $clienteCreado = Client::create($data);
-        // dd($clienteCreado);
+
         if($clienteCreado->pin == null){
             $clienteCreado->pin = rand(100000, 999999);
             $clienteCreado->save();
@@ -250,6 +266,7 @@ class ClientController extends Controller
                 }
             }
         }
+
         // Mails
         if($request->input('mails')){
             foreach($request->input('mails') as $key => $value) {
@@ -257,6 +274,21 @@ class ClientController extends Controller
                     $clientMails = ClientEmail::create(['client_id'=> $clienteCreado->id,'email'=>$value]);
                     $clientMailsSaved = $clientMails->save();
                     if (!$clientMailsSaved) {
+                        return session()->flash('toast', [
+                            'icon' => 'error',
+                            'mensaje' => "Error en el servidor, intentelo mas tarde."
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if($request->input('locales')){
+            foreach($request->input('locales') as $key => $value) {
+                if($value != ''){
+                    $clientlocales = ClientLocal::create(['client_id'=> $clienteCreado->id,'local'=>$value]);
+                    $clientlocalesSaved = $clientlocales->save();
+                    if (!$clientlocalesSaved) {
                         return session()->flash('toast', [
                             'icon' => 'error',
                             'mensaje' => "Error en el servidor, intentelo mas tarde."
@@ -456,6 +488,22 @@ class ClientController extends Controller
                         ['client_id' => $cliente->id, 'url' => $value]
                     );
                     if (!$clientWeb) {
+                        return session()->flash('toast', [
+                            'icon' => 'error',
+                            'mensaje' => "Error en el servidor, intentelo mas tarde."
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if($request->input('locales')){
+            foreach($request->input('locales') as $key => $value) {
+                if($value != ''){
+                    $clientlocales = ClientLocal::updateOrCreate(
+                        ['client_id'=> $cliente->id,'local'=>$value]);
+                    $clientlocalesSaved = $clientlocales->save();
+                    if (!$clientlocalesSaved) {
                         return session()->flash('toast', [
                             'icon' => 'error',
                             'mensaje' => "Error en el servidor, intentelo mas tarde."

@@ -249,7 +249,17 @@
                                 @enderror
                             </div>
                         </div>
-                        <h3 class="mt-5 mb-2 text-center uppercase">Cliente Asociado</h3>
+
+                        <h3 class="mt-5 mb-2 text-center uppercase">Local Asociado</h3>
+                        <hr class="mb-4">
+
+                        <div class="form-group">
+                            <button id="addExtraLocal" type="button" class="btn btn-secondary  mb-4"><i class="fa-solid fa-plus"></i> Agregar Local</button>
+                            <div class="col-12 form-group" id="dynamic_field_locales">
+                            </div>
+                        </div>
+
+                        <h3 class="mt-4 mb-2 text-center uppercase">Cliente Asociado</h3>
                         <hr class="mb-4">
                         <div class="form-group">
                             <select class="choices form-select" name="client_id">
@@ -447,6 +457,18 @@
         $(document).on('click', '.btn_remove_web', function(){
             var button_id = $(this).attr("id");
             $('#rowWeb'+button_id+'').remove();
+        });
+    });
+    $(document).ready(function() {
+        var i=1;
+        $('#addExtraLocal').click(function(){
+            i++;
+            $('#dynamic_field_locales').append('<div id="rowLocal'+i+'" class="dynamic-added row"><div class="col-md-10"><input type="text" style="margin-bottom:2%" name="locales[]" placeholder="" class="form-control name_list" /></div><div class="col-md-2"><button type="button" name="remove" id="'+i+'" class="btn btn-danger btn_remove_local">X</button></div></div>');
+
+        });
+        $(document).on('click', '.btn_remove_local', function(){
+            var button_id = $(this).attr("id");
+            $('#rowLocal'+button_id+'').remove();
         });
     });
 

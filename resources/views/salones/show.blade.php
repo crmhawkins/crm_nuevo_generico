@@ -26,7 +26,7 @@
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{route('salones.index')}}">Clientes</a></li>
+                            <li class="breadcrumb-item"><a href="{{route('salones.index')}}">Salones</a></li>
                             <li class="breadcrumb-item active" aria-current="page">{{$salon->nombre}}</li>
                         </ol>
                     </nav>
@@ -77,36 +77,35 @@
                                                 aria-labelledby="list-cabina-list">
                                                 <h3 class="mb-2 fs-4 text-uppercase">Cabinas del Salon</h3>
                                                 <hr class="border mb-4" >
-                                                {{-- @if (count($salon->cabina) > 0)
+                                                @if (count($salon->cabinas) > 0)
                                                     <div class="table-responsive">
                                                          <table class="table table-hover">
                                                             <thead class="header-table-other">
-                                                                <th class="px-3" style="font-size:0.75rem">DOMINIO</th>
-                                                                <th class="" style="font-size:0.75rem">CONTRARACIÓN</th>
-                                                                <th class="" style="font-size:0.75rem">RENOVACIÓN</th>
-                                                                <th class="" style="font-size:0.75rem">ESTADO</th>
+                                                                <th class="px-3" style="font-size:0.75rem">CANTIDAD</th>
+                                                                <th class="" style="font-size:0.75rem">FECHA</th>
+                                                                <th class="" style="font-size:0.75rem">USUARIO</th>
                                                                 <th class="text-center" style="font-size:0.75rem">ACCIONES</th>
                                                             </thead>
                                                             <tbody>
-                                                                @foreach ( $salon->dominios as $dominio )
+                                                                @foreach ( $salon->cabinas as $cabina )
                                                                     <tr>
-                                                                        <td>{{$dominio->dominio}}</td>
-                                                                        <td>{{$dominio->date_start}}</td>
-                                                                        <td>{{$dominio->date_end}}</td>
-                                                                        <td>{{$dominio->estadoName->name ?? ($dominio->estado_id ? 'Estado borrado' : 'Sin estado asignado')}}</td>
+                                                                        <td>{{$cabina->monto}}</td>
+                                                                        <td>{{$cabina->fecha}}</td>
+                                                                        <td>{{optional($cabina->adminUser)->name ?? ($cabina->admin_user_id ? 'Gestor borrado' : 'Sin gestor asignado')}}</td>
                                                                         <td class="">
-                                                                            <a class="" href="{{route('dominios.edit', $dominio->id)}}"><img class="m-auto" src="{{asset('assets/icons/eye.svg')}}" alt="Mostrar factura"></a>
+                                                                            <a class="" href="{{route('cabinas.show', $cabina->id)}}"><img class="m-auto" src="{{asset('assets/icons/eye.svg')}}" alt="Mostrar factura"></a>
                                                                         </td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                @else --}}
+
+                                                @else
                                                 <div class="text-center py-4">
                                                     <h3 class="text-center fs-4">No se encontraron registros de <strong>Facturas</strong></h3>
                                                 </div>
-                                                {{-- @endif --}}
+                                                @endif
                                             </div>
                                             <div class="tab-pane" id="list-caja" role="tabpanel"
                                                 aria-labelledby="list-caja-list">
@@ -333,5 +332,21 @@
             reader.onerror = reject;
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Recuperar la pestaña activa de LocalStorage
+            let activeTab = localStorage.getItem('activeTab');
+            if (activeTab) {
+                let tab = new bootstrap.Tab(document.querySelector(`[href="${activeTab}"]`));
+                tab.show();
+            }
 
+            // Guardar la pestaña activa cuando se cambia
+            document.querySelectorAll('.list-group-item-action').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function (event) {
+                    localStorage.setItem('activeTab', event.target.getAttribute('href'));
+                });
+            });
+        });
+    </script>
 @endsection
