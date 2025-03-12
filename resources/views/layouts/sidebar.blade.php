@@ -112,7 +112,7 @@
                     </a>
                     <ul class="submenu" style="{{ request()->routeIs('turnos.*') ? 'display:block;' : 'display:none' }}">
                         <li class="submenu-item {{ request()->routeIs('turnos.index') ? 'active' : '' }} ">
-                            <a href="{{route('salones.index')}}">
+                            <a href="{{route('turnos.index')}}">
                                 <i class="fa-solid fa-list"></i>
                                 <span>
                                     Ver todos
