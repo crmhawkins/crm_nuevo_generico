@@ -304,19 +304,42 @@
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <div class="row justify-content-end">
-                        <h2 id="timer" class="display-6 font-weight-bold col-3">00:00:00</h2>
+                        <h2 id="timer" class="display-6 font-weight-bold col-6">00:00:00</h2>
+                        @php
+                            use Jenssegers\Agent\Agent;
+                            $agent = new Agent();
+                        @endphp
+                        @if (!$agent->isMobile())
                         <button id="startJornadaBtn" class="btn jornada btn-primary mx-2 col-2" onclick="startJornada()">Inicio Jornada</button>
                         <button id="startPauseBtn" class="btn jornada btn-secondary mx-2 col-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
                         <button id="endPauseBtn" class="btn jornada btn-dark mx-2 col-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
                         <button id="endJornadaBtn" class="btn jornada btn-danger mx-2 col-2" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card mt-4">
-            <div class="card-body">
+        @if ($agent->isMobile())
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="text-center " >
+                        <h2 class="display-6 font-weight-bold">Control de Jornada</h2>
+                    </div>
+                    <div class="row my-3 ">
+                        <button id="startJornadaBtn" class="btn jornada btn-primary" onclick="startJornada()">Inicio Jornada</button>
+                        <button id="endJornadaBtn" class="btn jornada btn-danger" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
+                    </div>
+                    <div class="row my-3">
+                        <button id="startPauseBtn" class="btn jornada btn-secondary" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
+                        <button id="endPauseBtn" class="btn jornada btn-dark" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
+                    </div>
+                </div>
+            </div>
+        @endif
+        <div class="card2 mt-4">
+            <div class="card-body2">
                 <div class="row">
-                    <div class="col-md-7 mb-3">
+                    <div class="col-md-7 mb-3 order-md-1 order-last">
                         <div class="side-column d-flex flex-column h-100">
                             <div class="card mb-3 flex-grow-1">
                                 <div class="card-body">
@@ -474,7 +497,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-5 order-md-2 order-first">
                         <div class="side-column">
                             <div class="card mb-3">
                                 <div class="card-body">
@@ -526,11 +549,11 @@
                                             <a class="btn btn-outline-secondary" href="{{route('holiday.index')}}">Vacaciones</a>
                                             <a class="btn btn-outline-secondary" href="{{route('passwords.index')}}">Contraseñas</a>
                                         </div>
-                                        <div class="my-2 ml-4 text-center col-auto" role="tablist">
+                                        {{-- <div class="my-2 ml-4 text-center col-auto" role="tablist">
                                             <a class="btn btn-outline-secondary active" id="list-todo-list" data-bs-toggle="list" href="#list-todo" role="tab">TO-DO</a>
                                             <a class="btn btn-outline-danger" id="list-todo-list-finalizados" data-bs-toggle="list" href="#list-todo-finalizados" role="tab">Finalizados</a>
                                             <a class="btn btn-outline-secondary" id="list-agenda-list" data-bs-toggle="list" href="#list-agenda" role="tab">Agenda</a>
-                                        </div>
+                                        </div> --}}
                                     </div>
                                 </div>
                             </div>
