@@ -79,9 +79,9 @@ class CabinasController extends Controller
             ]);
         }else{
 
-            return redirect()->route('cabinas.index')->with('toast',[
+            return redirect()->back()->with('toast',[
                 'icon' => 'success',
-                'mensaje' => 'El salon se creo correctamente'
+                'mensaje' => 'El recuento de cabina se creo correctamente'
             ]);
         }
 
