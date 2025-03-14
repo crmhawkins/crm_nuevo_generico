@@ -537,12 +537,36 @@
                             <span>Productividad</span>
                         </a>
                     </li>
-                    <li class="sidebar-item {{ request()->routeIs('horas.index') ? 'active' : '' }}">
+                    <li class="sidebar-item has-sub {{ request()->routeIs('horas.*') ? 'active' : '' }}">
+                        <a href="#" class='sidebar-link'>
+                            <i class="fa-solid fa-clock"></i>
+                            <span>Jornadas</span>
+                        </a>
+                        <ul class="submenu" style="{{ request()->routeIs('horas.*') ?  'display:block;' : 'display:none;' }}">
+                            <li class="submenu-item {{ request()->routeIs('horas.index') ? 'active' : '' }}">
+                                <a href="{{route('horas.index')}}">
+                                    <i class="fa-solid fa-list"></i>
+                                    <span>
+                                        Ver Jornadas
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="submenu-item {{ request()->routeIs('horas.listado') ? 'active' : '' }}">
+                                <a href="{{route('horas.listado')}}">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>
+                                        Listado de jornadas
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {{-- <li class="sidebar-item {{ request()->routeIs('horas.index') ? 'active' : '' }}">
                         <a href="{{route('horas.index')}}" class='sidebar-link'>
                             <i class="fa-regular fa-clock"></i>
                             <span>Jornadas</span>
                         </a>
-                    </li>
+                    </li> --}}
                     <li class="sidebar-item has-sub {{ request()->routeIs('logs.*') ? 'active' : '' }}">
                         <a href="#" class='sidebar-link'>
                             <i class="fa-solid fa-list"></i>
