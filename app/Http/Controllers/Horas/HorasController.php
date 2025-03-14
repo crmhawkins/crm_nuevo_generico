@@ -126,6 +126,41 @@ class HorasController extends Controller
         return view('horas.index', ['usuarios' => $arrayUsuarios]);
     }
 
+    public function jornadas(Request $request)
+    {
+        return view('horas.jornadas');
+    }
+
+    public function edit($id)
+    {
+
+        $jornada = Jornada::find($id);
+        return view('horas.edit', ['jornada' => $jornada]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'start_time' => 'required|date',
+            'end_time' => 'required|date',
+        ], [
+            'start_time.required' => 'El campo "Hora de inicio" es requerido',
+            'end_time.required' => 'El campo "Hora de fin" es requerido',
+            'start_time.date' => 'El campo "Hora de inicio" debe ser una fecha valida',
+            'end_time.date' => 'El campo "Hora de fin" debe ser una fecha valida',
+        ]);
+
+        $jornada = Jornada::find($id);
+        $jornada->start_time = $validatedData['start_time'];
+        $jornada->end_time = $validatedData['end_time'];
+        $jornada->save();
+
+        return redirect()->route('horas.listado')->with('toast', [
+            'icon' => 'success',
+            'mensaje' => 'La Jornada se actualizo correctamente'
+        ]);
+
+    }
 
     public function exportHoras(Request $request)
     {
@@ -221,5 +256,27 @@ class HorasController extends Controller
 
         return $diasTotales;
 
+    }
+
+    public function destroy(Request $request)
+    {
+        $jornada = Jornada::find($request->id);
+
+        if (!$jornada) {
+            return response()->json([
+                'status' => false,
+                'mensaje' => "Error en el servidor, intentelo mas tarde."
+            ]);
+        }
+        $pausas = $jornada->pauses;
+        foreach ($pausas as $pausa) {
+            $pausa->delete();
+        }
+
+        $jornada->delete();
+        return response()->json([
+            'status' => true,
+            'mensaje' => 'La Jornada fue borrada correctamente'
+        ]);
     }
 }
