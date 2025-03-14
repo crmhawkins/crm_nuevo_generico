@@ -120,8 +120,12 @@ Route::get('/productividad', [ProductividadController::class, 'index'])->name('p
 
 //Jornadas
 Route::get('/jornadas', [HorasController::class, 'indexHoras'])->name('horas.index');
-    Route::get('/jornadas/calendar/{id}', [HorasController::class, 'calendar'])->name('horas.calendar');
-    Route::get('/exportarjornadas', [HorasController::class, 'exportHoras'])->name('horas.export');
+Route::get('/jornadas/calendar/{id}', [HorasController::class, 'calendar'])->name('horas.calendar');
+Route::get('/exportarjornadas', [HorasController::class, 'exportHoras'])->name('horas.export');
+Route::get('/jornadas/listado', [HorasController::class, 'jornadas'])->name('horas.listado');
+Route::get('/jornadas/editar/{id}', [HorasController::class, 'edit'])->name('horas.edit');
+Route::post('/jornadas/update/{id}', [HorasController::class, 'update'])->name('horas.update');
+Route::post('/jornadas/delete', [HorasController::class, 'destroy'])->name('horas.delete');
 
 //Events(Eventos del to-do)
 Route::post('/event/store', [EventController::class, 'store'])->name('event.store');
