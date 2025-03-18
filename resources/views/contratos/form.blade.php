@@ -33,7 +33,7 @@
         @enderror
     </div>
     <div class="mb-4">
-        <label for="archivo" class="mb-2 text-left uppercase" style="font-weight: bold">Archivo de Nómina (PDF)</label>
+        <label for="archivo" class="mb-2 text-left uppercase" style="font-weight: bold">Archivo de Contrato (PDF)</label>
         <input type="file" class="form-control" id="archivo" name="archivo" >
         @error('archivo')
             <span class="invalid-feedback" role="alert">
