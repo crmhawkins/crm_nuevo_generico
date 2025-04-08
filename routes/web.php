@@ -66,6 +66,8 @@ use App\Http\Controllers\Tpv\TpvController;
 use App\Http\Controllers\Turnos\TurnosController;
 use App\Http\Controllers\Users\DepartamentController;
 use App\Http\Controllers\Users\PositionController;
+use App\Http\Controllers\Vehiculos\VehiculosController;
+use App\Http\Controllers\Neveras\NeverasController;
 use App\Http\Controllers\Whatsapp\WhatsappController;
 
 /*
@@ -555,6 +557,8 @@ Route::post('/emails/delete', [EmailController::class, 'destroy'])->name('admin.
 Route::get('/statistics', [StatisticsController::class, 'index'])->name('estadistica.index');
 
 Route::get('/configuracion', [SettingsController::class, 'index'])->name('configuracion.index');
+Route::get('/configuracion/create', [SettingsController::class, 'create'])->name('configuracion.create');
+Route::get('/configuracion/edit/{id}', [SettingsController::class, 'edit'])->name('configuracion.edit');
 Route::post('/configuracion/update/{id}', [SettingsController::class, 'update'])->name('configuracion.update');
 Route::post('/configuracion/store', [SettingsController::class, 'store'])->name('configuracion.store');
 
@@ -678,29 +682,21 @@ Route::group(['prefix' => 'laravel-filemanager'], function () {
     \UniSharp\LaravelFilemanager\Lfm::routes();
 });
 
-// Kit Digital
-// Route::get('/kit-digital-whatsapp', [KitDigitalController::class, 'index'])->name('kitDigital.indexWhatsapp');
-// Route::get('/kit-digital', [KitDigitalController::class, 'listarClientes'])->name('kitDigital.index');
-// Route::get('/kit-digital/create', [KitDigitalController::class, 'create'])->name('kitDigital.create');
-// Route::post('/kit-digital/store', [KitDigitalController::class, 'store'])->name('kitDigital.store');
-// Route::post('/kit-digital/storeComercial', [KitDigitalController::class, 'storeComercial'])->name('kitDigital.storeComercial');
-// Route::post('/kit-digital/updatedata', [KitDigitalController::class, 'updateData'])->name('kitDigital.updateData');
-// Route::get('/kit-digital/whatsapp/{id}', [KitDigitalController::class, 'whatsapp'])->name('kitDigital.whatsapp');
+//Vehiculos
+Route::get('/vehiculos', [VehiculosController::class, 'index'])->name('vehiculos.index');
+Route::get('/vehiculos/create', [VehiculosController::class, 'create'])->name('vehiculos.create');
+Route::post('/vehiculos/store', [VehiculosController::class, 'store'])->name('vehiculos.store');
+Route::get('/vehiculos/edit/{id}', [VehiculosController::class, 'edit'])->name('vehiculos.edit');
+Route::post('/vehiculos/update/{id}', [VehiculosController::class, 'update'])->name('vehiculos.update');
+Route::post('/vehiculos/destroy', [VehiculosController::class, 'destroy'])->name('vehiculos.delete');
 
-
-//Whatsapp
-// Route::get('/whatsapp', [WhatsappController::class, 'hookWhatsapp'])->name('whatsapp.hookWhatsapp');
-// Route::post('/whatsapp', [WhatsappController::class, 'processHookWhatsapp'])->name('whatsapp.processHookWhatsapp');
-// Route::get('/chatgpt/{texto}', [WhatsappController::class, 'chatGptPruebas'])->name('whatsapp.chatGptPruebas');
-
-// Route::get('/mensajes-whatsapp', [WhatsappController::class, 'whatsapp'])->name('whatsapp.mensajes');
-// Route::get('/acciones', [AccionesController::class, 'index'])->name('acciones.index');
-// Route::get('/acciones/enviar', [AccionesController::class, 'enviar'])->name('acciones.enviar');
-// Route::post('/acciones/enviar-mensajes', [AccionesController::class, 'enviarMensajes'])->name('acciones.enviarMensajes');
-// Route::post('/listar-mensajes/{id}', [AccionesController::class, 'listarMensajes'])->name('acciones.listarMensajes');
-// Route::post('/acciones/enviar-segmento-3', [AccionesController::class, 'enviarMensajesSegmentos'])->name('acciones.enviarMensajesSegmentos');
-
-// Route::post('/actualizar', [AccionesController::class, 'actualizar'])->name('acciones.actualizar');
+//Neveras
+Route::get('/neveras', [NeverasController::class, 'index'])->name('neveras.index');
+Route::get('/neveras/create', [NeverasController::class, 'create'])->name('neveras.create');
+Route::post('/neveras/store', [NeverasController::class, 'store'])->name('neveras.store');
+Route::get('/neveras/edit/{id}', [NeverasController::class, 'edit'])->name('neveras.edit');
+Route::post('/neveras/update/{id}', [NeverasController::class, 'update'])->name('neveras.update');
+Route::post('/neveras/destroy', [NeverasController::class, 'destroy'])->name('neveras.delete');
 
 });
 // Portal Clientes

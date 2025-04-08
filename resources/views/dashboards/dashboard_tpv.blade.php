@@ -282,10 +282,10 @@
 <!-- CSS y JS del plugin -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/virtual-keyboard/1.30.4/languages/es.min.js" integrity="sha512-ITqWMeHU/52KlwUxKod9gI0cs8PhhCbigIsr2XBLobFR+80Cw9qZqgice6ewwsUqL2AuN5v7WJBO5XoW6C0dUg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/virtual-keyboard/1.30.4/js/jquery.keyboard.min.js" integrity="sha512-bnF44HiiJPFa0Kzr+pxQktiT6MnrdSWn/jSkZcJY9Lsw2TRIWZfkI1zo6uNfKEvK0QK2AsJuvf7AIxUmCDOOmw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/virtual-keyboard/1.30.4/css/keyboard-dark.min.css" integrity="sha512-zBvvUVHqnKccyZ+Wkp4tJEuVHqCjWd0JXNhFNfWGkXCYL4aL8gnnFqcH3NwyitEoOjyEDFtfWlvnK4qGigda/A==" crossorigin="anonymous" referrerpolicy="no-referrer" /> --}}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/virtual-keyboard/1.30.4/js/jquery.keyboard.min.js" integrity="sha512-bnF44HiiJPFa0Kzr+pxQktiT6MnrdSWn/jSkZcJY9Lsw2TRIWZfkI1zo6uNfKEvK0QK2AsJuvf7AIxUmCDOOmw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 @include('partials.toast')
 <script>

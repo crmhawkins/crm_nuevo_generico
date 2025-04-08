@@ -13,8 +13,16 @@ class SettingsController extends Controller
 {
     public function index()
     {
-        $configuracion = CompanyDetails::first();
-        return view('settings.index', compact('configuracion'));
+        return view('settings.index');
+    }
+
+    public function create(){
+        return view('settings.create');
+    }
+
+    public function edit($id){
+        $configuracion = CompanyDetails::findOrFail($id);
+        return view('settings.edit', compact('configuracion'));
     }
 
     public function store(Request $request)
