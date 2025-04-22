@@ -4,7 +4,7 @@
 
 <div>
     <div class="filtros row mb-4">
-        <div class="col-md-6 col-sm-12">
+        <div class="col-md-4 col-sm-12">
             <div class="flex flex-row justify-start">
                 <div class="mr-3">
                     <label for="">Nº</label>
@@ -21,7 +21,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-sm-12">
+        <div class="col-md-8 col-sm-12">
             <div class="flex flex-row justify-end">
                 <div class="mr-3" style="width: 100px">
                     <label for="">Banco</label>
