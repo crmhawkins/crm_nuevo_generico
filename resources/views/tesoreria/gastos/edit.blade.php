@@ -202,6 +202,8 @@
 @endsection
 
 @section('scripts')
+<script src="{{asset('assets/vendors/choices.js/choices.min.js')}}"></script>
+
 <script>
    function calculateCantidadConIVA() {
         let quantity = parseFloat(document.getElementById('quantity').value) || 0;
