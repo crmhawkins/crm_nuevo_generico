@@ -32,7 +32,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="mr-3" style="width: 100px">
+                <div class="mr-3" style="width: 150px">
                     <label for="">Proveedor</label>
                     <select wire:model="selectedProveedor" class="form-select choices">
                         <option value=""> Proveedor </option>
