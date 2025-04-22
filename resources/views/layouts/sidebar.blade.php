@@ -560,6 +560,14 @@
                                     </span>
                                 </a>
                             </li>
+                            <li class="submenu-item {{ request()->routeIs('horas.create') ? 'active' : '' }}">
+                                <a href="{{route('horas.create')}}">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>
+                                        Añadir jornada
+                                    </span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     {{-- <li class="sidebar-item {{ request()->routeIs('horas.index') ? 'active' : '' }}">
