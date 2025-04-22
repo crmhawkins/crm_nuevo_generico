@@ -6,6 +6,7 @@ use App\Http\Controllers\Alert\AlertController;
 use App\Http\Controllers\Archivos\FileController;
 use App\Http\Controllers\Backup\BackupController;
 use App\Http\Controllers\Bajas\BajaController;
+use App\Http\Controllers\Bancos\BancosController;
 use App\Http\Controllers\CrmActivities\CrmActivityMeetingController;
 use App\Http\Controllers\Suppliers\SuppliersController;
 use App\Http\Controllers\Tesoreria\CuadroController;
@@ -122,6 +123,8 @@ Route::get('/productividad', [ProductividadController::class, 'index'])->name('p
 Route::get('/jornadas', [HorasController::class, 'indexHoras'])->name('horas.index');
 Route::get('/exportarjornadas', [HorasController::class, 'exportHoras'])->name('horas.export');
 Route::get('/jornadas/listado', [HorasController::class, 'jornadas'])->name('horas.listado');
+Route::get('/jornadas/create', [HorasController::class, 'create'])->name('horas.create');
+Route::post('/jornadas/store', [HorasController::class, 'store'])->name('horas.store');
 Route::get('/jornadas/editar/{id}', [HorasController::class, 'edit'])->name('horas.edit');
 Route::post('/jornadas/update/{id}', [HorasController::class, 'update'])->name('horas.update');
 Route::post('/jornadas/delete', [HorasController::class, 'destroy'])->name('horas.delete');
@@ -182,6 +185,12 @@ Route::post('/bajas/store', [BajaController::class, 'store'])->name('bajas.store
 Route::post('/bajas/update/{baja}', [BajaController::class, 'update'])->name('bajas.update');
 Route::post('/bajas/delete', [BajaController::class, 'destroy'])->name('bajas.delete');
 
+Route::get('/bancos', [BancosController::class, 'index'])->name('bancos.index');
+Route::get('/bancos/create', [BancosController::class, 'create'])->name('bancos.create');
+Route::get('/bancos/edit/{id}', [BancosController::class, 'edit'])->name('bancos.edit');
+Route::post('/bancos/store', [BancosController::class, 'store'])->name('bancos.store');
+Route::post('/bancos/update/{id}', [BancosController::class, 'update'])->name('bancos.update');
+Route::post('/bancos/delete', [BancosController::class, 'destroy'])->name('bancos.delete');
 
 // Users (USUARIOS)
 Route::get('/users', [UserController::class, 'index'])->name('users.index');

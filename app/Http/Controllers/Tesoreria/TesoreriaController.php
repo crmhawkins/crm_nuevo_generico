@@ -16,53 +16,64 @@ use App\Models\Invoices\Invoice;
 use App\Models\Other\BankAccounts;
 use App\Models\PaymentMethods\PaymentMethod;
 use App\Models\PurcharseOrde\PurcharseOrder;
+use App\Models\Suppliers\Supplier;
 use Carbon\Carbon;
 
 class TesoreriaController extends Controller
 {
-    public function indexIngresos(){
+    public function indexIngresos()
+    {
 
         return view('tesoreria.ingresos.index');
     }
 
-    public function indexGastos(){
+    public function indexGastos()
+    {
         return view('tesoreria.gastos.index');
     }
 
-    public function indexUnclassifiedExpensese(Request $request){
+    public function indexUnclassifiedExpensese(Request $request)
+    {
         return view('tesoreria.gastos-sin-clasificar.index');
     }
 
-    public function indexAssociatedExpenses(){
+    public function indexAssociatedExpenses()
+    {
         return view('tesoreria.gastos-asociados.index');
     }
 
-    public function createIngresos(){
+    public function createIngresos()
+    {
         $banks = BankAccounts::all();
         $invoices = Invoice::all();
         return view('tesoreria.ingresos.create', compact('banks','invoices'));
     }
 
-    public function createGastos(){
+    public function createGastos()
+    {
         $tiposIva = Iva::all();
         $banks = BankAccounts::all();
         $paymentMethods = PaymentMethod::all();
         $categorias = CategoriaGastos::all();
+        $proveedores = Supplier::all();
 
-        return view('tesoreria.gastos.create',compact( 'banks', 'paymentMethods','tiposIva','categorias'));
+        return view('tesoreria.gastos.create',compact( 'banks', 'paymentMethods','tiposIva','categorias','proveedores'));
     }
 
-    public function createAssociatedExpenses(){
+    public function createAssociatedExpenses()
+    {
         $tiposIva = Iva::all();
         $banks = BankAccounts::all();
         $paymentMethods = PaymentMethod::all();
         $purchaseOrders = PurcharseOrder::doesntHave('associatedExpense')->get();
         $categorias = CategoriaGastosAsociados::all();
+        $proveedores = Supplier::all();
 
-        return view('tesoreria.gastos-asociados.create',compact( 'banks', 'paymentMethods','purchaseOrders','tiposIva','categorias'));
+        return view('tesoreria.gastos-asociados.create',compact( 'banks', 'paymentMethods','purchaseOrders','tiposIva','categorias','proveedores'));
     }
 
-    public function editIngresos(string $id){
+    public function editIngresos(string $id)
+    {
         $ingreso = Ingreso::find($id);
         if (!$ingreso) {
             session()->flash('toast', [
@@ -77,7 +88,8 @@ class TesoreriaController extends Controller
         return view('tesoreria.ingresos.edit',compact('ingreso','banks','invoices'));
     }
 
-    public function editGastos(string $id){
+    public function editGastos(string $id)
+    {
         $tiposIva = Iva::all();
         $gasto = Gasto::find($id);
         if (!$gasto) {
@@ -89,14 +101,16 @@ class TesoreriaController extends Controller
         }
         // Obtener listas de opciones necesarias para el formulario
         $banks = BankAccounts::all();
+        $proveedores = Supplier::all();
         $paymentMethods = PaymentMethod::all();
         $categorias = CategoriaGastos::all();
 
-        return view('tesoreria.gastos.edit', compact('gasto', 'banks', 'paymentMethods','tiposIva','categorias'));
+        return view('tesoreria.gastos.edit', compact('gasto', 'banks', 'paymentMethods','tiposIva','categorias','proveedores'));
 
     }
 
-    public function editUnclassifiedExpensese(string $id){
+    public function editUnclassifiedExpensese(string $id)
+    {
 
         $unclassifiedExpense = UnclassifiedExpenses::find($id);
         if (!$unclassifiedExpense) {
@@ -110,13 +124,15 @@ class TesoreriaController extends Controller
         // Obtener listas de opciones necesarias para el formulario
         $banks = BankAccounts::all();
         $paymentMethods = PaymentMethod::all();
+
         $budgets = Budget::whereIn('budget_status_id', [3,5,6,7])->get();
         $purchaseOrders = PurcharseOrder::doesntHave('associatedExpense')->get();
 
         return view('tesoreria.gastos-sin-clasificar.edit', compact('unclassifiedExpense', 'banks', 'paymentMethods', 'budgets', 'purchaseOrders'));
     }
 
-    public function editAssociatedExpenses(string $id){
+    public function editAssociatedExpenses(string $id)
+    {
         $tiposIva = Iva::all();
 
         $gasto = AssociatedExpenses::find($id);
@@ -131,6 +147,8 @@ class TesoreriaController extends Controller
         // Obtener listas de opciones necesarias para el formulario
         $banks = BankAccounts::all();
         $paymentMethods = PaymentMethod::all();
+        $proveedores = Supplier::all();
+
         $budgets = Budget::all();
         $categorias = CategoriaGastosAsociados::all();
 
@@ -138,10 +156,11 @@ class TesoreriaController extends Controller
             $query->doesntHave('associatedExpense')
                   ->orWhere('id', $gasto->purchase_order_id);
         })->get();
-        return view('tesoreria.gastos-asociados.edit',compact('gasto', 'banks', 'paymentMethods', 'budgets', 'purchaseOrders','tiposIva','categorias'));
+        return view('tesoreria.gastos-asociados.edit',compact('gasto', 'banks', 'paymentMethods', 'budgets', 'purchaseOrders','tiposIva','categorias','proveedores'));
     }
 
-    public function storeIngresos(Request $request ){
+    public function storeIngresos(Request $request )
+    {
         $validated = $this->validate($request, [
             'title' => 'required|string|max:255',
             'quantity' => 'required',
@@ -171,15 +190,15 @@ class TesoreriaController extends Controller
 
     }
 
-    public function storeGastos(Request $request){
+    public function storeGastos(Request $request)
+    {
 
-        $unclassifiedExpenses = UnclassifiedExpenses::find($request->id);
         // Validar los datos del formulario
         $validated = $this->validate($request, [
             'title' => 'required|string|max:255',
             'reference' => 'required|string|max:255',
             'quantity' => 'required',
-            'bank_id' => 'required|integer|exists:bank_accounts,id',
+            'bank_id' => 'nullable',
             'date' => 'nullable',
             'received_date' => 'nullable',
             'payment_method_id' => 'required|integer|exists:payment_method,id',
@@ -188,6 +207,7 @@ class TesoreriaController extends Controller
             'documents' => 'nullable',
             'iva' => 'nullable',
             'categoria_id' => 'nullable',
+            'proveedor_id' => 'nullable'
         ],[
             'title.required' => 'El título es obligatorio.',
             'title.string' => 'El título debe ser una cadena de texto.',
@@ -197,9 +217,6 @@ class TesoreriaController extends Controller
             'reference.max' => 'La referencia no debe exceder los 255 caracteres.',
             'quantity.required' => 'La cantidad es obligatoria.',
             'quantity.numeric' => 'La cantidad debe ser un número.',
-            'bank_id.required' => 'El ID del banco es obligatorio.',
-            'bank_id.integer' => 'El ID del banco debe ser un número entero.',
-            'bank_id.exists' => 'El ID del banco proporcionado no existe.',
             'date.date' => 'La fecha debe ser una fecha válida.',
             'received_date.required' => 'La fecha de recepción es obligatoria.',
             'received_date.date' => 'La fecha de recepción debe ser una fecha válida.',
@@ -252,6 +269,7 @@ class TesoreriaController extends Controller
             'documents' => 'nullable',
             'iva' => 'nullable',
             'categoria_id' => 'nullable',
+            'proveedor_id' => 'nullable'
         ],[
             'title.required' => 'El título es obligatorio.',
             'title.string' => 'El título debe ser una cadena de texto.',
@@ -307,7 +325,8 @@ class TesoreriaController extends Controller
         return redirect()->route('gasto-asociado.edit', $associatedExpense->id)->with('success', 'Gasto asociado creado exitosamente.');
     }
 
-    public function storeUnclassifiedExpensese(Request $request){
+    public function storeUnclassifiedExpensese(Request $request)
+    {
         // Crear un gasto sin clasificar
        if ($request->hasFile('file')) {
            $path = $request->file('file')->store('documents', 'public');
@@ -372,7 +391,8 @@ class TesoreriaController extends Controller
        }
     }
 
-    public function updateIngresos(Request $request, string $id){
+    public function updateIngresos(Request $request, string $id)
+    {
         $ingreso = Ingreso::find($id);
 
         $validated = $this->validate($request, [
@@ -411,7 +431,8 @@ class TesoreriaController extends Controller
 
     }
 
-    public function updateGastos(Request $request, string $id){
+    public function updateGastos(Request $request, string $id)
+    {
         $gasto = Gasto::find($id);
 
         // Validar los datos del formulario
@@ -427,6 +448,8 @@ class TesoreriaController extends Controller
             'state' => 'required|string|max:255',
             'iva' => 'nullable',
             'categoria_id' => 'nullable',
+            'proveedor_id' => 'nullable'
+
         ], [
             'title.required' => 'El título es obligatorio.',
             'title.string' => 'El título debe ser una cadena de texto.',
@@ -467,7 +490,8 @@ class TesoreriaController extends Controller
         return redirect()->route('gasto.index')->with('success', 'Gasto actualizado exitosamente.');
     }
 
-    public function updateAssociatedExpenses(Request $request, string $id){
+    public function updateAssociatedExpenses(Request $request, string $id)
+    {
         $gasto = AssociatedExpenses::find($id);
 
 
@@ -485,6 +509,7 @@ class TesoreriaController extends Controller
             'aceptado_gestor' => 'nullable|boolean',
             'iva' => 'nullable',
             'categoria_id' => 'nullable',
+            'proveedor_id' => 'nullable'
 
         ], [
             'title.required' => 'El título es obligatorio.',
@@ -529,7 +554,8 @@ class TesoreriaController extends Controller
     }
 
 
-    public function destroyIngresos(Request $request){
+    public function destroyIngresos(Request $request)
+    {
          $id = $request->id;
         if ($id != null) {
             $gasto = Ingreso::find($id);
@@ -553,7 +579,8 @@ class TesoreriaController extends Controller
         }
     }
 
-    public function destroyGastos(Request $request){
+    public function destroyGastos(Request $request)
+    {
         $id = $request->id;
         if ($id != null) {
             $gasto = Gasto::find($id);
@@ -578,7 +605,8 @@ class TesoreriaController extends Controller
 
     }
 
-    public function destroyAssociatedExpenses(Request $request){
+    public function destroyAssociatedExpenses(Request $request)
+    {
         $id = $request->id;
         if ($id != null) {
             $gasto = AssociatedExpenses::find($id);
@@ -602,7 +630,8 @@ class TesoreriaController extends Controller
         }
     }
 
-    public function destroyUnclassifiedExpensese(Request $request){
+    public function destroyUnclassifiedExpensese(Request $request)
+    {
         $id = $request->id;
         if ($id != null) {
             $gasto = UnclassifiedExpenses::find($id);
@@ -626,7 +655,8 @@ class TesoreriaController extends Controller
         }
     }
 
-    public function showIngresos(){
+    public function showIngresos()
+    {
         return view('tesoreria.ingresos.index');
     }
 }

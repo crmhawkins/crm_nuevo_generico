@@ -9,6 +9,18 @@ use Illuminate\Http\Request;
 class BancosController extends Controller
 {
 
+    public function index(){
+        $bancos = BankAccounts::all();
+        return view('bancos.index',compact('bancos'));
+    }
+
+    public function create(){
+        return view('bancos.create');
+    }
+
+    public function edit(BankAccounts $banco){
+        return view('bancos.edit',compact('banco'));
+    }
 
     public function store(Request $request){
         $rules = [
