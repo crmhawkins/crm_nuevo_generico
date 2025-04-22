@@ -163,8 +163,8 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6 form-group mt-2">
-                                    <label class="form-label mt-4 mr-2" for="proveedor">Proveedor:</label>
-                                    <select class="form-control" id="proveedor" name="proveedor_id">
+                                    <label class="form-label" for="proveedor">Proveedor:</label>
+                                    <select class="form-control choices" id="proveedor" name="proveedor_id">
                                         <option value="">Seleccione un proveedor</option>
                                         @foreach ($proveedores as $proveedor)
                                             <option value="{{ $proveedor->id }}" {{ old('proveedor_id', $gasto->proveedor_id ?? '') == $proveedor->id ? 'selected' : '' }}>{{ $proveedor->name }}</option>
