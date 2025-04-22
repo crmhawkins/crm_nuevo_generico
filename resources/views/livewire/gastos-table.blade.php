@@ -23,6 +23,15 @@
         </div>
         <div class="col-md-8 col-sm-12">
             <div class="flex flex-row justify-end">
+                <div class="mr-3" style="width: 200px">
+                    <label for="">Proveedor</label>
+                    <select wire:model="selectedProveedor" class="form-select choices">
+                        <option value=""> Proveedor </option>
+                        @foreach ($proveedores as $proveedor)
+                            <option value="{{ $proveedor->id }}">{{ $proveedor->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="mr-3" style="width: 100px">
                     <label for="">Banco</label>
                     <select wire:model="selectedBanco" class="form-select">
@@ -32,15 +41,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="mr-3" style="width: 150px">
-                    <label for="">Proveedor</label>
-                    <select wire:model="selectedProveedor" class="form-select choices">
-                        <option value=""> Proveedor </option>
-                        @foreach ($proveedores as $proveedor)
-                            <option value="{{ $proveedor->id }}">{{ $proveedor->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+
                 <div class="mr-2" style="width: 150px">
                     <label for="">Fecha inicio</label>
                     <input wire:model="startDate" type="date" class="form-control" placeholder="Fecha de inicio">
