@@ -43,7 +43,7 @@
                     $EmailConfig = request()->routeIs('admin.categoriaEmail.*') || request()->routeIs('admin.statusMail.*');
                     $BajaActive = request()->routeIs('bajas.*');
                     $StadisticsActive = request()->routeIs('estadistica.*');
-                    $$bancosActive = request()->routeIs('bancos.*');
+                    $bancosActive = request()->routeIs('bancos.*');
                     $ContabilidadActive = request()->routeIs('cuentasContables.*') || request()->routeIs('subCuentasContables.*') || request()->routeIs('subCuentasHijaContables.*') || request()->routeIs('grupoContabilidad.*') || request()->routeIs('subGrupoContabilidad.*') || request()->routeIs('admin.planContable.index');
                     $admin = (Auth::user()->access_level_id == 1);
                     $gerente = (Auth::user()->access_level_id == 2);
