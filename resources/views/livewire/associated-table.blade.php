@@ -83,6 +83,7 @@
                             'received_date' => 'F.RECEPCION',
                             'bank_id' => 'BANCO',
                             'state' => 'ESTADO',
+                            'proveedor_id' => 'P.ASOCIADO',
                             'categoria_id' => 'CATEGORIA',
 
                         ] as $field => $label)
@@ -112,6 +113,7 @@
                             <td>{{ \Carbon\Carbon::parse($gasto->received_date)->format('d/m/Y') }}</td>
                             <td>{{$gasto->bankAccount->name ?? 'Banco no asociado'}}</td>
                             <td>{{$gasto->state}}</td>
+                            <td>{{optional($gasto->proveedor)->name ?? 'Sin proveedor asignado'}}</td>
                             <td>{{optional($gasto->categoria)->nombre ?? 'Sin categoria asignada'}}</td>
                             <td>
                                 @if (isset($gasto->documents))

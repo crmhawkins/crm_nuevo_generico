@@ -6,6 +6,7 @@ use App\Models\Budgets\Budget;
 use App\Models\Other\BankAccounts;
 use App\Models\PaymentMethods\PaymentMethod;
 use App\Models\PurcharseOrde\PurcharseOrder;
+use App\Models\Suppliers\Supplier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -87,6 +88,10 @@ class AssociatedExpenses extends Model
     public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+    }
+
+    public function proveedor(){
+        return $this->belongsTo(Supplier::class,'proveedor_id');
     }
 
 }

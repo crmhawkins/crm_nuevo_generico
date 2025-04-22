@@ -3,6 +3,7 @@
 namespace App\Models\Accounting;
 
 use App\Models\Other\BankAccounts;
+use App\Models\Suppliers\Supplier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -62,5 +63,8 @@ class Gasto extends Model
         return $this->belongsTo(CategoriaGastos::class,'categoria_id');
     }
 
+    public function proveedor(){
+        return $this->belongsTo(Supplier::class,'proveedor_id');
+    }
 
 }

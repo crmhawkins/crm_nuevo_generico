@@ -6,6 +6,7 @@ use App\Exports\GastosExport;
 use App\Models\Accounting\Gasto;
 use App\Models\Clients\Client;
 use App\Models\Other\BankAccounts;
+use App\Models\Suppliers\Supplier;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -19,11 +20,13 @@ class GastosTable extends Component
 
     public $buscar;
     public $selectedYear;
+    public $selectedProveedor;
     public $startDate;
     public $endDate;
     public $selectedBanco;
     public $Bancos;
     public $clientes;
+    public $proveedores;
     public $estados;
     public $perPage = 10;
     public $sortColumn = 'created_at'; // Columna por defecto
@@ -34,6 +37,7 @@ class GastosTable extends Component
     public function mount(){
         $this->selectedYear = Carbon::now()->year;
         $this->Bancos = BankAccounts::all();
+        $this->proveedores = Supplier::all();
     }
     public function render()
     {
@@ -65,6 +69,9 @@ class GastosTable extends Component
                 })
                 ->when($this->selectedYear, function ($query) {
                     $query->whereYear('created_at', $this->selectedYear);
+                })
+                ->when($this->selectedProveedor, function ($query) {
+                    $query->whereYear('proveedor_id', $this->selectedProveedor);
                 })
                 ->when($this->selectedBanco, function ($query) {
                     $query->where('bank_id', $this->selectedBanco);

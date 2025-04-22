@@ -32,15 +32,24 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="mr-3" style="width: 150px">
+                <div class="mr-3" style="width: 100px">
+                    <label for="">Proveedor</label>
+                    <select wire:model="selectedProveedor" class="form-select choices">
+                        <option value=""> Proveedor </option>
+                        @foreach ($proveedores as $proveedor)
+                            <option value="{{ $proveedor->id }}">{{ $proveedor->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mr-2" style="width: 150px">
                     <label for="">Fecha inicio</label>
                     <input wire:model="startDate" type="date" class="form-control" placeholder="Fecha de inicio">
                 </div>
-                <div class="mr-3" style="width: 150px">
+                <div class="mr-2" style="width: 150px">
                     <label for="">Fecha fin</label>
                     <input wire:model="endDate" type="date" class="form-control" placeholder="Fecha de fin">
                 </div>
-                <div class="mr-3" style="width: 100px">
+                <div class="mr-2" style="width: 100px">
                     <label for="">Año</label>
                     <select wire:model="selectedYear" class="form-select">
                         <option value=""> Año </option>
@@ -71,6 +80,7 @@
                             'received_date' => 'F.RECEPCION',
                             'date' => 'F.PAGO',
                             'state' => 'ESTADO',
+                            'proveedor_id' => 'PROVEEDOR',
                             'categoria_id' => 'CATEGORIA',
                             'transfer_movement' => 'TRAN',
 
@@ -99,6 +109,7 @@
                             <td>{{ $gasto->received_date ? \Carbon\Carbon::parse($gasto->received_date)->format('d/m/Y') : 'Sin Fecha'}}</td>
                             <td>{{ \Carbon\Carbon::parse($gasto->date)->format('d/m/Y') }}</td>
                             <td>{{$gasto->state}}</td>
+                            <td>{{optional($gasto->proveedor)->name ?? 'Sin proveedor asignado'}}</td>
                             <td>{{optional($gasto->categoria)->nombre ?? 'Sin categoria asignada'}}</td>
                             <td>
                                 @if($gasto->transfer_movement == 1)
