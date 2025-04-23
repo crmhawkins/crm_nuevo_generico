@@ -589,7 +589,12 @@ class DashboardController extends Controller
     {
 
 
-        $todayJornadas = $user->jornadas()->whereDate('start_time', Carbon::today())->orWhere('is_active',true)->get();
+        $todayJornadas = $user->jornadas()
+        ->where(function($query) {
+            $query->whereDate('start_time', Carbon::today())
+                  ->orWhere('is_active', true);
+        })
+        ->get();
 
         $totalWorkedSeconds = 0;
 
