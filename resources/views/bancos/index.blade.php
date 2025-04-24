@@ -51,9 +51,7 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                            @if($perPage !== 'all')
                                 {{ $contratos->links() }}
-                            @endif
                         </div>
                     @else
                         <div class="text-center py-4">
