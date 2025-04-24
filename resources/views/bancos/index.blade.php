@@ -41,12 +41,17 @@
                                     <tr>
                                             <th class="px-3" style="font-size:0.75rem">NOMBRE </th>
                                             <th class="px-3" style="font-size:0.75rem">CUENTA</th>
+                                            <th class="px-3" style="font-size:0.75rem">ACCIONES</th>
                                 </thead>
                                 <tbody>
                                     @foreach ($bancos as $banco)
                                         <tr class="clickable-row" data-href="{{ route('bancos.edit', $banco->id) }}">
                                             <td>{{$banco->name}}</td>
                                             <td>{{$banco->cuenta}}</td>
+                                            <td class="flex flex-row justify-evenly align-middle" >
+                                                <a href="{{ route('bancos.edit', $banco->id) }}"><img src="{{asset('assets/icons/edit.svg')}}" alt="Mostrar banco"></a>
+                                                <a class="delete" data-id="{{$banco->id}}" href=""><img src="{{asset('assets/icons/trash.svg')}}" alt="Eliminar banco"></a>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -71,5 +76,58 @@
 
     @include('partials.toast')
 
+    <script>
+        $(document).ready(() => {
+                $('.delete').on('click', function(e) {
+                    e.preventDefault();
+                    let id = $(this).data('id');
+                    botonAceptar(id);
+                });
+            });
+
+            function botonAceptar(id){
+                Swal.fire({
+                    title: "¿Estas seguro que quieres eliminar este banco?",
+                    html: "<p>Esta acción es irreversible.</p>",
+                    showDenyButton: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Borrar",
+                    cancelButtonText: "Cancelar",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.when(getDelete(id)).then(function(data, textStatus, jqXHR) {
+                            if (!data.status) {
+                                Toast.fire({
+                                    icon: "error",
+                                    title: data.mensaje
+                                });
+                            } else {
+                                Toast.fire({
+                                    icon: "success",
+                                    title: data.mensaje
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            function getDelete(id) {
+                const url = '{{route("bancos.delete")}}';
+                return $.ajax({
+                    type: "POST",
+                    url: url,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    },
+                    data: {
+                        'id': id,
+                    },
+                    dataType: "json"
+                });
+            }
+    </script>
 @endsection
 
