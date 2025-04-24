@@ -53,9 +53,19 @@ class BancosController extends Controller
 
     }
 
-    public function destroy(BankAccounts $banco){
-        $banco->delete();
-
-        return redirect()->back()->with('status', 'Banco eliminado con éxito!');
+    public function destroy(Request $request){
+        $banco = BankAccounts::find($request->id);
+        if($banco){
+            $banco->delete();
+            return response()->json([
+                'status' => true,
+                'mensaje' => 'Banco eliminado con éxito!'
+            ]);
+        }else{
+            return response()->json([
+                'status' => false,
+                'mensaje' => 'Banco no encontrado'
+            ]);
+        }
     }
 }
