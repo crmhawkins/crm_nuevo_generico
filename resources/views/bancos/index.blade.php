@@ -34,22 +34,32 @@
             <div class="card">
 
                 <div class="card-body">
-                        {{-- Contenido para dispositivos móviles --}}
-                        <div>
-                            @if ($bancos->count() >= 0)
-                                @foreach ($bancos as $banco)
-                                    <div class="card border-bottom">
-                                        <div class="card-body" href="{{route('bancos.edit',$banco->id)}}">
-                                            <h5 class="card-title">{{ $banco->name }}</h5>
-                                        </div>
-                                    </div>
-                                @endforeach
-                                <div class="d-flex justify-content-center">
-                                    {{ $bancos->links() }}
-                                </div>
+                    @if ($bancos->count() >= 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="header-table">
+                                    <tr>
+                                            <th class="px-3" style="font-size:0.75rem">NOMBRE </th>
+                                            <th class="px-3" style="font-size:0.75rem">CUENTA</th>
+                                </thead>
+                                <tbody>
+                                    @foreach ($bancos as $banco)
+                                        <tr class="clickable-row" data-href="{{ route('bancos.edit', $acta->id) }}">
+                                            <td>{{$banco->name}}</td>
+                                            <td>{{$banco->cuenta}}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            @if($perPage !== 'all')
+                                {{ $contratos->links() }}
                             @endif
                         </div>
-
+                    @else
+                        <div class="text-center py-4">
+                            <h3 class="text-center fs-3">No se encontraron registros de <strong>Bancos</strong></h3>
+                        </div>
+                    @endif
                 </div>
             </div>
 
