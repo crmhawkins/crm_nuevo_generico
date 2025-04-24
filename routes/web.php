@@ -187,7 +187,7 @@ Route::post('/bajas/delete', [BajaController::class, 'destroy'])->name('bajas.de
 
 Route::get('/bancos', [BancosController::class, 'index'])->name('bancos.index');
 Route::get('/bancos/create', [BancosController::class, 'create'])->name('bancos.create');
-Route::get('/bancos/edit/{id}', [BancosController::class, 'edit'])->name('bancos.edit');
+Route::get('/bancos/edit/{banco}', [BancosController::class, 'edit'])->name('bancos.edit');
 Route::post('/bancos/store', [BancosController::class, 'store'])->name('bancos.store');
 Route::post('/bancos/update/{id}', [BancosController::class, 'update'])->name('bancos.update');
 Route::post('/bancos/delete', [BancosController::class, 'destroy'])->name('bancos.delete');
