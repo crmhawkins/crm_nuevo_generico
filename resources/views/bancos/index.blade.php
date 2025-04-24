@@ -51,7 +51,7 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                                {{ $contratos->links() }}
+                        {{ $bancos->links() }}
                         </div>
                     @else
                         <div class="text-center py-4">
