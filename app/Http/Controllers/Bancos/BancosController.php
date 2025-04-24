@@ -10,7 +10,8 @@ class BancosController extends Controller
 {
 
     public function index(){
-        $bancos = BankAccounts::all();
+        $bancos = BankAccounts::paginate(10)->get(); // O el número que quieras por página
+        ;
         return view('bancos.index',compact('bancos'));
     }
 
