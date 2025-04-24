@@ -44,7 +44,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($bancos as $banco)
-                                        <tr class="clickable-row" data-href="{{ route('bancos.edit', $acta->id) }}">
+                                        <tr class="clickable-row" data-href="{{ route('bancos.edit', $banco->id) }}">
                                             <td>{{$banco->name}}</td>
                                             <td>{{$banco->cuenta}}</td>
                                         </tr>
