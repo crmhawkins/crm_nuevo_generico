@@ -745,7 +745,7 @@
                         </li>
                         <li class="sidebar-item has-sub {{ $bancosActive ? 'active' : '' }}">
                             <a href="#" class='sidebar-link'>
-                                <i class="fa-solid fa-user-group fs-5"></i>
+                                <i class="fa-solid fa-building-columns fs-5"></i>
                                 <span>Bancos</span>
                             </a>
                             <ul class="submenu" style="{{ $bancosActive ? 'display:block;' : 'display:none;' }}">

@@ -18,5 +18,6 @@ class BankAccounts extends Model
      */
     protected $fillable = [
         'name',
+        'cuenta'
     ];
 }

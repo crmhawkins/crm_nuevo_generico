@@ -44,6 +44,15 @@
                                     </span>
                                     @enderror
                                 </div>
+                                <div class="form-group mb-3">
+                                    <label for="title">Cuenta:</label>
+                                    <input placeholder="Numero de cuenta" type="text" class="form-control @error('cuenta') is-invalid @enderror" id="cuenta" value="{{ old('cuenta',$banco->cuenta) }}" name="cuenta">
+                                    @error('cuenta')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>

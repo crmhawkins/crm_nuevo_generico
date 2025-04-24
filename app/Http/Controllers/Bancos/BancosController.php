@@ -11,7 +11,6 @@ class BancosController extends Controller
 
     public function index(){
         $bancos = BankAccounts::paginate(10)->get(); // O el número que quieras por página
-        ;
         return view('bancos.index',compact('bancos'));
     }
 
@@ -25,7 +24,9 @@ class BancosController extends Controller
 
     public function store(Request $request){
         $rules = [
-            'nombre' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'cuenta' => 'required|string|max:255',
+
         ];
 
         // Validar los datos del formulario
@@ -38,13 +39,14 @@ class BancosController extends Controller
 
     public function update(Request $request, BankAccounts $banco){
         $rules = [
-            'nombre' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'cuenta' => 'required|string|max:255',
         ];
 
         // Validar los datos del formulario
         $validatedData = $request->validate($rules);
         $banco->update([
-            'nombre' => $validatedData['nombre']
+            'name' => $validatedData['name']
         ]);
 
         return redirect()->back()->with('status', 'Banco actualizado con éxito!');
