@@ -558,9 +558,17 @@
                             </li>
                             <li class="submenu-item {{ request()->routeIs('horas.listado') ? 'active' : '' }}">
                                 <a href="{{route('horas.listado')}}">
-                                    <i class="fa-solid fa-plus"></i>
+                                    <i class="fa-solid fa-list"></i>
                                     <span>
                                         Listado de jornadas
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="submenu-item {{ request()->routeIs('horas.create') ? 'active' : '' }}">
+                                <a href="{{route('horas.create')}}">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>
+                                        Añadir jornada
                                     </span>
                                 </a>
                             </li>

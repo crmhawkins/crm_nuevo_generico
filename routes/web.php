@@ -123,7 +123,9 @@ Route::get('/jornadas', [HorasController::class, 'indexHoras'])->name('horas.ind
 Route::get('/jornadas/calendar/{id}', [HorasController::class, 'calendar'])->name('horas.calendar');
 Route::get('/exportarjornadas', [HorasController::class, 'exportHoras'])->name('horas.export');
 Route::get('/jornadas/listado', [HorasController::class, 'jornadas'])->name('horas.listado');
+Route::get('/jornadas/create', [HorasController::class, 'create'])->name('horas.create');
 Route::get('/jornadas/editar/{id}', [HorasController::class, 'edit'])->name('horas.edit');
+Route::post('/jornadas/store', [HorasController::class, 'store'])->name('horas.store');
 Route::post('/jornadas/update/{id}', [HorasController::class, 'update'])->name('horas.update');
 Route::post('/jornadas/delete', [HorasController::class, 'destroy'])->name('horas.delete');
 

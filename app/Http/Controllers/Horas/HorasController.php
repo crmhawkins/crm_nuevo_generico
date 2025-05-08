@@ -143,11 +143,51 @@ class HorasController extends Controller
         return view('horas.jornadas');
     }
 
+    public function create()
+    {
+        $usuarios = User::where('inactive',0)->get();
+        return view('horas.create', ['usuarios' => $usuarios]);
+    }
+
     public function edit($id)
     {
-
         $jornada = Jornada::find($id);
         return view('horas.edit', ['jornada' => $jornada]);
+    }
+
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'admin_user_id' => 'required',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date',
+        ], [
+            'admin_user_id.required' => 'El campo "Usuario" es requerido',
+            'start_time.required' => 'El campo "Hora de inicio" es requerido',
+            'end_time.required' => 'El campo "Hora de fin" es requerido',
+            'start_time.date' => 'El campo "Hora de inicio" debe ser una fecha valida',
+            'end_time.date' => 'El campo "Hora de fin" debe ser una fecha valida',
+        ]);
+
+        $validatedData['start_time'] = Carbon::parse($validatedData['start_time']);
+        $validatedData['end_time'] = Carbon::parse($validatedData['end_time']);
+        $validatedData['is_active'] = false;
+
+        $jornada = Jornada::create($validatedData);
+
+        if (!$jornada) {
+            return redirect()->back()->with('toast', [
+                'icon' => 'error',
+                'mensaje' => 'Error al crear la Jornada'
+            ]);
+        }else{
+            return redirect()->route('horas.listado')->with('toast', [
+                'icon' => 'success',
+                'mensaje' => 'La Jornada se actualizo correctamente'
+            ]);
+        }
+
+
     }
 
     public function update(Request $request, $id)
@@ -162,13 +202,15 @@ class HorasController extends Controller
             'end_time.date' => 'El campo "Hora de fin" debe ser una fecha valida',
         ]);
 
+        $validatedData['start_time'] = Carbon::parse($validatedData['start_time']);
+        $validatedData['end_time'] = Carbon::parse($validatedData['end_time']);
+
         $jornada = Jornada::find($id);
         $jornada->start_time = $validatedData['start_time'];
         $jornada->end_time = $validatedData['end_time'];
-        if($validatedData['end_time'] != null){
+        if($jornada->end_time != null){
             $jornada->is_active = false;
         }
-
         $jornada->save();
 
         return redirect()->route('horas.listado')->with('toast', [
