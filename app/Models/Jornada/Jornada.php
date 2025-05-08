@@ -20,8 +20,6 @@ class Jornada extends Model
     public function user() {
         return $this->belongsTo(\App\Models\Users\User::class, 'admin_user_id');
     }
-
-
     public function pauses() {
         return $this->hasMany(\App\Models\Jornada\Pause::class);
     }
