@@ -35,7 +35,7 @@
                         <h3 class="mb-2 text-left uppercase">Usuario : {{$jornada->user->name.' '.$jornada->user->surname}}</h3>
                         <div class="form-group mb-4">
                             <label class="mb-2 text-left uppercase" style="font-weight: bold" for="start_time">Fecha Inicio</label>
-                            <input type="datetime" class="form-control @error('start_time') is-invalid @enderror" id="start_time" value="{{ old('start_time', \Carbon\Carbon::parse($jornada->start_time)->format('Y-m-d H:i') ) }}" name="start_time">
+                            <input type="datetime-local" class="form-control @error('start_time') is-invalid @enderror" id="start_time" value="{{ old('start_time', \Carbon\Carbon::parse($jornada->start_time)->format('Y-m-d H:i') ) }}" name="start_time">
                             @error('start_time')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -44,7 +44,7 @@
                         </div>
                         <div class="form-group mb-4">
                             <label class="mb-2 text-left uppercase" style="font-weight: bold" for="end_time">Fecha Fin</label>
-                            <input type="datetime" class="form-control @error('end_time') is-invalid @enderror" id="end_time" value="{{ old('end_time',\Carbon\Carbon::parse($jornada->end_time)->format('Y-m-d H:i') ) }}" name="end_time">
+                            <input type="datetime-local" class="form-control @error('end_time') is-invalid @enderror" id="end_time" value="{{ old('end_time',\Carbon\Carbon::parse($jornada->end_time)->format('Y-m-d H:i') ) }}" name="end_time">
                             @error('end_time')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>

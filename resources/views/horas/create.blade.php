@@ -56,7 +56,7 @@
                         </div>
                         <div class="form-group mb-4">
                             <label class="mb-2 text-left uppercase" style="font-weight: bold" for="start_time">Fecha Inicio</label>
-                            <input placeholder="yyyy/mm/dd hh:mm" type="datetime" class="form-control @error('start_time') is-invalid @enderror" id="start_time"  name="start_time">
+                            <input placeholder="yyyy/mm/dd hh:mm" type="datetime-local" class="form-control @error('start_time') is-invalid @enderror" id="start_time"  name="start_time">
                             @error('start_time')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -65,7 +65,7 @@
                         </div>
                         <div class="form-group mb-4">
                             <label class="mb-2 text-left uppercase" style="font-weight: bold" for="end_time">Fecha Fin</label>
-                            <input placeholder="yyyy/mm/dd hh:mm" type="datetime" class="form-control @error('end_time') is-invalid @enderror" id="end_time"  name="end_time">
+                            <input placeholder="yyyy/mm/dd hh:mm" type="datetime-local" class="form-control @error('end_time') is-invalid @enderror" id="end_time"  name="end_time">
                             @error('end_time')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
