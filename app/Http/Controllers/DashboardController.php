@@ -287,6 +287,8 @@ class DashboardController extends Controller
                     }
                 }
                 return view('dashboards.dashboard_comercial', compact('user','diasDiferencia','estadosKit','comisionRestante','ayudas','comisionTramitadas','comisionPendiente', 'comisionCurso', 'pedienteCierre','timeWorkedToday', 'jornadaActiva', 'pausaActiva'));
+            case(7):
+                return view('dashboards.dashboard_fichaje', compact('users'));
         }
     }
     public function parseFlexibleTime($time) {
