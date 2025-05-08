@@ -158,6 +158,7 @@ class HorasController extends Controller
 
         $validatedData['start_time'] = Carbon::parse($validatedData['start_time']);
         $validatedData['end_time'] = Carbon::parse($validatedData['end_time']);
+        $validatedData['is_active'] = false;
 
         $jornada = Jornada::create($validatedData);
 
@@ -194,6 +195,9 @@ class HorasController extends Controller
         $jornada = Jornada::find($id);
         $jornada->start_time = $validatedData['start_time'];
         $jornada->end_time = $validatedData['end_time'];
+        if($jornada->end_time != null){
+            $jornada->is_active = false;
+        }
         $jornada->save();
 
         return redirect()->route('horas.listado')->with('toast', [
