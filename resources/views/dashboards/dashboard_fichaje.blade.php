@@ -49,13 +49,13 @@
             <div class="mt-4" style="margin-left:50px; margin-right: 50px;">
                 <div class="row">
                     @foreach($users as $usuario)
-                        <div class="col-md-2 mb-4">
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-4">
                             <div class="card shadow-sm text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ $usuario->name }} {{ $usuario->surname }}</h5>
-                                    <p class="text-muted">{{ $usuario->departamento->name ?? 'Sin departamento' }}</p>
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUsuario{{ $usuario->id }}">
-                                        Ver Acciones
+                                <div class="card-body py-2 px-2"> {{-- Menos padding vertical y horizontal --}}
+                                    <h4 class="card-title h4">{{ $usuario->name }} {{ $usuario->surname }}</h4>
+                                    <p class="text-muted mb-3">{{ $usuario->departamento->name ?? 'Sin departamento' }}</p>
+                                    <button class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#modalUsuario{{ $usuario->id }}">
+                                        Control de Jornada
                                     </button>
                                 </div>
                             </div>
