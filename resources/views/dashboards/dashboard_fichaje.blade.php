@@ -46,26 +46,41 @@
 
         <main id="main">
             @include('layouts.topBar')
-            <div class="contenedor p-4">
-                <div class="page-heading card" style="box-shadow: none !important" >
-                    <div class="page-title card-body">
-                        <div class="row">
-                            <div class="col-12 col-md-4 order-md-1 order-last">
-                                <h3>Dashboard</h3>
-                            </div>
-
-                            <div class="col-12 col-md-8 order-md-2 order-s">
-                                <div class="row justify-end">
-                                    <button id="endllamadaBtn" class="btn jornada btn-danger mx-2 col-2" onclick="endLlamada()" style="display:none;">Finalizar llamada</button>
-                                     <h2 id="timer" class="display-6 font-weight-bold col-3">00:00:00</h2>
-                                    <button id="startJornadaBtn" class="btn jornada btn-primary mx-2 col-2" onclick="startJornada()">Inicio Jornada</button>
-                                    <button id="startPauseBtn" class="btn jornada btn-secondary mx-2 col-2" onclick="startPause()" style="display:none;">Iniciar Pausa</button>
-                                    <button id="endPauseBtn" class="btn jornada btn-dark mx-2 col-2" onclick="endPause()" style="display:none;">Finalizar Pausa</button>
-                                    <button id="endJornadaBtn" class="btn jornada btn-danger mx-2 col-2" onclick="endJornada()" style="display:none;">Fin de Jornada</button>
+            <div class="mt-4" style="margin-left:50px; margin-right: 50px;">
+                <div class="row">
+                    @foreach($users as $usuario)
+                        <div class="col-md-2 mb-4">
+                            <div class="card shadow-sm text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ $usuario->name }} {{ $usuario->surname }}</h5>
+                                    <p class="text-muted">{{ $usuario->departamento->name ?? 'Sin departamento' }}</p>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUsuario{{ $usuario->id }}">
+                                        Ver Acciones
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                       <!-- Modal de acciones por usuario -->
+                        <div class="modal fade" id="modalUsuario{{ $usuario->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $usuario->id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="modalLabel{{ $usuario->id }}">Acciones de {{ $usuario->name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <h5 class="mb-3">Tiempo de jornada</h5>
+                                        <div id="timerUsuario{{ $usuario->id }}" class="display-6 mb-4">00:00:00</div>
+
+                                            <button class="btn btn-success m-2" onclick="accionUsuario({{ $usuario->id }}, 'start')" style="display: none">Iniciar Jornada</button>
+                                            <button class="btn btn-secondary m-2" onclick="accionUsuario({{ $usuario->id }}, 'pause')" style="display: none">Iniciar Pausa</button>
+                                            <button class="btn btn-danger m-2" onclick="accionUsuario({{ $usuario->id }}, 'end')" style="display: none">Finalizar Jornada</button>
+                                            <button class="btn btn-dark m-2" onclick="accionUsuario({{ $usuario->id }}, 'endpause')" style="display: none">Finalizar Pausa</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </main>
@@ -87,177 +102,129 @@
                     loader.style.display = 'none';
             }
         });
+        document.addEventListener('DOMContentLoaded', function() {
+            $("#sidebar").remove();
+            $("#main").css("margin-left", "0px");
+        });
     </script>
-    <script>
-        function getTime() {
-            fetch('/dashboard/timeworked', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({})
-            })
-                .then(response => response.json())
+   <script>
+    let userTimers = {};
+
+    function iniciarContador(userId, segundosIniciales = 0) {
+        if (userTimers[userId]?.interval) clearInterval(userTimers[userId].interval);
+
+        userTimers[userId] = { tiempo: segundosIniciales };
+
+        userTimers[userId].interval = setInterval(() => {
+            userTimers[userId].tiempo++;
+            actualizarContador(userId);
+        }, 1000);
+
+        actualizarContador(userId);
+    }
+
+    function pararContador(userId) {
+        if (userTimers[userId]?.interval) clearInterval(userTimers[userId].interval);
+    }
+
+    function actualizarContador(userId, segundosForzados = null) {
+        if (segundosForzados !== null) {
+            userTimers[userId] = userTimers[userId] || {};
+            userTimers[userId].tiempo = parseInt(segundosForzados);
+        }
+
+        const tiempo = userTimers[userId]?.tiempo || 0;
+        const horas = String(Math.floor(tiempo / 3600)).padStart(2, '0');
+        const minutos = String(Math.floor((tiempo % 3600) / 60)).padStart(2, '0');
+        const segundos = String(tiempo % 60).padStart(2, '0');
+
+        const el = document.getElementById('timerUsuario' + userId);
+        if (el) el.textContent = `${horas}:${minutos}:${segundos}`;
+    }
+
+    function mostrarBotones(userId, jornadaActiva, pausaActiva) {
+        const botonStart = document.querySelector(`#modalUsuario${userId} .btn-success`);
+        const botonPause = document.querySelector(`#modalUsuario${userId} .btn-secondary`);
+        const botonEndPause = document.querySelector(`#modalUsuario${userId} .btn-dark`);
+        const botonEnd = document.querySelector(`#modalUsuario${userId} .btn-danger`);
+
+        botonStart.style.display = (!jornadaActiva) ? 'inline-block' : 'none';
+        botonPause.style.display = (jornadaActiva && !pausaActiva) ? 'inline-block' : 'none';
+        botonEndPause.style.display = (jornadaActiva && pausaActiva) ? 'inline-block' : 'none';
+        botonEnd.style.display = (jornadaActiva && !pausaActiva) ? 'inline-block' : 'none';
+    }
+
+    // Cuando se abre un modal, consultar el tiempo trabajado y estado
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[id^=modalUsuario]').forEach(modal => {
+            modal.addEventListener('show.bs.modal', function () {
+                const userId = this.id.replace('modalUsuario', '');
+                console.log(userId);
+                fetch(`/usuarios/${userId}/tiempo-hoy`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(res => res.json())
                 .then(data => {
+                    console.log(data);
                     if (data.success) {
-                        timerTime = data.time
-                        updateTime()
+                        mostrarBotones(userId, data.jornada_activa, data.pausa_activa);
+
+                        if (data.jornada_activa && !data.pausa_activa) {
+                            iniciarContador(userId, data.tiempo);
+                        } else {
+                            actualizarContador(userId, data.tiempo);
+                        }
                     }
                 });
-        }
-
-        function updateTime() {
-            let hours = Math.floor(timerTime / 3600);
-            let minutes = Math.floor((timerTime % 3600) / 60);
-            let seconds = timerTime % 60;
-
-            hours = hours < 10 ? '0' + hours : hours;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
-
-            document.getElementById('timer').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-
-        function startTimer() {
-                timerState = 'running';
-                timerInterval = setInterval(() => {
-                    timerTime++;
-                    updateTime();
-                }, 1000);
-        }
-
-        function stopTimer() {
-                clearInterval(timerInterval);
-                timerState = 'stopped';
-        }
-
-        function startJornada() {
-            fetch('/start-jornada', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({})
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        startTimer();
-                        document.getElementById('startJornadaBtn').style.display = 'none';
-                        document.getElementById('startPauseBtn').style.display = 'block';
-                        document.getElementById('endJornadaBtn').style.display = 'block';
-                    }
-                });
-        }
-
-        function endJornada() {
-            // Obtener el tiempo actualizado
-            getTime();
-
-            let now = new Date();
-            let currentHour = now.getHours();
-            let currentMinute = now.getMinutes();
-
-            // Convertir los segundos trabajados a horas
-            let workedHours = timerTime / 3600;
-
-            // Verificar si es antes de las 18:00 o si ha trabajado menos de 8 horas
-            if (currentHour < 18 || workedHours < 8) {
-                let title = '';
-                let text = '';
-
-                if (currentHour < 18) {
-                    title = 'Horario de Salida Prematuro';
-                    text = 'Es menos de las 18:00.  ';
-                }else{
-                    if(workedHours < 8) {
-                    title = ('Jornada Incompleta');
-                    text = 'Has trabajado menos de 8 horas. Si no compensas el tiempo faltante,';
-                    }
-                }
-
-                text += 'Se te descontará de tus vacaciones al final del mes.';
-
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Finalizar Jornada',
-                    cancelButtonText: 'Continuar Jornada'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        finalizarJornada();
-                    }
-                    // Si elige continuar, no hacemos nada, simplemente mantiene la jornada activa
-                });
-            } else {
-                // Si el tiempo es mayor o igual a 8 horas y es después de las 18:00, finalizamos directamente la jornada
-                finalizarJornada();
-            }
-        }
-
-        function finalizarJornada() {
-            fetch('/end-jornada', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    stopTimer();
-                    document.getElementById('startJornadaBtn').style.display = 'block';
-                    document.getElementById('startPauseBtn').style.display = 'none';
-                    document.getElementById('endJornadaBtn').style.display = 'none';
-                    document.getElementById('endPauseBtn').style.display = 'none';
-                }
             });
-        }
+        });
+    });
 
-        function startPause() {
-            fetch('/start-pause', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({})
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        stopTimer();
-                        document.getElementById('startPauseBtn').style.display = 'none';
-                        document.getElementById('endPauseBtn').style.display = 'block';
+    function accionUsuario(userId, accion) {
+        fetch(`/usuarios/${userId}/accion/${accion}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetch(`/usuarios/${userId}/tiempo-hoy`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(res => res.json())
+                .then(info => {
+                    mostrarBotones(userId, info.jornada_activa, info.pausa_activa);
+
+                    if (accion === 'start' || accion === 'endpause') {
+                        iniciarContador(userId, info.tiempo);
+                    }
+
+                    if (accion === 'pause' || accion === 'end') {
+                        pararContador(userId);
                     }
                 });
-        }
 
-        function endPause() {
-            fetch('/end-pause', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({})
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        startTimer();
-                        document.getElementById('startPauseBtn').style.display = 'block';
-                        document.getElementById('endPauseBtn').style.display = 'none';
-                    }
-                });
-        }
+                Swal.fire('Éxito', data.message, 'success');
+            } else {
+                Swal.fire('Error', data.message || 'Ocurrió un error', 'error');
+            }
+        })
+        .catch(() => {
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        });
+    }
+</script>
 
-    </script>
 </body>
 </html>

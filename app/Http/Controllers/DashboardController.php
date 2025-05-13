@@ -288,7 +288,14 @@ class DashboardController extends Controller
                 }
                 return view('dashboards.dashboard_comercial', compact('user','diasDiferencia','estadosKit','comisionRestante','ayudas','comisionTramitadas','comisionPendiente', 'comisionCurso', 'pedienteCierre','timeWorkedToday', 'jornadaActiva', 'pausaActiva'));
             case(7):
-                return view('dashboards.dashboard_fichaje', compact('users'));
+
+                $users = User::where('inactive', 0)->get()->map(function ($usuario) {
+                    $usuario->jornada_activa = $usuario->activeJornada();
+                    $usuario->pausa_activa = optional($usuario->jornada_activa)->pausasActiva();
+                    return $usuario;
+                });
+
+            return view('dashboards.dashboard_fichaje', compact('users'));
         }
     }
     public function parseFlexibleTime($time) {
@@ -446,78 +453,6 @@ class DashboardController extends Controller
         $todayJornada = Jornada::where('admin_user_id', $user->id)
         ->whereDate('start_time', Carbon::today())
         ->get();
-
-        //Alertas de puntualidad
-        // if(count($todayJornada) == 1 ){
-
-        //     $horaLimiteEntrada = Carbon::createFromTime(9, 30, 0, 'Europe/Madrid');
-        //     $horaLimiteEntradaUTC = $horaLimiteEntrada->setTimezone('UTC');
-        //     $mesActual = Carbon::now()->month;
-        //     $añoActual = Carbon::now()->year;
-        //     $fechaActual = Carbon::now();
-
-        //     $tardehoy = Jornada::where('admin_user_id', $user->id)
-        //     ->whereDate('start_time', $fechaActual->toDateString())
-        //     ->whereTime('start_time', '>', $horaLimiteEntradaUTC->format('H:i:s'))
-        //     ->get();
-
-
-        //     $hourlyAverage = Jornada::where('admin_user_id', $user->id)
-        //         ->whereMonth('start_time', $mesActual)
-        //         ->whereYear('start_time', $añoActual)
-        //         ->whereRaw("TIME(start_time) > ?", [$horaLimiteEntradaUTC->format('H:i:s')])
-        //         ->get();
-
-        //     $fechaNow = Carbon::now();
-
-        //     if(count($tardehoy) > 0){
-
-        //         //Si hay mas de 3 veces
-        //         if (count($hourlyAverage) > 2) {
-        //             $alertados = [1,8];
-        //             foreach($alertados as $alertar){
-        //                 $data = [
-        //                     "admin_user_id" =>  $alertar,
-        //                     "stage_id" => 23,
-        //                     "description" => $user->name . " ha llegado tarde 3 veces o mas este mes",
-        //                     "status_id" => 1,
-        //                     "reference_id" => $user->id,
-        //                     "activation_datetime" => Carbon::now()->format('Y-m-d H:i:s')
-        //                 ];
-
-        //                 $alert = Alert::create($data);
-        //                 $alertSaved = $alert->save();
-        //             }
-        //         }
-
-        //         switch (count($hourlyAverage)) {
-        //             case 1:
-        //                 $text = 'Hemos notado que hoy llegaste después de la hora límite de entrada (09:30). Entendemos que a veces pueden surgir imprevistos, pero te recordamos la importancia de respetar el horario para mantener la eficiencia en el equipo.';
-        //                 break;
-        //             case 2:
-        //                 $text = 'Nuevamente has llegado después de la hora límite de entrada (09:30). Reforzamos la importancia de cumplir con el horario para asegurar un buen rendimiento y organización en el equipo.';
-        //                 break;
-        //             case 3:
-        //                 $text = 'Se ha registrado tu llegada tarde tres veces. Esta información se compartirá con la Dirección. Es importante respetar los horarios para mantener el rendimiento y la organización del equipo.';
-        //                 break;
-        //             default:
-        //                 $text = 'Se ha registrado tu llegada tarde mas de  tres veces. Esta información se compartirá con la Dirección. Es importante respetar los horarios para mantener el rendimiento y la organización del equipo.';
-        //                 break;
-        //         }
-
-        //         $data = [
-        //             "admin_user_id" =>  $user->id,
-        //             "stage_id" => 23,
-        //             "description" => $text,
-        //             "status_id" => 1,
-        //             "reference_id" => $user->id,
-        //             "activation_datetime" => $fechaNow->format('Y-m-d H:i:s')
-        //         ];
-
-        //         $alert = Alert::create($data);
-        //         $alertSaved = $alert->save();
-        //     }
-        // }
 
 
         if($jornada){
@@ -951,4 +886,142 @@ class DashboardController extends Controller
             return 503;
         }
     }
+
+    public function getUserTimeWorkedToday($id)
+    {
+        $user = User::findOrFail($id);
+
+        $todayJornadas = $user->jornadas()
+            ->where(function ($query) {
+                $query->whereDate('start_time', Carbon::today())
+                    ->orWhere('is_active', true);
+            })
+            ->get();
+
+        $totalWorkedSeconds = 0;
+        $jornadaActiva = null;
+        $pausaActiva = false;
+
+        foreach ($todayJornadas as $jornada) {
+            $workedSeconds = Carbon::parse($jornada->start_time)->diffInSeconds($jornada->end_time ?? Carbon::now());
+            $totalPauseSeconds = $jornada->pauses->sum(function ($pause) {
+                return Carbon::parse($pause->start_time)->diffInSeconds($pause->end_time ?? Carbon::now());
+            });
+
+            $totalWorkedSeconds += $workedSeconds - $totalPauseSeconds;
+
+            if ($jornada->is_active) {
+                $jornadaActiva = $jornada;
+                $pausaActiva = $jornada->pauses->contains(function ($pause) {
+                    return is_null($pause->end_time);
+                });
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'tiempo' => $totalWorkedSeconds,
+            'jornada_activa' => (bool) $jornadaActiva,
+            'pausa_activa' => (bool) $pausaActiva,
+        ]);
+    }
+
+    public function accionUsuario($id, $accion)
+    {
+        $user = User::findOrFail($id);
+
+        switch ($accion) {
+            case 'start':
+                // Verifica si ya hay jornada activa
+                if ($user->activeJornada()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El usuario ya tiene una jornada activa.'
+                    ]);
+                }
+
+                Jornada::create([
+                    'admin_user_id' => $user->id,
+                    'start_time' => now(),
+                    'is_active' => true
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Jornada iniciada correctamente.'
+                ]);
+
+            case 'pause':
+                $jornada = $user->activeJornada();
+                if (!$jornada) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No hay jornada activa para iniciar pausa.'
+                    ]);
+                }
+
+                Pause::create([
+                    'jornada_id' => $jornada->id,
+                    'start_time' => now()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pausa iniciada correctamente.'
+                ]);
+
+            case 'endpause':
+                $jornada = $user->activeJornada();
+                if (!$jornada) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No hay jornada activa.'
+                    ]);
+                }
+
+                $pausa = $jornada->pauses()->whereNull('end_time')->first();
+                if (!$pausa) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No hay pausa activa.'
+                    ]);
+                }
+
+                $pausa->update([
+                    'end_time' => now(),
+                    'is_active' => false
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pausa finalizada correctamente.'
+                ]);
+
+            case 'end':
+                $jornada = $user->activeJornada();
+                if (!$jornada) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No hay jornada activa.'
+                    ]);
+                }
+
+                $jornada->update([
+                    'end_time' => now(),
+                    'is_active' => false
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Jornada finalizada correctamente.'
+                ]);
+
+            default:
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acción no válida.'
+                ]);
+        }
+    }
+
 }
