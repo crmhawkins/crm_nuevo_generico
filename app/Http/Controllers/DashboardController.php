@@ -289,7 +289,7 @@ class DashboardController extends Controller
                 return view('dashboards.dashboard_comercial', compact('user','diasDiferencia','estadosKit','comisionRestante','ayudas','comisionTramitadas','comisionPendiente', 'comisionCurso', 'pedienteCierre','timeWorkedToday', 'jornadaActiva', 'pausaActiva'));
             case(7):
 
-                $users = User::where('inactive', 0)->get()->map(function ($usuario) {
+                $users = User::where('inactive', 0)->where('access_level_id',5)->get()->map(function ($usuario) {
                     $usuario->jornada_activa = $usuario->activeJornada();
                     $usuario->pausa_activa = optional($usuario->jornada_activa)->pausasActiva();
                     return $usuario;
