@@ -88,6 +88,12 @@ Route::post('/budget/generate-pdf', [BudgetController::class, 'generatePDF'])->n
 
 Route::group(['middleware' => 'auth'], function () {
 
+
+Route::post('/usuarios/{id}/tiempo-hoy', [DashboardController::class, 'getUserTimeWorkedToday']);
+Route::post('/usuarios/{id}/accion/{accion}', [DashboardController::class, 'accionUsuario']);
+
+
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 //Alertas
