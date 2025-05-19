@@ -44,7 +44,7 @@ class TasksAsignarTable extends Component
 
 
     protected function actualizartareas(){
-            $query = Task::where('split_master_task_id',null)->where('duplicated',0)
+            $query = Task::where('split_master_task_id',null)->where('duplicated',null)
             ->when($this->buscar, function ($query) {
                     $query->where('tasks.title', 'like', '%' . $this->buscar . '%')
                           ->orWhere('tasks.description', 'like', '%' . $this->buscar . '%');
