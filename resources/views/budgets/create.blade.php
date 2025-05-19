@@ -39,7 +39,6 @@
                         <div class="bloque-formulario">
                             <div class="row">
                                 <div class="col-sm-12 col-md-6">
-                                    {{-- Cliente model:Client --}}
                                     <div class="form-group">
                                         <label class="mb-2 text-left">Cliente Asociado</label>
                                         <div class="flex flex-row align-items-start mb-0">
@@ -63,7 +62,17 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
-                                    {{-- Campaña model:Project --}}
+                                    <div class="form-group mb-3">
+                                        <label class="mb-2 text-left" for="concept">Titulo:</label>
+                                        <input type="text" class="form-control @error('concept') is-invalid @enderror" id="concept" value="{{ old('concept') }}" name="concept">
+                                        @error('concept')
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                {{-- <div class="col-sm-12 col-md-6">
                                     <div class="form-group">
                                         <label class="mb-2 text-left">Campañas</label>
                                         <div class="flex flex-row align-items-start mb-0">
@@ -91,11 +100,11 @@
                                             </p>
                                         @enderror
                                     </div>
-                                </div>
+                                </div> --}}
                             </div>
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="col-sm-12 col-md-6">
-                                    {{-- Gestor model:User --}}
+
                                     <div class="form-group mb-3">
                                         <label class="mb-2 text-left">Gestor</label>
                                         <select class="choices form-select w-100 @error('admin_user_id') is-invalid @enderror" name="admin_user_id" id="gestor">
@@ -116,7 +125,6 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
-                                    {{-- Comercial model:User --}}
                                     <div class="form-group mb-3">
                                         <label class="mb-2 text-left">Comercial</label>
                                         <select class="choices form-select w-75" name="commercial_id">
@@ -131,7 +139,7 @@
                                         </select>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="row">
                                 <div class="col-sm-12 col-md-6">
                                     {{-- Formas de Pago model:PaymentMethod --}}
@@ -149,32 +157,6 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
-                                    {{-- Concepto --}}
-                                    <div class="form-group mb-3">
-                                        <label class="mb-2 text-left" for="concept">Titulo:</label>
-                                        <input type="text" class="form-control @error('concept') is-invalid @enderror" id="concept" value="{{ old('concept') }}" name="concept">
-                                        @error('concept')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-12 col-md-6">
-                                    {{-- Observaciones --}}
-                                    <div class="form-group">
-                                        <label for="description">Observaciones:</label>
-                                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description">{{ old('description') }}</textarea>
-                                        @error('description')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-sm-12 col-md-6">
                                     {{-- Nota --}}
                                     <div class="form-group">
                                         <label for="note">Nota Interna:</label>
@@ -186,6 +168,21 @@
                                         @enderror
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12">
+                                    {{-- Observaciones --}}
+                                    <div class="form-group">
+                                        <label for="description">Observaciones:</label>
+                                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description">{{ old('description') }}</textarea>
+                                        @error('description')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
                             </div>
                             {{-- Boton --}}
                             <div class="form-group mt-5">

@@ -144,8 +144,8 @@ class BudgetController extends Controller
         // Validamos los campos
         $data = $this->validate($request, [
             'client_id' => 'required|integer',
-            'project_id' => 'required|integer',
-            'admin_user_id' => 'required|integer',
+            'project_id' => 'nullable|integer',
+            'admin_user_id' => 'nullable|integer',
             'concept' => 'required|max:200',
             'commercial_id' => 'nullable|integer',
             'payment_method_id' => 'nullable|integer',
@@ -159,12 +159,13 @@ class BudgetController extends Controller
             'concept.required' => 'El concepto es requerido para continuar',
         ]);
 
-        $budgetTemporal = Budget::where('temp', true)->orderBy('created_at', 'desc')->first();
-        $referenceTemp = $budgetTemporal === null ? 'temp_00' : $this->generateReferenceTemp($budgetTemporal->reference);
+        //$budgetTemporal = Budget::where('temp', true)->orderBy('created_at', 'desc')->first();
+        //$referenceTemp = $budgetTemporal === null ? 'temp_00' : $this->generateReferenceTemp($budgetTemporal->reference);
+        $referencia = $this->generateBudgetReference();
 
-        $data['temp'] = true;
-        $data['budget_status_id'] = 1;
-        $data['reference'] = $referenceTemp;
+        $data['temp'] = false;
+        $data['budget_status_id'] = 3;
+        $data['reference'] = $referencia['reference'];
         $data['creation_date'] = Carbon::now();
         $petitionId = $request->petitionId;
 

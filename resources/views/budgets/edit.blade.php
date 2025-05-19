@@ -47,7 +47,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="form-group">
+                                        {{-- <div class="form-group">
                                             <label class="mb-2 text-left">Campañas</label>
                                             <div class="flex flex-row align-items-start mb-0">
                                                 <select class=" form-select w-100 @error('project_id') is-invalid @enderror" name="project_id"  id="proyecto" @if($campanias != null )@if( $campanias->count() < 0){{'disabled'}} @endif @endif >
@@ -64,7 +64,7 @@
                                                     <strong>{{ $message }}</strong>
                                                 </p>
                                             @enderror
-                                        </div>
+                                        </div> --}}
                                         <div class="form-group mb-3">
                                             <label class="mb-2 text-left" for="payment_method_id">Forma de pago:</label>
                                             <div class="flex flex-row align-items-start mb-0">
@@ -122,7 +122,7 @@
                                                 </p>
                                             @enderror
                                         </div>
-                                        <div class="form-group mb-3">
+                                        {{-- <div class="form-group mb-3">
                                             <label class="mb-2 text-left">Gestor</label>
                                             <select class=" form-select w-100 @error('admin_user_id') is-invalid @enderror" name="admin_user_id" id="gestor">
                                                 @if ($gestores->count() > 0)
@@ -138,7 +138,7 @@
                                                     <strong>{{ $message }}</strong>
                                                 </p>
                                             @enderror
-                                        </div>
+                                        </div> --}}
                                         <div class="form-group mb-3">
                                             <label class="mb-2 text-left" for="concept">Concepto:</label>
                                             <input type="text" class="form-control @error('concept') is-invalid @enderror" id="concept" value="{{ $presupuesto->concept }}" name="concept">
@@ -571,6 +571,7 @@
         //Boton de generar factura
         $('#generateInvoice').click(function(e){
             e.preventDefault(); // Esto previene que el enlace navegue a otra página.
+            $(this).prop('disabled', true);
 
             const idPresupuesto = @json($presupuesto->id);
 
@@ -643,6 +644,7 @@
         //Boton de generar tareas
         $('#generateTask').click(function(e){
             e.preventDefault(); // Esto previene que el enlace navegue a otra página.
+                $(this).prop('disabled', true);
 
             const idPresupuesto = @json($presupuesto->id);
 
@@ -935,7 +937,9 @@
 
         $('#generateInvoicePartial').click(function(e) {
             // Iniciar SweetAlert2 con opciones
+            $(this).prop('disabled', true);
             e.preventDefault();
+
             const porcentajeYaFacturado = @json($porcentaje); // Asegúrate de que esta variable tiene el porcentaje ya facturado.
             const maximoPermitido = 100 - porcentajeYaFacturado;
             Swal.fire({
