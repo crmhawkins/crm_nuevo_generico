@@ -536,6 +536,7 @@ class CuadroController extends Controller
         // Cálculo de los totales previstos basados en las facturas pendientes
         $aux = 0;
         $facturas = $this->getAllInvoices($year);
+        $balance = 0;
 
         foreach (range(1, 12) as $i) {
             $mesFormat = sprintf("%02d", $i);
