@@ -6,6 +6,7 @@ use App\Http\Controllers\Alert\AlertController;
 use App\Http\Controllers\Archivos\FileController;
 use App\Http\Controllers\Backup\BackupController;
 use App\Http\Controllers\Bajas\BajaController;
+use App\Http\Controllers\Bancos\BancosController;
 use App\Http\Controllers\CrmActivities\CrmActivityMeetingController;
 use App\Http\Controllers\Suppliers\SuppliersController;
 use App\Http\Controllers\Tesoreria\CuadroController;
@@ -178,6 +179,13 @@ Route::post('/bajas/store', [BajaController::class, 'store'])->name('bajas.store
 Route::post('/bajas/update/{baja}', [BajaController::class, 'update'])->name('bajas.update');
 Route::post('/bajas/delete', [BajaController::class, 'destroy'])->name('bajas.delete');
 
+//Bancos
+Route::get('/bancos', [BancosController::class, 'index'])->name('bancos.index');
+Route::get('/bancos/create', [BancosController::class, 'create'])->name('bancos.create');
+Route::get('/bancos/edit/{banco}', [BancosController::class, 'edit'])->name('bancos.edit');
+Route::post('/bancos/store', [BancosController::class, 'store'])->name('bancos.store');
+Route::post('/bancos/update/{id}', [BancosController::class, 'update'])->name('bancos.update');
+Route::post('/bancos/delete', [BancosController::class, 'destroy'])->name('bancos.delete');
 
 // Users (USUARIOS)
 Route::get('/users', [UserController::class, 'index'])->name('users.index');
