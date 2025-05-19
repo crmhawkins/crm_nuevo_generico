@@ -124,7 +124,7 @@
     @include('partials.toast')
     <script>
         var feed = @json($feed);
-        var api = @json($api->api_key);
+        var api = @json(optional($api)->api_key);
 
         console.log(feed);
         document.addEventListener('DOMContentLoaded', function() {
