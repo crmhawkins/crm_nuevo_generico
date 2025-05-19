@@ -9,10 +9,24 @@ use Illuminate\Http\Request;
 class BancosController extends Controller
 {
 
+    public function index(){
+        $bancos = BankAccounts::paginate(10); // O el número que quieras por página
+        return view('bancos.index',compact('bancos'));
+    }
+
+    public function create(){
+        return view('bancos.create');
+    }
+
+    public function edit(BankAccounts $banco){
+        return view('bancos.edit',compact('banco'));
+    }
 
     public function store(Request $request){
         $rules = [
-            'nombre' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'cuenta' => 'required|string|max:255',
+
         ];
 
         // Validar los datos del formulario
@@ -25,22 +39,33 @@ class BancosController extends Controller
 
     public function update(Request $request, BankAccounts $banco){
         $rules = [
-            'nombre' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'cuenta' => 'required|string|max:255',
         ];
 
         // Validar los datos del formulario
         $validatedData = $request->validate($rules);
         $banco->update([
-            'nombre' => $validatedData['nombre']
+            'name' => $validatedData['name']
         ]);
 
         return redirect()->back()->with('status', 'Banco actualizado con éxito!');
 
     }
 
-    public function destroy(BankAccounts $banco){
-        $banco->delete();
-
-        return redirect()->back()->with('status', 'Banco eliminado con éxito!');
+    public function destroy(Request $request){
+        $banco = BankAccounts::find($request->id);
+        if($banco){
+            $banco->delete();
+            return response()->json([
+                'status' => true,
+                'mensaje' => 'Banco eliminado con éxito!'
+            ]);
+        }else{
+            return response()->json([
+                'status' => false,
+                'mensaje' => 'Banco no encontrado'
+            ]);
+        }
     }
 }

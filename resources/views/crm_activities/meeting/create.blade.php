@@ -139,7 +139,6 @@
                                     <label for="teamActa" class="form-label">Equipo Vinculado al Acta</label>
                                     <select class="form-select" id="teamActa" name="teamActa[]" multiple >
                                         <option value="">Buscar ...</option>
-                                        <option value="1" selected="selected"> Iván Fernández Cardosa </option>
                                         @foreach($usuariosActa as $user)
                                             <option value="{{$user->id}}">{{$user->name}} {{$user->surname}}</option>
                                         @endforeach
