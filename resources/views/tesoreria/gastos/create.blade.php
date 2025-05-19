@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titulo', 'Editar Gasto Sin Clasificar')
+@section('titulo', 'Creacion de Gasto')
 
 @section('css')
     <link rel="stylesheet" href="{{asset('assets/vendors/choices.js/choices.min.css')}}" />
@@ -11,8 +11,8 @@
     <div class="page-title card-body">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Editar Gasto</h3>
-                <p class="text-subtitle text-muted">Formulario para editar un gasto</p>
+                <h3>Crear Gasto</h3>
+                <p class="text-subtitle text-muted">Formulario para crear un gasto</p>
             </div>
 
             <div class="col-12 col-md-6 order-md-2 order-first">
