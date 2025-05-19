@@ -50,6 +50,7 @@
                     $maquinasActive = request()->routeIs('maquinas.*') || request()->routeIs('maquinasCategoria.*');
                     $ActiveCabinas = request()->routeIs('cabinas.*');
                     $controlTemperaturaActive = request()->routeIs('neveras.*');
+                    $bancosActive = request()->routeIs('bancos.*');
                     $contenedorSalonesActive = $SalonesActive || $controlTemperaturaActive || $ActiveCabinas || $productosActive || $AlmacenesActive || $maquinasActive;
                     $contenedorGestionActive = $clientesActive || $presupuestoActive ||request()->routeIs('facturas.index') || $servicesActive || $poveedoresActive || $peticionesActive || $projectActive || $tareaActive || request()->routeIs('order.indexAll');
                     $contenedorRecursosHumanosActive = request()->routeIs('turnos.*') || $contratosActive || $nominasActive || $BajaActive || $vacacionesActive || request()->routeIs('productividad.index') || request()->routeIs('horas.index');
