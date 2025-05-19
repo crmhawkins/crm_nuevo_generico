@@ -386,14 +386,7 @@
                                     </span>
                                 </a>
                             </li>
-                            <li class="submenu-item {{ request()->routeIs('gasto-sin-clasificar.index') ? 'active' : '' }}">
-                                <a href="{{route('gasto-sin-clasificar.index')}}">
-                                    <i class="fa-solid fa-list"></i>
-                                    <span>
-                                        Ver Gastos Sin Clasificar
-                                    </span>
-                                </a>
-                            </li>
+
                             <li class="submenu-item {{ request()->routeIs('admin.treasury.index') ? 'active' : '' }}">
                                 <a target="_blank" href="{{route('admin.treasury.index')}}">
                                     <i class="fa-solid fa-list"></i>
