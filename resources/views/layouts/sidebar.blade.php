@@ -916,6 +916,30 @@
                                 </li>
                             </ul>
                         </li>
+                        <li class="sidebar-item has-sub {{ $bancosActive ? 'active' : '' }}">
+                            <a href="#" class='sidebar-link'>
+                                <i class="fa-solid fa-building-columns fs-5"></i>
+                                <span>Bancos</span>
+                            </a>
+                            <ul class="submenu" style="{{ $bancosActive ? 'display:block;' : 'display:none;' }}">
+                                <li class="submenu-item {{ request()->routeIs('bancos.index') ? 'active' : '' }}">
+                                    <a href="{{route('bancos.index')}}">
+                                        <i class="fa-solid fa-list"></i>
+                                        <span>
+                                            Ver todos
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('bancos.create') ? 'active' : '' }}">
+                                    <a href="{{route('bancos.create')}}">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>
+                                            Crear banco
+                                        </span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
 
                         <li class="sidebar-item  has-sub {{ $cofiguracionActive ? 'active' : '' }}">
                             <a href="#" class='sidebar-link'>
