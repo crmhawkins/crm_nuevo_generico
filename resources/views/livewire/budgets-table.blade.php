@@ -66,9 +66,7 @@
                         @foreach ([
                             'reference' => 'REFERENCIA',
                             'client_id' => 'CLIENTE',
-                            'project_id' => 'CAMPAÑA',
                             'creation_date' => 'FECHA CREACION',
-                            'budget_status_id' => 'ESTADO',
                             'total' => 'TOTAL',
                             'admin_user_id' => 'GESTOR'
                         ] as $field => $label)
@@ -89,9 +87,7 @@
                         <tr class="clickable-row" data-href="{{route('presupuesto.edit', $budget->id)}}">
                             <td>{{$budget->reference}}</td>
                             <td>{{$budget->cliente->name ??  ($budget->client_id ? 'Cliente borrado' : 'Sin cliente asignado') }}</td>
-                            <td>{{$budget->proyecto->name ?? ($budget->project_id ? 'Campaña borrada' : 'Sin campaña asignada') }}</td>
                             <td>{{$budget->creation_date}}</td>
-                            <td>{{$budget->estadoPresupuesto->name ?? ($budget->budget_status_id ? 'Estado borrado' : 'Sin estado asignado') }}</td>
                             <td>{{ number_format((float)$budget->total, 2, '.', '')  }} €</td>
                             <td>{{$budget->usuario->name ?? ($budget->admin_user_id ? 'Gestor borrado' : 'Sin gestor asignado') }}</td>
                             <td class="flex flex-row justify-evenly align-middle" style="min-width: 120px">

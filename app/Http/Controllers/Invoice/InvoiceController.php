@@ -480,45 +480,56 @@ class InvoiceController extends Controller
                 "province"      => $cliente->province,
             ]));
         }
-        foreach ($conceptos as $key => $concepto) {
-            if ($concepto->discount > 0) {
 
-                $fac->addItem(new FacturaeItem([
-                    "articleCode" => $concepto->services_category_id,
-                    "name" => $concepto->title,
-                    "unitPriceWithoutTax" => $concepto->total_no_discount / $concepto->units,
-                    "quantity" => $concepto->units,
-                    "discounts" => [
-                          ["reason" => "Descuento", "amount" => $concepto->discount]
-                    ],
-                    "taxes" => [Facturae::TAX_IVA => $factura->iva_percentage]
-                ]));
-            }else {
-                $fac->addItem(new FacturaeItem([
-                    "articleCode" => $concepto->services_category_id,
-                    "name" => $concepto->title,
-                    "unitPriceWithoutTax" => $concepto->total_no_discount / $concepto->units,
-                    "quantity" => $concepto->units,
-                    "taxes" => [Facturae::TAX_IVA => $factura->iva_percentage]
-                ]));
+        $retencion = floatval($factura->retencion_percentage);
+        $iva = floatval($factura->iva_percentage);
+
+        foreach ($conceptos as $concepto) {
+            // Evitar divisiones por cero
+            $unidad = max(1, $concepto->units);
+
+            $item = [
+                "articleCode" => $concepto->services_category_id,
+                "name" => $concepto->title,
+                "unitPriceWithoutTax" => $concepto->total_no_discount / $unidad,
+                "quantity" => $concepto->units,
+                "taxes" => []
+            ];
+
+            // Añadir IVA si aplica
+            if ($iva > 0) {
+                $item["taxes"][Facturae::TAX_IVA] = $iva;
             }
 
+            // Añadir retención IRPF si aplica
+            if ($retencion > 0) {
+                $item["taxes"][Facturae::TAX_IRPF] = $retencion;
+            }
+
+            // Añadir descuento si existe
+            if ($concepto->discount > 0) {
+                $item["discounts"] = [
+                    ["reason" => "Descuento", "amount" => $concepto->discount]
+                ];
+            }
+
+            $fac->addItem(new FacturaeItem($item));
         }
 
-        $certificado = $empresa->certificado;
-        $contrasena = $empresa->contrasena;
+        // $certificado = $empresa->certificado;
+        // $contrasena = $empresa->contrasena;
 
-        if (empty($certificado)) {
-            return response()->json(['error' => 'Falta el certificado.', 'status' => false]);
+        // if (empty($certificado)) {
+        //     return response()->json(['error' => 'Falta el certificado.', 'status' => false]);
 
-        }
-        if (empty($contrasena)) {
-            return response()->json(['error' => 'Falta la contraseña del certificado.', 'status' => false]);
+        // }
+        // if (empty($contrasena)) {
+        //     return response()->json(['error' => 'Falta la contraseña del certificado.', 'status' => false]);
 
-        }
+        // }
 
-        $encryptedStore = file_get_contents(asset('storage/'.$certificado));
-        $fac->sign($encryptedStore, null, $contrasena);
+        // $encryptedStore = file_get_contents(asset('storage/'.$certificado));
+        // $fac->sign($encryptedStore, null, $contrasena);
 
         $fac->export($numero.'-'.$serie.".xsig");
 

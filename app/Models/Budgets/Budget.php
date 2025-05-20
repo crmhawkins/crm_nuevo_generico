@@ -29,6 +29,8 @@ class Budget extends Model
         'base',
         'iva',
         'iva_percentage',
+        'retencion',
+        'retencion_percentage',
         'total',
         'discount',
         'temp',

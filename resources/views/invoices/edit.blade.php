@@ -55,18 +55,18 @@
                                             <input type="text" class="form-control @error('client_id') is-invalid @enderror" id="client_id" value="{{ $factura->cliente->name ??  ($factura->client_id ? 'Cliente borrado' : 'Sin cliente asignado') }}" name="client_id" disabled>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 col-sm-12">
+                                    {{-- <div class="col-md-6 col-sm-12">
                                         <div class="form-group mb-3">
                                             <label class="text-left mb-2">Campaña <span id="budgetLinkContainer"></span><a id="budgetAssignedClient" target="_blank" href="{{ route('campania.edit', $factura->project_id) }}"><i class="fas fa-external-link-alt"></i></a></label>
                                             <input type="text" class="form-control @error('project_id') is-invalid @enderror" id="project_id" value="{{ $factura->project->name ?? ($factura->project_id ? 'Campaña borrada' : 'Sin campaña asignada') }}" name="project_id" disabled>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6 col-sm-12">
+                                    </div> --}}
+                                    {{-- <div class="col-md-6 col-sm-12">
                                         <div class="form-group mb-3">
                                             <label class="text-left mb-2">Gestor:</label>
                                             <input type="text" class="form-control @error('admin_user_id') is-invalid @enderror" id="admin_user_id" value="{{ $factura->adminUser->name ?? ($factura->admin_user_id ? 'Gestor borrado' : 'Sin gestor asignado') }}" name="admin_user_id" disabled>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="col-md-6 col-sm-12">
                                         <div class="form-group mb-3">
                                             <label class="text-left mb-2" for="payment_method_id">Forma de pago:</label>
@@ -245,6 +245,8 @@
                                               <th>Base</th>
                                               <th>% IVA</th>
                                               <th>IVA</th>
+                                              <th>% Retención</th>
+                                              <th>Retención</th>
                                               <th>TOTAL</th>
                                             </tr>
                                           </thead>
@@ -255,6 +257,8 @@
                                                 <td id="base_amount"> {{ number_format((float)$factura->base, 2, '.', '')  }}</td>
                                                 <td id="iva_percentage">{{ number_format((float)$factura->iva_percentage, 0, '.', '')  }}</td>
                                                 <td id="iva_amount">{{ number_format((float)$factura->iva, 2, '.', '')  }}</td>
+                                                <td id="Retencion_percentage">{{ number_format((float)$factura->retencion_percentage, 0, '.', '')  }}</td>
+                                                <td id="Retencion_amount">{{ number_format((float)$factura->retencion, 2, '.', '')  }}</td>
                                                 <td id="budget_total"><strong>{{ number_format((float)$factura->total, 2, '.', '')  }} €</strong></td>
                                             </tr>
                                           </tbody>

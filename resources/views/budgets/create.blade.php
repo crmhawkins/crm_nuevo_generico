@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titulo', 'Crear Presupuesto')
+@section('titulo', 'Crear Pre-factura')
 
 @section('css')
 <link rel="stylesheet" href="{{asset('assets/vendors/choices.js/choices.min.css')}}" />
@@ -12,16 +12,16 @@
         <div class="page-title card-body">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Crear Presupuesto</h3>
-                    <p class="text-subtitle text-muted">Formulario para registrar un presupuesto</p>
+                    <h3>Crear Pre-factura</h3>
+                    <p class="text-subtitle text-muted">Formulario para registrar un pre-factura</p>
                 </div>
 
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{route('presupuestos.index')}}">Presupuestos</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Crear presupuesto</li>
+                            <li class="breadcrumb-item"><a href="{{route('presupuestos.index')}}">Pre-factura</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Crear pre-factura</li>
                         </ol>
                     </nav>
                 </div>

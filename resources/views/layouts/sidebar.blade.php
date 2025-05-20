@@ -81,7 +81,7 @@
                     <a href="#" class='sidebar-link'>
                         <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
 
-                        <span>Presupuestos</span>
+                        <span>Pre-factura</span>
                     </a>
                     <ul class="submenu" style="{{ $presupuestoActive ? 'display:block;' : 'display:none;' }}">
                         <li class="submenu-item {{ request()->routeIs('presupuestos.index') ? 'active' : '' }}">
@@ -96,7 +96,7 @@
                             <a href="{{route('presupuesto.create')}}">
                                 <i class="fa-solid fa-plus"></i>
                                 <span>
-                                    Crear presupuesto
+                                    Crear Pre-factura
                                 </span>
                             </a>
                         </li>
@@ -108,7 +108,7 @@
                         <span>Facturas</span>
                     </a>
                 </li>
-                <li class="sidebar-item has-sub {{ $projectActive ? 'active' : '' }}">
+                {{-- <li class="sidebar-item has-sub {{ $projectActive ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="fa-solid fa-diagram-project fs-5"></i>
                         <span>Campañas</span>
@@ -131,7 +131,7 @@
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> --}}
                 <li class="sidebar-item has-sub {{ $poveedoresActive ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="fa-solid fa-user-tie fs-5"></i>

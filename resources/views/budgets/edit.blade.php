@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titulo', 'Editar Presupuesto')
+@section('titulo', 'Editar Pre-factura')
 
 @section('css')
 <link rel="stylesheet" href="{{asset('assets/vendors/choices.js/choices.min.css')}}" />
@@ -12,16 +12,16 @@
         <div class="page-title card-body" >
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Editar Presupuesto</h3>
-                    <p class="text-subtitle text-muted">Formulario para editar un presupuesto</p>
+                    <h3>Editar Pre-factura</h3>
+                    <p class="text-subtitle text-muted">Formulario para editar un pre-factura</p>
                 </div>
 
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{route('presupuestos.index')}}">Presupuestos</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Editar presupuesto</li>
+                            <li class="breadcrumb-item"><a href="{{route('presupuestos.index')}}">Pre-factura</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Editar pre-factura</li>
                         </ol>
                     </nav>
                 </div>
@@ -310,6 +310,8 @@
                                                 <th>Base</th>
                                                 <th>% IVA</th>
                                                 <th>IVA</th>
+                                                <th>% Retención</th>
+                                                <th>Retención</th>
                                                 <th>TOTAL</th>
                                                 </tr>
                                             </thead>
@@ -324,6 +326,11 @@
                                                     value="{{ number_format((float)$presupuesto->iva_percentage, 2, '.', '')  }}" >
                                                     </td>
                                                     <td id="iva_amount">{{ number_format((float)$presupuesto->iva, 2, '.', '')  }}</td>
+                                                    <td>
+                                                        <input type="number" class="form-control" style="width:80px" id="retencion" name="retencion_percentage" min="0" max="100"
+                                                    value="{{ number_format((float)$presupuesto->retencion_percentage, 2, '.', '')  }}" >
+                                                    </td>
+                                                    <td id="retencion_amount">{{ number_format((float)$presupuesto->retencion, 2, '.', '')  }}</td>
                                                     <td id="budget_total"><strong>{{ number_format((float)$presupuesto->total, 2, '.', '')  }} €</strong></td>
                                                 </tr>
                                             </tbody>
@@ -333,6 +340,7 @@
                                       <input type="hidden" id="gross" name="gross" value="0">
                                       <input type="hidden" id="total" name="total" value="0">
                                       <input type="hidden" id="iva_total" name="iva" value="0">
+                                      <input type="hidden" id="retencion_total" name="retencion" value="0">
                                       @if($presupuesto->budget_status_id == null || $presupuesto->budget_status_id == 1 || $presupuesto->budget_status_id == 2 )
                                         <input type="hidden" id="thisbudgetstatus"  value="0">
                                       @else
@@ -366,8 +374,8 @@
                                 @csrf
                                 <button type="submit" class="btn btn-secondary btn-block mb-3">Duplicar</button>
                             </form>
-                            <a href="" id="generatePdf" class="btn btn-dark btn-block mb-3">Generar PDF</a>
-                            <a href="" id="enviarEmail" data-id="{{$presupuesto->id}}" class="btn btn-dark btn-block mb-3">Enviar por email</a>
+                            {{-- <a href="" id="generatePdf" class="btn btn-dark btn-block mb-3">Generar PDF</a> --}}
+                            {{-- <a href="" id="enviarEmail" data-id="{{$presupuesto->id}}" class="btn btn-dark btn-block mb-3">Enviar por email</a> --}}
                             <a href="" id="generateInvoice" class="btn btn-dark btn-block mb-3">Generar factura</a>
                             <a href="" id="generateInvoicePartial" class="btn btn-dark btn-block mb-3">Generar factura parcial</a>
                             <a href="" id="deletePresupuesto" data-id="{{$presupuesto->id}}" class="btn btn-outline-danger btn-block mb-3">Eliminar</a>
@@ -551,7 +559,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Ocurrió un error al cambiar el estado del presupuesto. Por favor, inténtalo de nuevo.',
+                        text: 'Ocurrió un error al cambiar el estado de la pre-factura. Por favor, inténtalo de nuevo.',
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
@@ -1032,12 +1040,17 @@
             actualizarPrecios()
         })
 
+        $('#retencion').on('change', function(){
+            actualizarPrecios()
+        })
+
         // Actualizar Precios
         const actualizarPrecios = () => {
             const conceptosPresupuesto = @json($budgetConcepts);
             let total = 0;
             let totalgross = 0;
             let iva = $('#iva').val();
+            let retencion = $('#retencion').val();
             let descuento;
 
             conceptosPresupuesto.map((concepto) => {
@@ -1046,14 +1059,17 @@
                 totalgross += concepto.sale_price
             })
             const ivaTotal = (total*iva)/100
+            const retencionTotal = (total*retencion)/100
             $('#base').val(total)
             $('#gross').val(totalgross)
-            $('#total').val(total+ivaTotal)
+            $('#total').val(total+ivaTotal-retencionTotal)
             $('#iva_total').val(ivaTotal)
-            $('#budget_total').html(`<strong>${formatearNumero(total+ivaTotal)} €</strong>`)
+            $('#retencion_total').val(retencionTotal)
+            $('#budget_total').html(`<strong>${formatearNumero(total+ivaTotal-retencionTotal)} €</strong>`)
             $('#gross').html(formatearNumero(totalgross) + ' €')
             $('#base_amount').html(formatearNumero(total) + ' €')
             $('#iva_amount').html(formatearNumero(ivaTotal) + ' €')
+            $('#retencion_amount').html(formatearNumero(retencionTotal) + ' €')
         }
 
         // Formatear los numeros
@@ -1155,7 +1171,7 @@
         function botonAceptar(id){
             // Salta la alerta para confirmar la eliminacion
             Swal.fire({
-                title: "¿Estas seguro que quieres eliminar este presupuesto?",
+                title: "¿Estas seguro que quieres eliminar esta pre-factura?",
                 html: "<p>Esta acción es irreversible.</p>", // Corrige aquí
                 showDenyButton: false,
                 showCancelButton: true,

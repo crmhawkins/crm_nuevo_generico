@@ -166,8 +166,10 @@ class BudgetController extends Controller
         $data['temp'] = false;
         $data['budget_status_id'] = 3;
         $data['reference'] = $referencia['reference'];
+        $data['admin_user_id'] = Auth::user()->id;
         $data['creation_date'] = Carbon::now();
         $petitionId = $request->petitionId;
+
 
         $budgetCreado = Budget::create($data);
         if($budgetCreado && $petitionId){
@@ -243,8 +245,7 @@ class BudgetController extends Controller
 
         $request->validate([
             'client_id' => 'required',
-            'project_id' => 'required',
-            'admin_user_id' => 'required',
+            'project_id' => 'nullable',
             'payment_method_id' => 'required'
         ]);
 
@@ -260,17 +261,17 @@ class BudgetController extends Controller
 
         // Comprobar existencia a la hora de guardar por si se eliminó un registro durante la creación
         $clientID = $data['client_id'];
-        $projectID = $data['project_id'];
-        $adminUserID = $data['admin_user_id'];
+        //$projectID = $data['project_id'];
+        //$adminUserID = $data['admin_user_id'];
 
-        $projectExists = Project::where('id', $projectID)->get()->first();
+        //$projectExists = Project::where('id', $projectID)->get()->first();
 
-        if( !$projectExists){
-            return redirect()->back()->with('toast', [
-                'icon' => 'error',
-                'mensaje' => 'La campaña seleccinada no existe. Es posible que se borrase durante el proceso de creación. Por favor, recargue la página.'
-            ]);
-        }
+        // if( !$projectExists){
+        //     return redirect()->back()->with('toast', [
+        //         'icon' => 'error',
+        //         'mensaje' => 'La campaña seleccinada no existe. Es posible que se borrase durante el proceso de creación. Por favor, recargue la página.'
+        //     ]);
+        // }
 
         $clientExists = Client::where('id', $clientID)->get()->first();
 
@@ -281,14 +282,14 @@ class BudgetController extends Controller
             ]);
         }
 
-        $adminUserExists = User::where('id', $adminUserID)->get()->first();
+       // $adminUserExists = User::where('id', $adminUserID)->get()->first();
 
-        if( !$adminUserExists){
-            return redirect()->back()->with('toast', [
-                'icon' => 'error',
-                'mensaje' => 'El gestor seleccinado no existe. Es posible que se borrase durante el proceso de creación. Por favor, recargue la página.'
-            ]);
-        }
+        // if( !$adminUserExists){
+        //     return redirect()->back()->with('toast', [
+        //         'icon' => 'error',
+        //         'mensaje' => 'El gestor seleccinado no existe. Es posible que se borrase durante el proceso de creación. Por favor, recargue la página.'
+        //     ]);
+        // }
 
         // Dates
         if(isset($data['creation_date'])){
@@ -303,25 +304,34 @@ class BudgetController extends Controller
         }else{
             $ivaPercentage  = $data['iva_percentage'];
         }
+        if(!isset($data['retencion_percentage'])){
+            $data['retencion_percentage'] = $request->retencion_percentage;
+            $retencionPercentage = $request->retencion_percentage;
+        }else{
+            $retencionPercentage  = $data['retencion_percentage'];
+        }
 
         // Obtener los conceptos con descuento y actualizarlos
         if(isset($data['discount'])){
             $conceptsDiscounts = $data['discount'];
             // Calculo los valores del presupuesto y de sus conceptos (descuento, total, etc)
-            $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage);
+            $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage , $retencionPercentage);
         }else {
             $conceptsDiscounts = 0;
             // Calculo los valores del presupuesto y de sus conceptos (descuento, total, etc)
-            $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage);
+            $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage, $retencionPercentage);
         }
 
         if(!$data['iva']){
             $data['iva'] = $updateBudgetQuantities['iva'];
         }
+        if(!$data['retencion']){
+            $data['retencion'] = $updateBudgetQuantities['retencion'];
+        }
         $data['discount'] = $updateBudgetQuantities['discount'];
         $data['gross'] = $updateBudgetQuantities['gross'];
         $data['base'] = $updateBudgetQuantities['base'];
-        $data['total'] = $data['base'] + $data['iva'];
+        $data['total'] =  $updateBudgetQuantities['totalFormated'];
 
 
         if($budget->temp == 1 ){
@@ -729,7 +739,7 @@ class BudgetController extends Controller
      *
      */
 
-    public function updateBudgetQuantities(Budget $budgetToUpdate, $conceptsDiscounts = null, $ivaPercentage = null){
+    public function updateBudgetQuantities(Budget $budgetToUpdate, $conceptsDiscounts = null, $ivaPercentage = null ,$retencionPercentage = null){
 
         // Descuentos que hay que aplicar y actualizar en los conceptos
         foreach($conceptsDiscounts as $key => $value){
@@ -766,6 +776,8 @@ class BudgetController extends Controller
             $discountQuantity = 0;
             $iva = 0;
             $total = 0;            // Recorro todos los conceptos y voy realizando los calculos
+            $retencion = 0;
+
             foreach($thisBudgetConcepts as $concept){
                 // Proveedor
                 if($concept->concept_type_id == BudgetConceptType::TYPE_SUPPLIER){
@@ -786,6 +798,10 @@ class BudgetController extends Controller
                     }else{
                         $discountQuantity += 0;
                     }
+
+                    if ( $retencionPercentage > 0) {
+                        $retencion += ($concept->total * $retencionPercentage) / 100;
+                    }
                     $iva += ($concept->total * $ivaPercentage) / 100;
                     $ivaFormated =  $iva*100/100;
                 }
@@ -800,12 +816,15 @@ class BudgetController extends Controller
                     }else{
                         $discountQuantity += 0;
                     }
+                    if ( $retencionPercentage > 0) {
+                        $retencion += ($concept->total * $retencionPercentage) / 100;
+                    }
                     // Calculo el IVA
                     $iva += ($concept->total * $ivaPercentage) / 100;
                 }
             }
             // Calculo el total
-            $total += $iva + $base;
+            $total += $iva + $base - $retencion;
             $totalFormated = $total*100/100;
             $totalFormated =  number_format((float)$totalFormated, 2, '.', '');
 
@@ -815,6 +834,7 @@ class BudgetController extends Controller
                 'discount' => $discountQuantity,
                 'iva' => $iva,
                 'totalFormated' => $total,
+                'retencion' => $retencion,
             ];
         return $newBudgetQuantitiesToUpdateArray;
         }
@@ -1077,6 +1097,7 @@ class BudgetController extends Controller
         $descuento=0;
         $ivaTotalfacturado=0;
         $totalfacturado=0;
+        $retencionTotalfacturado=0;
 
         if(count(BudgetConcept::where('budget_id', $budget->id)->where('is_facturado', true)->get()) >= 1){
 
@@ -1119,7 +1140,8 @@ class BudgetController extends Controller
                 }
             }
             // Calculamos el Iva y el Total
-            $ivaTotalfacturado += ( $basefacturada * 21 ) /100;
+            $ivaTotalfacturado += ( $basefacturada * $budget->iva_percentage ) /100;
+            $retencionTotalfacturado += ( $basefacturada * $budget->retencion_percentage ) /100;
             $totalfacturado += $basefacturada + $ivaTotalfacturado;
 
         }
@@ -1150,6 +1172,8 @@ class BudgetController extends Controller
             'base' => ($budget->base - $basefacturada) * $porcentaje,
             'iva' => ($budget->iva - $ivaTotalfacturado) * $porcentaje,
             'iva_percentage' => ($budget->iva_percentage),
+            'retencion' => ($budget->retencion - $retencionTotalfacturado) * $porcentaje,
+            'retencion_percentage' => ($budget->retencion_percentage),
             'discount' => ($budget->discount - $descuento) * $porcentaje,
             'discount_percentage' => $discountPercentage,
             'total' => ($budget->total - $totalfacturado) * $porcentaje,
@@ -1206,7 +1230,7 @@ class BudgetController extends Controller
                     $thisBudgetOwnTypeConcept->update(['is_facturado' => true]);
 
                     if(!$conceptOwnSaved){
-                            $generationSuccess = false;
+                        $generationSuccess = false;
                     }
                 }
             }
