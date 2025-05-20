@@ -345,6 +345,7 @@ class InvoiceController extends Controller
     public function sendInvoicePDF(Request $request)
     {
         $invoice = Invoice::where('id', $request->id)->get()->first();
+        $empresa = CompanyDetails::get()->first();
 
         $filename = $this->savePDF($invoice);
 
@@ -355,22 +356,26 @@ class InvoiceController extends Controller
         $mailInvoice = new \stdClass();
         $mailInvoice->gestor = $invoice->adminUser->name." ".$invoice->adminUser->surname;
         $mailInvoice->gestorMail = $invoice->adminUser->email;
-        $mailInvoice->gestorTel = '956 662 942';
+        $mailInvoice->gestorTel = $empresa->telephone;
         $mailInvoice->paymentMethodId = $invoice->paymentMethod->id;
 
         $email = new MailInvoice($mailInvoice, $filename);
-        $empresa = CompanyDetails::get()->first();
         $mail = $empresa->email;
         Mail::to($request->email)
         ->cc( $mail)
         ->send($email);
 
-        // Respuesta
         if(File::delete($filename)){
             // Respuesta
-            return 200;
+            return response()->json([
+                'status' => true,
+                'mensaje' => "Factura enviada correctamente."
+            ]);
         }else{
-            return 404;
+            return response()->json([
+                'status' => false,
+                'mensaje' => "Error al enviar la factura."
+            ]);
         }
 
     }
