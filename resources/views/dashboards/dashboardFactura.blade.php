@@ -53,7 +53,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3 card-body">
+                        {{-- <div class="mb-3 card-body">
                             <h5 class="card-title fw-bold">Presupuestos</h5>
                             <div class="row row-cols-1 row-cols-xl-3 g-xl-4 g-3 mb-3">
                                 <div class="col">
@@ -81,7 +81,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="mb-3 card-body col-12">
                             <h5 class="card-title fw-bold">Facturas</h5>
                             <div class="row row-cols-1 row-cols-xl-5 g-xl-4 g-3 mb-3">
