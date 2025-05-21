@@ -516,20 +516,20 @@ class InvoiceController extends Controller
             $fac->addItem(new FacturaeItem($item));
         }
 
-        // $certificado = $empresa->certificado;
-        // $contrasena = $empresa->contrasena;
+        $certificado = $empresa->certificado;
+        $contrasena = $empresa->contrasena;
 
-        // if (empty($certificado)) {
-        //     return response()->json(['error' => 'Falta el certificado.', 'status' => false]);
+        if (empty($certificado)) {
+            return response()->json(['error' => 'Falta el certificado.', 'status' => false]);
 
-        // }
-        // if (empty($contrasena)) {
-        //     return response()->json(['error' => 'Falta la contraseña del certificado.', 'status' => false]);
+        }
+        if (empty($contrasena)) {
+            return response()->json(['error' => 'Falta la contraseña del certificado.', 'status' => false]);
 
-        // }
+        }
 
-        // $encryptedStore = file_get_contents(asset('storage/'.$certificado));
-        // $fac->sign($encryptedStore, null, $contrasena);
+        $encryptedStore = file_get_contents(asset('storage/'.$certificado));
+        $fac->sign($encryptedStore, null, $contrasena);
 
         $fac->export($numero.'-'.$serie.".xsig");
 
