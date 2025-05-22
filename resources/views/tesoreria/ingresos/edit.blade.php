@@ -37,7 +37,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6 mt-4">
                                     <label for="title" class="mb-2">Título:</label>
-                                    <input type="text" class="form-control" id="title" name="title" value="{{ $ingreso->title }}">
+                                    <input type="text" class="form-control" id="title" name="title" value="{{ old('title', $ingreso->title) }}">
                                     @error('title')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>
@@ -45,7 +45,7 @@
                                 </div>
                                 <div class="col-md-6  mt-4">
                                     <label for="quantity" class="mb-2">Cantidad:</label>
-                                    <input type="number" class="form-control" id="quantity" name="quantity" value="{{ $ingreso->quantity }}">
+                                    <input type="number" class="form-control" id="quantity" name="quantity" value="{{ old('quantity', $ingreso->quantity) }}">
                                     @error('quantity')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>
@@ -57,10 +57,25 @@
                                     <select class="form-select" id="bank_id" name="bank_id">
                                         <option value="">-- Seleccione un Banco --</option>
                                         @foreach($banks as $bank)
-                                            <option value="{{ $bank->id }}" {{ $bank->id == $ingreso->bank_id ? 'selected' : '' }}>{{ $bank->name }}</option>
+                                            <option value="{{ $bank->id }}" {{ $bank->id == old('bank_id', $ingreso->bank_id) ? 'selected' : '' }}>{{ $bank->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('bank_id')
+                                    <span class="text-danger">{{ $message }}</span>
+                                    <style>.text-danger {color: red;}</style>
+                                @enderror
+                                </div>
+                                <div class="col-md-6 mt-4">
+                                    <label for="salon_id" class="mb-2">Salon:</label>
+                                    <select class="form-select choices" id="salon_id" name="salon_id">
+                                        <option value="">-- Selecciona un Salon --</option>
+                                        @if (count($salones) > 0)
+                                            @foreach($salones as $salon)
+                                            <option value="{{ $salon->id }}" {{ $salon->id == old('salon_id', $ingreso->salon_id) ? 'selected' : '' }}>{{ $salon->nombre}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('salon_id')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>
                                 @enderror
@@ -71,7 +86,7 @@
                                         <option value="">-- Selecciona una Factura --</option>
                                         @if (count($invoices) > 0)
                                             @foreach($invoices as $invoice)
-                                                <option value="{{ $invoice->id }}" {{ $invoice->id == $ingreso->invoice_id ? 'selected' : '' }}>{{ $invoice->id }} &nbsp; {{ $invoice->client->name  ?? ''}} &nbsp; {{ $invoice->total ?? ''}} €</option>
+                                                <option value="{{ $invoice->id }}" {{ $invoice->id == old('invoice_id', $ingreso->invoice_id) ? 'selected' : '' }}>{{ $invoice->id }} &nbsp; {{ $invoice->client->name  ?? ''}} &nbsp; {{ $invoice->total ?? ''}} €</option>
                                             @endforeach
                                         @endif
                                     </select>

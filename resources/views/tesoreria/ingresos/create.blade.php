@@ -37,7 +37,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6 mt-4">
                                     <label for="title" class="mb-2">Título:</label>
-                                    <input type="text" class="form-control" id="title" name="title">
+                                    <input type="text" class="form-control" id="title" name="title" value="{{old('title')}}">
                                     @error('title')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>
@@ -45,7 +45,7 @@
                                 </div>
                                 <div class="col-md-6 mt-4">
                                     <label for="quantity" class="mb-2">Cantidad:</label>
-                                    <input type="number" class="form-control" id="quantity" name="quantity">
+                                    <input type="number" class="form-control" id="quantity" name="quantity" value="{{old('quantity')}}">
                                     @error('quantity')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>
@@ -56,10 +56,25 @@
                                     <select class="form-select" id="bank_id" name="bank_id">
                                         <option value="">-- Seleccione un Banco --</option>
                                         @foreach($banks as $bank)
-                                            <option value="{{ $bank->id }}">{{ $bank->name }}</option>
+                                            <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>{{ $bank->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('bank_id')
+                                    <span class="text-danger">{{ $message }}</span>
+                                    <style>.text-danger {color: red;}</style>
+                                @enderror
+                                </div>
+                                <div class="col-md-6 mt-4">
+                                    <label for="salon_id" class="mb-2">Salon:</label>
+                                    <select class="form-select choices" id="salon_id" name="salon_id">
+                                        <option value="">-- Selecciona un Salon --</option>
+                                        @if (count($salones) > 0)
+                                            @foreach($salones as $salon)
+                                            <option value="{{ $salon->id }}" {{ old('salon_id') == $salon->id ? 'selected' : '' }}>{{ $salon->nombre}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('salon_id')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>
                                 @enderror
@@ -70,7 +85,7 @@
                                         <option value="">-- Selecciona una factura --</option>
                                         @if (count($invoices) > 0)
                                             @foreach($invoices as $invoice)
-                                            <option value="{{ $invoice->id }}" >{{ $invoice->id }} &nbsp; {{ $invoice->client->name  ?? ''}} &nbsp; {{ $invoice->total ?? ''}} €</option>
+                                            <option value="{{ $invoice->id }}" {{ old('invoice_id') == $invoice->id ? 'selected' : '' }}>{{ $invoice->reference }} &nbsp; {{ $invoice->client->name  ?? ''}} &nbsp; {{ $invoice->total ?? ''}} €</option>
                                             @endforeach
                                         @endif
                                     </select>
@@ -81,7 +96,7 @@
                                 </div>
                                 <div class="col-md-6  mt-4">
                                     <label for="date" class="mb-2">Fecha:</label>
-                                    <input type="date" class="form-control" id="date" name="date">
+                                    <input type="date" class="form-control" id="date" name="date" value="{{old('date')}}">
                                     @error('date')
                                     <span class="text-danger">{{ $message }}</span>
                                     <style>.text-danger {color: red;}</style>

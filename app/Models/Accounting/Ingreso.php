@@ -26,7 +26,8 @@ class Ingreso extends Model
         'bank_id',
         'invoice_id',
         'budget_date',
-        'date'
+        'date',
+        'salon_id',
     ];
 
     /**
@@ -35,12 +36,12 @@ class Ingreso extends Model
      * @var array
      */
     protected $dates = [
-        'created_at', 'updated_at', 'deleted_at', 
+        'created_at', 'updated_at', 'deleted_at',
     ];
 
     /**
      * Obtener Banco
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function bankAccount()

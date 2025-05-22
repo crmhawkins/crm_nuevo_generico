@@ -16,6 +16,7 @@ use App\Models\Invoices\Invoice;
 use App\Models\Other\BankAccounts;
 use App\Models\PaymentMethods\PaymentMethod;
 use App\Models\PurcharseOrde\PurcharseOrder;
+use App\Models\Salones\Salon;
 use Carbon\Carbon;
 
 class TesoreriaController extends Controller
@@ -40,7 +41,8 @@ class TesoreriaController extends Controller
     public function createIngresos(){
         $banks = BankAccounts::all();
         $invoices = Invoice::all();
-        return view('tesoreria.ingresos.create', compact('banks','invoices'));
+        $salones = Salon::all();
+        return view('tesoreria.ingresos.create', compact('banks','invoices','salones'));
     }
 
     public function createGastos(){
@@ -48,8 +50,9 @@ class TesoreriaController extends Controller
         $banks = BankAccounts::all();
         $paymentMethods = PaymentMethod::all();
         $categorias = CategoriaGastos::all();
+        $salones = Salon::all();
 
-        return view('tesoreria.gastos.create',compact( 'banks', 'paymentMethods','tiposIva','categorias'));
+        return view('tesoreria.gastos.create',compact( 'banks', 'paymentMethods','tiposIva','categorias','salones'));
     }
 
     public function createAssociatedExpenses(){
@@ -73,8 +76,10 @@ class TesoreriaController extends Controller
         }
         $banks = BankAccounts::all();
         $invoices = Invoice::all();
+        $salones = Salon::all();
 
-        return view('tesoreria.ingresos.edit',compact('ingreso','banks','invoices'));
+
+        return view('tesoreria.ingresos.edit',compact('ingreso','banks','invoices','salones'));
     }
 
     public function editGastos(string $id){
@@ -91,8 +96,9 @@ class TesoreriaController extends Controller
         $banks = BankAccounts::all();
         $paymentMethods = PaymentMethod::all();
         $categorias = CategoriaGastos::all();
+        $salones = Salon::all();
 
-        return view('tesoreria.gastos.edit', compact('gasto', 'banks', 'paymentMethods','tiposIva','categorias'));
+        return view('tesoreria.gastos.edit', compact('gasto', 'banks', 'paymentMethods','tiposIva','categorias','salones'));
 
     }
 
@@ -148,6 +154,7 @@ class TesoreriaController extends Controller
             'bank_id' => 'required|integer|exists:bank_accounts,id',
             'invoice_id' => 'nullable|integer|exists:invoices,id',
             'date' => 'required',
+            'salon_id' => 'nullable|integer|exists:salones,id',
         ],[
             'title.required' => 'El título es obligatorio.',
             'date.required' => 'La fecha es obligatoria.',
@@ -188,6 +195,7 @@ class TesoreriaController extends Controller
             'documents' => 'nullable',
             'iva' => 'nullable',
             'categoria_id' => 'nullable',
+            'salon_id' => 'nullable|integer|exists:salones,id',
         ],[
             'title.required' => 'El título es obligatorio.',
             'title.string' => 'El título debe ser una cadena de texto.',
@@ -381,6 +389,7 @@ class TesoreriaController extends Controller
             'date' => 'required',
             'bank_id' => 'required|integer|exists:bank_accounts,id',
             'invoice_id' => 'nullable|integer|exists:invoices,id',
+            'salon_id' => 'nullable|integer|exists:salones,id',
         ],[
             'title.required' => 'El título es obligatorio.',
             'title.string' => 'El título debe ser una cadena de texto.',
@@ -427,6 +436,7 @@ class TesoreriaController extends Controller
             'state' => 'required|string|max:255',
             'iva' => 'nullable',
             'categoria_id' => 'nullable',
+            'salon_id' => 'nullable|integer|exists:salones,id',
         ], [
             'title.required' => 'El título es obligatorio.',
             'title.string' => 'El título debe ser una cadena de texto.',

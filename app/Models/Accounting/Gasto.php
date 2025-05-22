@@ -34,7 +34,8 @@ class Gasto extends Model
         'transfer_movement',
         'aprobado',
         'iva',
-        'categoria_id'
+        'categoria_id',
+        'salon_id',
 
     ];
 
