@@ -78,6 +78,10 @@ class BudgetConceptsController extends Controller
                 $data[$field] = str_replace(',', '.', $data[$field]);
             }
         }
+
+         if($data['sale_price'] < $data['total']){
+            $data['total'] = $data['sale_price'] * $data['units'];
+        }
         // Creamos el concepto
         $conceptoCreate = BudgetConcept::create($data);
 
