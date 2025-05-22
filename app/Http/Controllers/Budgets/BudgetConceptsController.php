@@ -195,6 +195,11 @@ class BudgetConceptsController extends Controller
             }
         }
 
+        if($data['sale_price'] < $data['total']){
+            $data['total'] = $data['sale_price'] * $data['units'];
+        }
+
+
         // Creamos el concepto
         $conceptoCreate = BudgetConcept::where('id', $budget)->first()->update($data);
 
