@@ -75,11 +75,11 @@ class BudgetConceptsController extends Controller
         ];
         foreach ($doubleFields as $field) {
             if (isset($data[$field])) {
-                $data[$field] = str_replace(',', '.', $data[$field]);
+                $data[$field] = (float) str_replace(',', '.', $data[$field]);
             }
         }
 
-         if($data['sale_price'] < $data['total']){
+        if($data['sale_price'] < $data['total']){
             $data['total'] = $data['sale_price'] * $data['units'];
         }
         // Creamos el concepto
@@ -195,7 +195,7 @@ class BudgetConceptsController extends Controller
         ];
         foreach ($doubleFields as $field) {
             if (isset($data[$field])) {
-                $data[$field] = str_replace(',', '.', $data[$field]);
+                $data[$field] = (float) str_replace(',', '.', $data[$field]);
             }
         }
 
