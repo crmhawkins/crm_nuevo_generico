@@ -58,11 +58,26 @@ class BudgetConceptsController extends Controller
             'total.required' => 'El total es requerido para continuar',
         ]);
 
+
         // Construimos la DATA
         $data = $request->all();
         $data['budget_id'] = $budget;
         // Establecemos el tipo (PROVEEDOR) al concepto
         $data['concept_type_id'] = 2;
+
+        $doubleFields = [
+            'purchase_price',
+            'benefit_margin',
+            'sale_price',
+            'discount',
+            'total',
+            'total_no_discount',
+        ];
+        foreach ($doubleFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = str_replace(',', '.', $data[$field]);
+            }
+        }
         // Creamos el concepto
         $conceptoCreate = BudgetConcept::create($data);
 
@@ -165,6 +180,21 @@ class BudgetConceptsController extends Controller
 
         // Construimos la DATA
         $data = $request->all();
+
+        $doubleFields = [
+            'purchase_price',
+            'benefit_margin',
+            'sale_price',
+            'discount',
+            'total',
+            'total_no_discount',
+        ];
+        foreach ($doubleFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = str_replace(',', '.', $data[$field]);
+            }
+        }
+
         // Creamos el concepto
         $conceptoCreate = BudgetConcept::where('id', $budget)->first()->update($data);
 
