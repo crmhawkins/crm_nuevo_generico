@@ -33,11 +33,11 @@ class BancosController extends Controller
         $validatedData = $request->validate($rules);
         $banco = BankAccounts::create($validatedData);
 
-        return redirect()->back()->with('status', 'Banco creado con éxito!');
+        return redirect()->route('bancos.index')->with('status', 'Banco creado con éxito!');
 
     }
 
-    public function update(Request $request, BankAccounts $banco){
+    public function update(Request $request, $banco){
         $rules = [
             'name' => 'required|string|max:255',
             'cuenta' => 'required|string|max:255',
@@ -45,8 +45,11 @@ class BancosController extends Controller
 
         // Validar los datos del formulario
         $validatedData = $request->validate($rules);
-        $banco->update([
-            'name' => $validatedData['name']
+        $banco = BankAccounts::find($banco);
+
+        $updated = $banco->update([
+            'name' => $validatedData['name'],
+            'cuenta' => $validatedData['cuenta']
         ]);
 
         return redirect()->back()->with('status', 'Banco actualizado con éxito!');

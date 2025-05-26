@@ -304,7 +304,8 @@
             33: 'Dominio a punto de expirar',
             40: 'Aviso de Tarea - Se está sobrepasando las horas estimadas',
             41: 'Tarea en Revision',
-            42: 'Alerta pospuesta 3 veces'
+            42: 'Alerta pospuesta 3 veces',
+            50: 'Aviso',
         };
 
         // Función para obtener las alertas usando fetch

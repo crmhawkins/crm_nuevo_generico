@@ -68,6 +68,21 @@
                                 @enderror
                                 </div>
                                 <div class="col-md-6 form-group mt-2">
+                                    <label for="salon_id" class="mb-2">Salon:</label>
+                                    <select class="form-select choices" id="salon_id" name="salon_id">
+                                        <option value="">-- Selecciona un Salon --</option>
+                                        @if (count($salones) > 0)
+                                            @foreach($salones as $salon)
+                                            <option value="{{ $salon->id }}" {{ $salon->id == old('salon_id', $gasto->salon_id) ? 'selected' : '' }}>{{ $salon->nombre}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('salon_id')
+                                    <span class="text-danger">{{ $message }}</span>
+                                    <style>.text-danger {color: red;}</style>
+                                @enderror
+                                </div>
+                                <div class="col-md-6 form-group mt-2">
                                     <label class="form-label" for="categoria_id">Categoria:</label>
                                     <select class="form-select choices" id="categoria_id" name="categoria_id">
                                         <option value="">Categorias</option>

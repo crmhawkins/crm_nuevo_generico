@@ -70,6 +70,7 @@
 @endsection
 
 @section('scripts')
+@include('partials.toast')
 <script src="{{asset('assets/vendors/choices.js/choices.min.js')}}"></script>
 
 @endsection

@@ -47,25 +47,40 @@
                                     <label class="form-label" for="reference">Referencia:</label>
                                     <input type="text" class="form-control" id="reference" name="reference" value="{{old('reference')}}">
                                     @error('reference')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    <style>.text-danger {color: red;}</style>
+                                        <span class="text-danger">{{ $message }}</span>
+                                        <style>.text-danger {color: red;}</style>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 form-group mt-2">
                                     <label class="form-label" for="date">Fecha de recepción:</label>
                                     <input type="date" class="form-control" id="received_date" name="received_date" value="{{old('received_date',Carbon\Carbon::now()->format('Y-m-d'))}}">
                                     @error('received_date')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    <style>.text-danger {color: red;}</style>
+                                        <span class="text-danger">{{ $message }}</span>
+                                        <style>.text-danger {color: red;}</style>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 form-group mt-2">
                                     <label class="form-label" for="date">Fecha de pago:</label>
                                     <input type="date" class="form-control" id="date" name="date" value="{{old('date')}}">
                                     @error('date')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    <style>.text-danger {color: red;}</style>
-                                @enderror
+                                        <span class="text-danger">{{ $message }}</span>
+                                        <style>.text-danger {color: red;}</style>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 form-group mt-2">
+                                    <label for="salon_id" class="mb-2">Salon:</label>
+                                    <select class="form-select choices" id="salon_id" name="salon_id">
+                                        <option value="">-- Selecciona un Salon --</option>
+                                        @if (count($salones) > 0)
+                                            @foreach($salones as $salon)
+                                            <option value="{{ $salon->id }}" {{ old('salon_id') == $salon->id ? 'selected' : '' }}>{{ $salon->nombre}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('salon_id')
+                                        <span class="text-danger">{{ $message }}</span>
+                                        <style>.text-danger {color: red;}</style>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6 form-group mt-2">
                                     <label class="form-label" for="categoria_id">Categoria:</label>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Alert\AlertController;
 use App\Http\Controllers\Almacen\AlmacenController;
 use App\Http\Controllers\Archivos\FileController;
 use App\Http\Controllers\Bajas\BajaController;
+use App\Http\Controllers\Bancos\BancosController;
 use App\Http\Controllers\CrmActivities\CrmActivityMeetingController;
 use App\Http\Controllers\Suppliers\SuppliersController;
 use App\Http\Controllers\Tesoreria\CuadroController;
@@ -49,6 +50,7 @@ use App\Http\Controllers\Maquinas\MaquinasCategoriesController;
 use App\Http\Controllers\Maquinas\MaquinasController;
 use App\Http\Controllers\Message\MessageController;
 use App\Http\Controllers\Nominas\NominasController;
+use App\Http\Controllers\Documentos\DocumentosController;
 use App\Http\Controllers\Ordenes\OrdenesController;
 use App\Http\Controllers\Portal\PortalClientesController;
 use App\Http\Controllers\Product\ProductsCategoriesController;
@@ -68,7 +70,7 @@ use App\Http\Controllers\Users\DepartamentController;
 use App\Http\Controllers\Users\PositionController;
 use App\Http\Controllers\Vehiculos\VehiculosController;
 use App\Http\Controllers\Neveras\NeverasController;
-use App\Http\Controllers\Whatsapp\WhatsappController;
+use App\Http\Controllers\Avisos\AvisosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -188,6 +190,13 @@ Route::post('/bajas/store', [BajaController::class, 'store'])->name('bajas.store
 Route::post('/bajas/update/{baja}', [BajaController::class, 'update'])->name('bajas.update');
 Route::post('/bajas/delete', [BajaController::class, 'destroy'])->name('bajas.delete');
 
+//Bancos
+Route::get('/bancos', [BancosController::class, 'index'])->name('bancos.index');
+Route::get('/bancos/create', [BancosController::class, 'create'])->name('bancos.create');
+Route::get('/bancos/edit/{banco}', [BancosController::class, 'edit'])->name('bancos.edit');
+Route::post('/bancos/store', [BancosController::class, 'store'])->name('bancos.store');
+Route::post('/bancos/update/{id}', [BancosController::class, 'update'])->name('bancos.update');
+Route::post('/bancos/delete', [BancosController::class, 'destroy'])->name('bancos.delete');
 
 // Users (USUARIOS)
 Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -405,7 +414,41 @@ Route::post('/nominas/store', [NominasController::class, 'store'])->name('nomina
 Route::post('/nominas/update/{id}', [NominasController::class, 'update'])->name('nominas.update');
 Route::post('/nominas/destroy', [NominasController::class, 'destroy'])->name('nominas.delete');
 
-Route::get('/nominas', [NominasController::class, 'index'])->name('nominas.index');
+
+//documentos
+Route::get('/documentos', [DocumentosController::class, 'index'])->name('documentos.index');
+Route::get('/documentos/create', [DocumentosController::class, 'create'])->name('documentos.create');
+Route::get('/documentos/edit/{id}', [DocumentosController::class, 'edit'])->name('documentos.edit');
+Route::post('/documentos/store', [DocumentosController::class, 'store'])->name('documentos.store');
+Route::post('/documentos/update/{id}', [DocumentosController::class, 'update'])->name('documentos.update');
+Route::post('/documentos/destroy', [DocumentosController::class, 'destroy'])->name('documentos.delete');
+
+//Avisos index
+Route::get('/seguros', [AvisosController::class, 'indexSeguro'])->name('seguros.index');
+Route::get('/extinciones', [AvisosController::class, 'indexExtintores'])->name('extintores.index');
+Route::get('/oca', [AvisosController::class, 'indexOca'])->name('ocas.index');
+Route::get('/plagas', [AvisosController::class, 'indexPlagas'])->name('plagas.index');
+
+//Avisos Create
+Route::get('/seguros/create', [AvisosController::class, 'createSeguro'])->name('seguros.create');
+Route::get('/extinciones/create', [AvisosController::class, 'createExtintores'])->name('extintores.create');
+Route::get('/oca/create', [AvisosController::class, 'createOca'])->name('ocas.create');
+Route::get('/plagas/create', [AvisosController::class, 'createPlagas'])->name('plagas.create');
+
+//Avisos Edit
+Route::get('/seguros/edit/{id}', [AvisosController::class, 'editSeguros'])->name('seguros.edit');
+Route::get('/extinciones/edit/{id}', [AvisosController::class, 'editExtintores'])->name('extintores.edit');
+Route::get('/oca/edit/{id}', [AvisosController::class, 'editOca'])->name('ocas.edit');
+Route::get('/plagas/edit/{id}', [AvisosController::class, 'editPlagas'])->name('plagas.edit');
+
+//Avisos Store
+Route::post('/seguros/store', [AvisosController::class, 'store'])->name('seguros.store');
+Route::post('/extinciones/store', [AvisosController::class, 'store'])->name('seguros.store');
+Route::post('/oca/store', [AvisosController::class, 'store'])->name('seguros.store');
+Route::post('/plagas/store', [AvisosController::class, 'store'])->name('seguros.store');
+
+Route::post('/seguros/update/{id}', [AvisosController::class, 'update'])->name('seguros.update');
+Route::post('/seguros/destroy', [AvisosController::class, 'destroy'])->name('seguros.delete');
 
 //Departamentos
 Route::get('/departament', [DepartamentController::class, 'index'])->name('departamento.index');
