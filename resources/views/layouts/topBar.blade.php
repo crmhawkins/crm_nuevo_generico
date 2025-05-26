@@ -1,9 +1,13 @@
-<nav id="topbar" class="navbar p-3">
-    <header class="top-burguer">
-        <a href="#" class="burger-btn d-block d-lg-none">
-            <i class="bi bi-list"></i>
-        </a>
-    </header>
+<nav id="topbar" class="navbar">
+    <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
+    <div class="d-flex d-lg-none" style="width: 100px;">
+        <header class="top-burguer">
+            <a href="#" class="burger-btn d-block d-lg-none">
+                <i class="bi bi-list"></i>
+            </a>
+        </header>
+        <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
+    </div>
     <ul class="topbar-menu d-flex align-items-center gap-3">
 
         <li class="dropdown notification-list">
