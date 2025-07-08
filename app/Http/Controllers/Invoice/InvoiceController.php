@@ -101,10 +101,10 @@ class InvoiceController extends Controller
         return $pdf->download('factura_' . $invoice->reference . '_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
-    public function createPdf(invoice $invoice){
+    public function createPdf(Invoice $invoice){
 
-        // Obtener los conceptos de esta factura
-        $thisInvoiceConcepts = InvoiceConcepts::where('invoice_id', $invoice->id)->get();
+        // Obtener los conceptos de esta factura con la relación del servicio
+        $thisInvoiceConcepts = InvoiceConcepts::with('service')->where('invoice_id', $invoice->id)->get();
         // Título del PDF
         $title = "Factura - " . $invoice->reference;
         // Datos básicos para pasar a la vista del PDF
@@ -122,6 +122,13 @@ class InvoiceController extends Controller
                 $invoiceConceptsFormated[$invoiceConcept->id]['title'] = $invoiceConcept->title ?? 'Título no disponible';
                 // Unidades
                 $invoiceConceptsFormated[$invoiceConcept->id]['units'] = $invoiceConcept->units;
+                
+                // Imagen del servicio si existe
+                if ($invoiceConcept->service && $invoiceConcept->service->image) {
+                    $invoiceConceptsFormated[$invoiceConcept->id]['service_image'] = $invoiceConcept->service->image;
+                } else {
+                    $invoiceConceptsFormated[$invoiceConcept->id]['service_image'] = null;
+                }
 
                 // Precio por unidad
                 $invoiceConceptsFormated[$invoiceConcept->id]['price_unit'] = round($invoiceConcept->total / $invoiceConcept->units, 2);
@@ -221,7 +228,7 @@ class InvoiceController extends Controller
 
         foreach ($invoices as $invoice) {
 
-            $pdf = $this->createPDF($invoice);
+            $pdf = $this->createPdf($invoice);
 
             // Guardar el archivo PDF en la carpeta temporal
             $pdfFilePath = $tempDirectory . 'factura_' . $invoice->reference . '_' . Carbon::now()->format('Y-m-d') . '.pdf';

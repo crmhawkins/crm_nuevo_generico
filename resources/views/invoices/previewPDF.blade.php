@@ -64,6 +64,22 @@
                 color: white;
             }
             div.breakNow { page-break-inside:avoid; page-break-after:always; }
+            
+            .service-image {
+                border-radius: 4px;
+                border: 1px solid #ddd;
+            }
+            
+            .no-image-placeholder {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #6c757d;
+                font-size: 10px;
+            }
 
         </style>
 
@@ -125,7 +141,8 @@
                 <div class="invoice" style="padding-left:16px; breakNow">
                     <table id="conceptTable" class="fixed" width="100%">
                         <tr>
-                            <th  style="width:60%;text-align:left;">Conceptos</th>
+                            <th  style="width:8%;text-align:center;">Imagen</th>
+                            <th  style="width:52%;text-align:left;">Conceptos</th>
                             <th  style="width:10%;text-align:right">Uds.</th>
                             <th  style="width:15%;text-align:right">Precio/Uds.</th>
                             <th  style="width:15%;text-align:right">Subtotal.</th>
@@ -137,9 +154,16 @@
 
                             @foreach($invoiceConceptsFormated as $concept)
                                 <tr style="padding-right:20px;">
-
-
-                                    <td style="width:100px; page-break-after: avoid">
+                                    <td style="text-align:center;vertical-align: top;width:8%;">
+                                        @if(isset($concept['service_image']) && $concept['service_image'])
+                                            <img src="{{ public_path($concept['service_image']) }}" alt="Imagen del servicio" class="service-image" style="max-width: 40px; max-height: 40px; object-fit: cover;">
+                                        @else
+                                            <div class="no-image-placeholder" style="width: 40px; height: 40px; margin: 0 auto;">
+                                                <span>Sin img</span>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td style="width:52%; page-break-after: avoid">
                                         <span style="font-weight: bold">{{ $concept['title'] }}</span>
 
                                         <br>
