@@ -41,6 +41,7 @@
                 <thead class="header-table">
                     <tr>
                         @foreach ([
+                            'image' => 'IMAGEN',
                             'title' => 'NOMBRE',
                             'categoria_nombre' => 'CATEGORIA',
                             'price' => 'PRECIO',
@@ -60,7 +61,16 @@
                     {{-- Recorremos los servicios --}}
                     @foreach ( $servicios as $servicio )
                         <tr class="clickable-row" data-href="{{route('servicios.edit', $servicio->id)}}">
-                            <td class="px-3" style="width: 60%">{{$servicio->title}}</td>
+                            <td class="px-3" style="width: 10%; text-align: center;">
+                                @if($servicio->image)
+                                    <img src="{{ asset($servicio->image) }}" alt="{{ $servicio->title }}" class="img-thumbnail" style="max-width: 50px; max-height: 50px;">
+                                @else
+                                    <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 4px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-3" style="width: 50%">{{$servicio->title}}</td>
                             <td style="width: 20%">{{$servicio->servicoNombre->name}}</td>
                             <td style="width: 10%; text-align: right; padding-right: 2rem"><strong>{{ number_format($servicio->price, 2, ',', '') }} €</strong></td>
                             <td class="flex flex-row justify-evenly align-middle" style="min-width: 120px">

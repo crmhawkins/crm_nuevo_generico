@@ -30,7 +30,7 @@
     <section class="section mt-4">
         <div class="card">
             <div class="card-body">
-                <form action="{{route('servicios.store')}}" method="POST">
+                <form action="{{route('servicios.store')}}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="bloque-formulario">
                         <div class="row">
@@ -79,6 +79,18 @@
                                     <label for="price">Precio:</label>
                                     <input placeholder="Precio..." type="text" class="form-control @error('price') is-invalid @enderror" id="phone" value="{{ old('price') }}" name="price" step="0.01">
                                     @error('price')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="image">Imagen del Servicio:</label>
+                                    <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
+                                    <small class="form-text text-muted">Formatos permitidos: JPEG, PNG, JPG, GIF. Máximo 2MB.</small>
+                                    @error('image')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
