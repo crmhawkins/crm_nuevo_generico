@@ -151,6 +151,8 @@ class BudgetController extends Controller
             'payment_method_id' => 'nullable|integer',
             'description' => 'nullable',
             'note' => 'nullable',
+            'iva_percentage' => 'nullable|numeric|min:0|max:100',
+            'retencion_percentage' => 'nullable|numeric|min:0|max:100',
 
         ], [
             'client_id.required' => 'El cliente es requerido para continuar',
@@ -168,6 +170,8 @@ class BudgetController extends Controller
         $data['reference'] = $referencia['reference'];
         $data['admin_user_id'] = Auth::user()->id;
         $data['creation_date'] = Carbon::now();
+        $data['iva_percentage'] = $request->iva_percentage ?? 21;
+        $data['retencion_percentage'] = $request->retencion_percentage ?? 0;
         $petitionId = $request->petitionId;
 
 
@@ -785,16 +789,11 @@ class BudgetController extends Controller
                     $benefitMargin = $concept->benefit_margin;
                     $marginBenefitToAdd  =  ($purchasePriceWithoutMarginBenefit*$benefitMargin)/100;
                     $purchasePriceWithMarginBenefit  =  $purchasePriceWithoutMarginBenefit+ $marginBenefitToAdd;
-                    $gross += $purchasePriceWithMarginBenefit;
-                    $grossFormated =  $gross;
-                    $base += $concept->total ;
-                    $baseFormated = $base;
-                    $salePrice =  $concept->sale_price;
+                    $gross += $concept->total_no_discount;
+                    $base += $concept->total;
                     $discountPercentage = $concept->discount;
                     if($discountPercentage > 0){
-                        $discountQuantity += (($purchasePriceWithMarginBenefit)*$discountPercentage)/100 ;
-                        $discountOfThisConcept =  (($purchasePriceWithMarginBenefit)*$discountPercentage)/100 ;
-                        $discountQuantityFormated = $discountQuantity;
+                        $discountQuantity += ($concept->total_no_discount * $discountPercentage) / 100;
                     }else{
                         $discountQuantity += 0;
                     }
@@ -803,7 +802,6 @@ class BudgetController extends Controller
                         $retencion += ($concept->total * $retencionPercentage) / 100;
                     }
                     $iva += ($concept->total * $ivaPercentage) / 100;
-                    $ivaFormated =  $iva*100/100;
                 }
                 // Propio
                 if($concept->concept_type_id == BudgetConceptType::TYPE_OWN){

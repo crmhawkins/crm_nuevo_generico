@@ -255,10 +255,16 @@
                                                 <td><span id="gross">{{ number_format((float)$factura->gross, 2, '.', '')  }}</span></td>
                                                 <td id="discount_summary_amount">{{ number_format((float)$factura->discount, 2, '.', '')  }}</td>
                                                 <td id="base_amount"> {{ number_format((float)$factura->base, 2, '.', '')  }}</td>
-                                                <td id="iva_percentage">{{ number_format((float)$factura->iva_percentage, 0, '.', '')  }}</td>
+                                                <td>
+                                                    <input type="number" class="form-control" style="width:80px" id="iva_percentage" name="iva_percentage" min="0" max="100" step="0.01"
+                                                        value="{{ number_format((float)$factura->iva_percentage, 2, '.', '')  }}" >
+                                                </td>
                                                 <td id="iva_amount">{{ number_format((float)$factura->iva, 2, '.', '')  }}</td>
-                                                <td id="Retencion_percentage">{{ number_format((float)$factura->retencion_percentage, 0, '.', '')  }}</td>
-                                                <td id="Retencion_amount">{{ number_format((float)$factura->retencion, 2, '.', '')  }}</td>
+                                                <td>
+                                                    <input type="number" class="form-control" style="width:80px" id="retencion_percentage" name="retencion_percentage" min="0" max="100" step="0.01"
+                                                        value="{{ number_format((float)$factura->retencion_percentage, 2, '.', '')  }}" >
+                                                </td>
+                                                <td id="retencion_amount">{{ number_format((float)$factura->retencion, 2, '.', '')  }}</td>
                                                 <td id="budget_total"><strong>{{ number_format((float)$factura->total, 2, '.', '')  }} €</strong></td>
                                             </tr>
                                           </tbody>
@@ -270,6 +276,13 @@
                                     <input  @if($factura->show_summary) {{ 'checked' }} @endif type="checkbox" value="1" class="form-check-input" id="show_summary" name="show_summary">
                                     <label class="form-check-label ml-2" for="show_summary">Mostrar sumatorio</label>
                                 </div>
+                                
+                                <!-- Campos ocultos para los cálculos -->
+                                <input type="hidden" id="base" name="base" value="{{ $factura->base }}">
+                                <input type="hidden" id="gross" name="gross" value="{{ $factura->gross }}">
+                                <input type="hidden" id="total" name="total" value="{{ $factura->total }}">
+                                <input type="hidden" id="iva_total" name="iva" value="{{ $factura->iva }}">
+                                <input type="hidden" id="retencion_total" name="retencion" value="{{ $factura->retencion }}">
                             </form>
                         </div>
                     </div>
@@ -306,6 +319,44 @@
 
 <script>
     $(document).ready(function() {
+
+        // Eventos para recalcular cuando cambien los porcentajes
+        $('#iva_percentage').on('change', function(){
+            actualizarPreciosFactura();
+        });
+
+        $('#retencion_percentage').on('change', function(){
+            actualizarPreciosFactura();
+        });
+
+        // Función para actualizar precios de la factura
+        const actualizarPreciosFactura = () => {
+            const base = parseFloat($('#base').val()) || 0;
+            const ivaPercentage = parseFloat($('#iva_percentage').val()) || 0;
+            const retencionPercentage = parseFloat($('#retencion_percentage').val()) || 0;
+            
+            const ivaTotal = (base * ivaPercentage) / 100;
+            const retencionTotal = (base * retencionPercentage) / 100;
+            const total = base + ivaTotal - retencionTotal;
+            
+            // Actualizar campos ocultos
+            $('#iva_total').val(ivaTotal.toFixed(2));
+            $('#retencion_total').val(retencionTotal.toFixed(2));
+            $('#total').val(total.toFixed(2));
+            
+            // Actualizar visualización
+            $('#iva_amount').html(formatearNumero(ivaTotal));
+            $('#retencion_amount').html(formatearNumero(retencionTotal));
+            $('#budget_total').html(`<strong>${formatearNumero(total)} €</strong>`);
+        };
+
+        // Función para formatear números
+        function formatearNumero(numero) {
+            return numero.toLocaleString('es-ES', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
 
         // Boton Actualizar factura
         $('#actualizarfactura').click(function(e){

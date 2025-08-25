@@ -170,6 +170,32 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-sm-12 col-md-6">
+                                    {{-- IVA --}}
+                                    <div class="form-group mb-3">
+                                        <label class="mb-2 text-left" for="iva_percentage">% IVA:</label>
+                                        <input type="number" class="form-control @error('iva_percentage') is-invalid @enderror" id="iva_percentage" name="iva_percentage" min="0" max="100" step="0.01" value="{{ old('iva_percentage', 21) }}">
+                                        @error('iva_percentage')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 col-md-6">
+                                    {{-- Retención --}}
+                                    <div class="form-group mb-3">
+                                        <label class="mb-2 text-left" for="retencion_percentage">% Retención:</label>
+                                        <input type="number" class="form-control @error('retencion_percentage') is-invalid @enderror" id="retencion_percentage" name="retencion_percentage" min="0" max="100" step="0.01" value="{{ old('retencion_percentage', 0) }}">
+                                        @error('retencion_percentage')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-sm-12 col-md-12">
                                     {{-- Observaciones --}}
                                     <div class="form-group">

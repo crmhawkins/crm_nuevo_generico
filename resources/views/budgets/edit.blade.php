@@ -1047,29 +1047,45 @@
         // Actualizar Precios
         const actualizarPrecios = () => {
             const conceptosPresupuesto = @json($budgetConcepts);
-            let total = 0;
-            let totalgross = 0;
-            let iva = $('#iva').val();
-            let retencion = $('#retencion').val();
-            let descuento;
+            let totalBruto = 0;
+            let totalBase = 0;
+            let totalDescuento = 0;
+            let iva = parseFloat($('#iva').val()) || 0;
+            let retencion = parseFloat($('#retencion').val()) || 0;
 
-            conceptosPresupuesto.map((concepto) => {
-                descuento += concepto.discount;
-                total += concepto.total;
-                totalgross += concepto.sale_price
-            })
-            const ivaTotal = (total*iva)/100
-            const retencionTotal = (total*retencion)/100
-            $('#base').val(total)
-            $('#gross').val(totalgross)
-            $('#total').val(total+ivaTotal-retencionTotal)
-            $('#iva_total').val(ivaTotal)
-            $('#retencion_total').val(retencionTotal)
-            $('#budget_total').html(`<strong>${formatearNumero(total+ivaTotal-retencionTotal)} €</strong>`)
-            $('#gross').html(formatearNumero(totalgross) + ' €')
-            $('#base_amount').html(formatearNumero(total) + ' €')
-            $('#iva_amount').html(formatearNumero(ivaTotal) + ' €')
-            $('#retencion_amount').html(formatearNumero(retencionTotal) + ' €')
+            conceptosPresupuesto.forEach((concepto) => {
+                // Sumar al total bruto (sin descuentos)
+                totalBruto += parseFloat(concepto.total_no_discount) || 0;
+                
+                // Sumar al total base (con descuentos aplicados)
+                totalBase += parseFloat(concepto.total) || 0;
+                
+                // Calcular descuento total
+                if (concepto.discount && concepto.discount > 0) {
+                    const descuentoConcepto = (parseFloat(concepto.total_no_discount) * parseFloat(concepto.discount)) / 100;
+                    totalDescuento += descuentoConcepto;
+                }
+            });
+
+            // Calcular IVA y retención sobre la base (después de descuentos)
+            const ivaTotal = (totalBase * iva) / 100;
+            const retencionTotal = (totalBase * retencion) / 100;
+            const totalFinal = totalBase + ivaTotal - retencionTotal;
+
+            // Actualizar campos ocultos
+            $('#base').val(totalBase.toFixed(2));
+            $('#gross').val(totalBruto.toFixed(2));
+            $('#total').val(totalFinal.toFixed(2));
+            $('#iva_total').val(ivaTotal.toFixed(2));
+            $('#retencion_total').val(retencionTotal.toFixed(2));
+
+            // Actualizar visualización
+            $('#budget_total').html(`<strong>${formatearNumero(totalFinal)} €</strong>`);
+            $('#gross').html(formatearNumero(totalBruto));
+            $('#base_amount').html(formatearNumero(totalBase));
+            $('#discount_summary_amount').html(formatearNumero(totalDescuento));
+            $('#iva_amount').html(formatearNumero(ivaTotal));
+            $('#retencion_amount').html(formatearNumero(retencionTotal));
         }
 
         // Formatear los numeros
