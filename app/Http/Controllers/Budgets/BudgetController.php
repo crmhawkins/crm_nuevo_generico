@@ -171,7 +171,7 @@ class BudgetController extends Controller
         $data['admin_user_id'] = Auth::user()->id;
         $data['creation_date'] = Carbon::now();
         $data['iva_percentage'] = $request->iva_percentage ?? 21;
-        $data['retencion_percentage'] = $request->retencion_percentage ?? 0;
+        $data['retencion_percentage'] = $request->retencion_percentage ?? 19;
         $petitionId = $request->petitionId;
 
 
@@ -250,7 +250,9 @@ class BudgetController extends Controller
         $request->validate([
             'client_id' => 'required',
             'project_id' => 'nullable',
-            'payment_method_id' => 'required'
+            'payment_method_id' => 'required',
+            'iva_percentage' => 'nullable|numeric|min:0|max:100',
+            'retencion_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Formulario datos
@@ -302,18 +304,13 @@ class BudgetController extends Controller
             }
         }
 
-        if(!isset($data['iva_percentage'])){
-            $data['iva_percentage'] = $request->iva_percentage;
-            $ivaPercentage = $request->iva_percentage;
-        }else{
-            $ivaPercentage  = $data['iva_percentage'];
-        }
-        if(!isset($data['retencion_percentage'])){
-            $data['retencion_percentage'] = $request->retencion_percentage;
-            $retencionPercentage = $request->retencion_percentage;
-        }else{
-            $retencionPercentage  = $data['retencion_percentage'];
-        }
+        // Manejar IVA y retenciones
+        $ivaPercentage = $data['iva_percentage'] ?? $budget->iva_percentage ?? 21;
+        $retencionPercentage = $data['retencion_percentage'] ?? $budget->retencion_percentage ?? 19;
+        
+        // Asegurar que los valores estén en el array de datos
+        $data['iva_percentage'] = $ivaPercentage;
+        $data['retencion_percentage'] = $retencionPercentage;
 
         // Obtener los conceptos con descuento y actualizarlos
         if(isset($data['discount'])){
@@ -352,28 +349,42 @@ class BudgetController extends Controller
         }
 
 
-        $budgetupdated=$budget->update($data);
-        $budget->cambiarEstadoPresupuesto($budget->budget_status_id);
+        try {
+            $budgetupdated = $budget->update($data);
+            $budget->cambiarEstadoPresupuesto($budget->budget_status_id);
 
-        if( str_starts_with($budget->reference, 'temp_')){
-            $referencia = $this->generateBudgetReference();
-            $data['reference'] = $referencia['reference'];
-            $data['reference_autoincrement_id'] = $referencia['id'];
-            $budgetupdated=$budget->update($data);
-        }
+            if( str_starts_with($budget->reference, 'temp_')){
+                $referencia = $this->generateBudgetReference();
+                if ($referencia === null) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Error al generar la referencia del presupuesto.',
+                    ]);
+                }
+                $data['reference'] = $referencia['reference'];
+                $data['reference_autoincrement_id'] = $referencia['id'];
+                $budgetupdated = $budget->update($data);
+            }
 
-        if($budgetupdated){
-           $rutaPrevia = session()->get('ruta_previa','presupuestos.index');
+            if($budgetupdated){
+               $rutaPrevia = session()->get('ruta_previa','presupuestos.index');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Presupuesto actualizado correctamente.',
-                'redirect' => Route($rutaPrevia)
-            ]);
-        }else{
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Presupuesto actualizado correctamente.',
+                    'redirect' => Route($rutaPrevia)
+                ]);
+            }else{
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar el presupuesto en la base de datos.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error al actualizar presupuesto: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar el presupuesto.',
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
             ]);
         }
     }

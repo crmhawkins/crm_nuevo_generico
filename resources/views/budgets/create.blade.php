@@ -186,7 +186,7 @@
                                     {{-- Retención --}}
                                     <div class="form-group mb-3">
                                         <label class="mb-2 text-left" for="retencion_percentage">% Retención:</label>
-                                        <input type="number" class="form-control @error('retencion_percentage') is-invalid @enderror" id="retencion_percentage" name="retencion_percentage" min="0" max="100" step="0.01" value="{{ old('retencion_percentage', 0) }}">
+                                        <input type="number" class="form-control @error('retencion_percentage') is-invalid @enderror" id="retencion_percentage" name="retencion_percentage" min="0" max="100" step="0.01" value="{{ old('retencion_percentage', 19) }}">
                                         @error('retencion_percentage')
                                             <span class="invalid-feedback" role="alert">
                                                 <strong>{{ $message }}</strong>

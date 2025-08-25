@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('invoices', function (Blueprint $table) {
             $table->string('retencion')->nullable();
-            $table->string('retencion_percentage')->nullable();
+            $table->string('retencion_percentage')->nullable()->default('19');
         });
     }
 

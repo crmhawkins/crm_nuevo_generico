@@ -465,10 +465,19 @@
                     }
                 },
                 error: function(xhr, status, error) {
+                    console.error('Error AJAX:', xhr.responseText);
+                    console.error('Status:', status);
+                    console.error('Error:', error);
+                    
+                    let errorMessage = "Error al actualizar el presupuesto.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
                     Toast.fire({
-                            icon: "error",
-                            title: "Error al actualizar el presupuesto."
-                        })
+                        icon: "error",
+                        title: errorMessage
+                    });
                 }
             });
         });
