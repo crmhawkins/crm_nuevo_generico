@@ -40,12 +40,44 @@ class SettingsController extends Controller
         ]);
 
         if ($request->hasFile('logo')) {
-            $photo = $request->file('logo');
-            $path = public_path('assets/images/logo/logo.png');
-            $manager = new ImageManager(new Driver());
-            $image = $manager->read($photo);
-            $image->toPng()->save($path);
-            $data['logo'] = 'assets/images/logo/logo.png';
+            try {
+                $photo = $request->file('logo');
+                
+                // Validar que el archivo sea una imagen válida
+                if (!$photo->isValid()) {
+                    throw new \Exception('El archivo de imagen no es válido');
+                }
+                
+                // Validar el tipo MIME
+                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!in_array($photo->getMimeType(), $allowedMimes)) {
+                    throw new \Exception('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF, WEBP');
+                }
+                
+                // Validar el tamaño (máximo 5MB)
+                if ($photo->getSize() > 5 * 1024 * 1024) {
+                    throw new \Exception('El archivo es demasiado grande. Máximo 5MB permitido');
+                }
+                
+                $path = public_path('assets/images/logo/logo.png');
+                
+                // Asegurar que el directorio existe
+                $directory = dirname($path);
+                if (!file_exists($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+                
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($photo);
+                $image->toPng()->save($path);
+                $data['logo'] = 'assets/images/logo/logo.png';
+                
+            } catch (\Exception $e) {
+                return redirect()->back()->with('toast', [
+                    'icon' => 'error',
+                    'mensaje' => 'Error al procesar la imagen: ' . $e->getMessage(),
+                ])->withInput();
+            }
         }
 
         // Guardar certificado
@@ -77,7 +109,7 @@ class SettingsController extends Controller
 
         $request->validate([
             'price_hour' => 'nullable|numeric',
-            'logo' => 'nullable|image',
+            'logo' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB máximo
             'company_name' => 'nullable|string|max:255',
             'nif' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
@@ -97,16 +129,49 @@ class SettingsController extends Controller
 
          // Guardar logo
          if ($request->hasFile('logo')) {
-            $oldLogoPath = public_path('assets/images/logo/logo.png');
-            if (file_exists($oldLogoPath)) {
-                unlink($oldLogoPath);
+            try {
+                $photo = $request->file('logo');
+                
+                // Validar que el archivo sea una imagen válida
+                if (!$photo->isValid()) {
+                    throw new \Exception('El archivo de imagen no es válido');
+                }
+                
+                // Validar el tipo MIME
+                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!in_array($photo->getMimeType(), $allowedMimes)) {
+                    throw new \Exception('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF, WEBP');
+                }
+                
+                // Validar el tamaño (máximo 5MB)
+                if ($photo->getSize() > 5 * 1024 * 1024) {
+                    throw new \Exception('El archivo es demasiado grande. Máximo 5MB permitido');
+                }
+                
+                $oldLogoPath = public_path('assets/images/logo/logo.png');
+                if (file_exists($oldLogoPath)) {
+                    unlink($oldLogoPath);
+                }
+                
+                $path = public_path('assets/images/logo/logo.png');
+                
+                // Asegurar que el directorio existe
+                $directory = dirname($path);
+                if (!file_exists($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+                
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($photo);
+                $image->toPng()->save($path);
+                $data['logo'] = 'assets/images/logo/logo.png';
+                
+            } catch (\Exception $e) {
+                return redirect()->back()->with('toast', [
+                    'icon' => 'error',
+                    'mensaje' => 'Error al procesar la imagen: ' . $e->getMessage(),
+                ])->withInput();
             }
-            $photo = $request->file('logo');
-            $path = public_path('assets/images/logo/logo.png');
-            $manager = new ImageManager(new Driver());
-            $image = $manager->read($photo);
-            $image->toPng()->save($path);
-            $data['logo'] = 'assets/images/logo/logo.png';
         }
 
         // Guardar certificado
