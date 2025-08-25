@@ -49,9 +49,9 @@ class SettingsController extends Controller
                 }
                 
                 // Validar el tipo MIME
-                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
                 if (!in_array($photo->getMimeType(), $allowedMimes)) {
-                    throw new \Exception('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF, WEBP');
+                    throw new \Exception('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF, WEBP, SVG');
                 }
                 
                 // Validar el tamaño (máximo 5MB)
@@ -67,10 +67,19 @@ class SettingsController extends Controller
                     mkdir($directory, 0755, true);
                 }
                 
-                $manager = new ImageManager(new Driver());
-                $image = $manager->read($photo);
-                $image->toPng()->save($path);
-                $data['logo'] = 'assets/images/logo/logo.png';
+                // Manejar SVG de forma diferente
+                if ($photo->getMimeType() === 'image/svg+xml') {
+                    // Para SVG, simplemente copiar el archivo
+                    $svgPath = public_path('assets/images/logo/logo.svg');
+                    copy($photo->getPathname(), $svgPath);
+                    $data['logo'] = 'assets/images/logo/logo.svg';
+                } else {
+                    // Para imágenes raster, usar Intervention Image
+                    $manager = new ImageManager(new Driver());
+                    $image = $manager->read($photo);
+                    $image->toPng()->save($path);
+                    $data['logo'] = 'assets/images/logo/logo.png';
+                }
                 
             } catch (\Exception $e) {
                 return redirect()->back()->with('toast', [
@@ -109,7 +118,7 @@ class SettingsController extends Controller
 
         $request->validate([
             'price_hour' => 'nullable|numeric',
-            'logo' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB máximo
+            'logo' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:5120', // 5MB máximo
             'company_name' => 'nullable|string|max:255',
             'nif' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
@@ -138,9 +147,9 @@ class SettingsController extends Controller
                 }
                 
                 // Validar el tipo MIME
-                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
                 if (!in_array($photo->getMimeType(), $allowedMimes)) {
-                    throw new \Exception('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF, WEBP');
+                    throw new \Exception('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF, WEBP, SVG');
                 }
                 
                 // Validar el tamaño (máximo 5MB)
@@ -148,9 +157,14 @@ class SettingsController extends Controller
                     throw new \Exception('El archivo es demasiado grande. Máximo 5MB permitido');
                 }
                 
+                // Eliminar logos anteriores
                 $oldLogoPath = public_path('assets/images/logo/logo.png');
+                $oldSvgPath = public_path('assets/images/logo/logo.svg');
                 if (file_exists($oldLogoPath)) {
                     unlink($oldLogoPath);
+                }
+                if (file_exists($oldSvgPath)) {
+                    unlink($oldSvgPath);
                 }
                 
                 $path = public_path('assets/images/logo/logo.png');
@@ -161,10 +175,19 @@ class SettingsController extends Controller
                     mkdir($directory, 0755, true);
                 }
                 
-                $manager = new ImageManager(new Driver());
-                $image = $manager->read($photo);
-                $image->toPng()->save($path);
-                $data['logo'] = 'assets/images/logo/logo.png';
+                // Manejar SVG de forma diferente
+                if ($photo->getMimeType() === 'image/svg+xml') {
+                    // Para SVG, simplemente copiar el archivo
+                    $svgPath = public_path('assets/images/logo/logo.svg');
+                    copy($photo->getPathname(), $svgPath);
+                    $data['logo'] = 'assets/images/logo/logo.svg';
+                } else {
+                    // Para imágenes raster, usar Intervention Image
+                    $manager = new ImageManager(new Driver());
+                    $image = $manager->read($photo);
+                    $image->toPng()->save($path);
+                    $data['logo'] = 'assets/images/logo/logo.png';
+                }
                 
             } catch (\Exception $e) {
                 return redirect()->back()->with('toast', [
