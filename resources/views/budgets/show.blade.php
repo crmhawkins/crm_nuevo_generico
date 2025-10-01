@@ -114,6 +114,12 @@
                                                                 <div class="col-sm-4 col-5">
                                                                     <p class="">{{$presupuesto->iva}} €</p>
                                                                 </div>
+                                                                <div class="col-sm-8 col-7">
+                                                                    <p class="">Retención {{$presupuesto->retencion_percentage}}% :</p>
+                                                                </div>
+                                                                <div class="col-sm-4 col-5">
+                                                                    <p class="">{{$presupuesto->retencion}} €</p>
+                                                                </div>
                                                                 <div class="col-sm-8 col-7 mt-3">
                                                                     <h4 class="">Total : </h4>
                                                                 </div>

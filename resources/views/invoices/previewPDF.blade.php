@@ -83,7 +83,7 @@
                         <h1 style="font-weight: normal;vertical-align:bottom"><cite>FACTURA</cite></h1>
                     </td>
                     <td align="right" style="width: 50%;padding-left:20px;padding-right:45px">
-                         <img src="{{asset('assets/images/logo/logo.png')}}" alt="Logo" width="200" class="logo"/>
+                         <img src="{{asset($empresa->logo)}}" alt="Logo" width="200" class="logo"/>
 
                     </td>
                 </tr>

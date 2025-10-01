@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Illuminate\Support\Facades\File;
 
 class SettingsController extends Controller
 {
@@ -75,10 +76,16 @@ class SettingsController extends Controller
                     $data['logo'] = 'assets/images/logo/logo.svg';
                 } else {
                     // Para imágenes raster, usar Intervention Image
-                    $manager = new ImageManager(new Driver());
-                    $image = $manager->read($photo);
-                    $image->toPng()->save($path);
-                    $data['logo'] = 'assets/images/logo/logo.png';
+                    try {
+                        $manager = new ImageManager(new Driver());
+                        $image = $manager->read($photo);
+                        $image->toPng()->save($path);
+                        $data['logo'] = 'assets/images/logo/logo.png';
+                    } catch (\Exception $e) {
+                        // Si falla Intervention Image, usar el método nativo de Laravel
+                        $photo->move($directory, 'logo.png');
+                        $data['logo'] = 'assets/images/logo/logo.png';
+                    }
                 }
                 
             } catch (\Exception $e) {
@@ -183,10 +190,16 @@ class SettingsController extends Controller
                     $data['logo'] = 'assets/images/logo/logo.svg';
                 } else {
                     // Para imágenes raster, usar Intervention Image
-                    $manager = new ImageManager(new Driver());
-                    $image = $manager->read($photo);
-                    $image->toPng()->save($path);
-                    $data['logo'] = 'assets/images/logo/logo.png';
+                    try {
+                        $manager = new ImageManager(new Driver());
+                        $image = $manager->read($photo);
+                        $image->toPng()->save($path);
+                        $data['logo'] = 'assets/images/logo/logo.png';
+                    } catch (\Exception $e) {
+                        // Si falla Intervention Image, usar el método nativo de Laravel
+                        $photo->move($directory, 'logo.png');
+                        $data['logo'] = 'assets/images/logo/logo.png';
+                    }
                 }
                 
             } catch (\Exception $e) {

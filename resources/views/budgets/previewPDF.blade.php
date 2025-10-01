@@ -96,7 +96,7 @@
                         <h1 style="font-weight: normal;vertical-align:bottom"><cite>PRESUPUESTO</cite></h1>
                     </td>
                     <td align="right" style="width: auto;padding-left:20px;padding-right:45px">
-                        <img src="{{asset('assets/images/logo/logo.png')}}" alt="Logo" width="200" class="logo"/>
+                        <img src="{{asset($empresa->logo)}}" alt="Logo" width="200" class="logo"/>
                     </td>
                 </tr>
             </table>
@@ -215,6 +215,7 @@
                         <th style="text-align:center">Dto.</th>
                         <th style="text-align:center">Base</th>
                         <th style="text-align:center">IVA {{ $budget->iva_percentage }}%</th>
+                        <th style="text-align:center">Retención {{ $budget->retencion_percentage }}%</th>
                         <th style="text-align:right">TOTAL</th>
                     </tr>
                     <tr>
@@ -222,6 +223,7 @@
                         <td style="text-align:center">{{ $budget->discount }}&nbsp;€</td>
                         <td style="text-align:center">{{ $budget->base }}&nbsp;€</td>
                         <td style="text-align:center">{{ $budget->iva }}&nbsp;€</td>
+                        <td style="text-align:center">{{ $budget->retencion }}&nbsp;€</td>
                         <td style="text-align:right">{{ $budget->total }}&nbsp;€</td>
                     </tr>
                     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td> </tr>

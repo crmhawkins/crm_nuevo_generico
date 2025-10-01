@@ -115,7 +115,7 @@
                         <h1 style="font-size:15px;font-weight: normal;vertical-align:bottom; width:100%"><cite><strong>ORDEN DE COMPRA Nº {{$data['ref_order']}}</strong> </cite></h1>
                     </td>
                     <td align="right" style="width: 60%;padding-left:20px;padding-right:45px">
-                        <img src="{{asset('assets/images/logo/logo.png')}}" alt="Logo" width="150" class="logo"/>
+                        <img src="{{asset('{{$empresa->logo}}')}}" alt="Logo" width="150" class="logo"/>
 
                     </td>
                 </tr>
