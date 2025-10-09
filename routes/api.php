@@ -33,3 +33,4 @@ Route::post('/Presupuestos', action: [ApiController::class, 'getpresupuestos']);
 Route::post('/Facturas', action: [ApiController::class, 'getfacturas']);
 Route::post('/Proyectos', action: [ApiController::class, 'getproyectos']);
 Route::post('/Servicios', action: [ApiController::class, 'getservicios']);
+Route::get('/checklogs', action: [ApiController::class, 'checkLogs']);
