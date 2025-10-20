@@ -22,7 +22,7 @@
     <div class="container d-flex flex-column align-items-center justify-content-center" style="height: 100%">
         <div class="card mb-4" style="width: 100%; max-width: 400px;">
             <div class="card-body text-center">
-                <img src="{{ asset('assets/images/logo/logo.png')}}" alt="Logo de la Compañía" class="img-fluid mb-4">
+                <img src="{{ asset('assets/images/logo/LogoHera.svg')}}" alt="Logo de la Compañía" class="img-fluid mb-4">
             </div>
         </div>
         <div class="card" style="width: 100%; max-width: 400px;">
