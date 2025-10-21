@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('budgets', function (Blueprint $table) {
             $table->float('retencion')->default(0);
-            $table->float('retencion_percentage')->default(0);
+            $table->float('retencion_percentage')->default(19);
         });
     }
 
