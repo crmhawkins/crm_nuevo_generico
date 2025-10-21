@@ -42,6 +42,11 @@ class User extends Authenticatable
         'surname',
         'username',
         'password',
+        'pin',
+        'pin_activo',
+        'password_activa',
+        'ultimo_acceso',
+        'metodo_login',
         'role',
         'image',
         'email',
@@ -70,6 +75,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'pin_activo' => 'boolean',
+        'password_activa' => 'boolean',
+        'ultimo_acceso' => 'datetime',
     ];
 
     public function llamadas() {

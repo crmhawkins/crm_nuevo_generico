@@ -21,122 +21,58 @@ class HorasController extends Controller
 
 
     protected function indexHoras(Request $request){
-
-        // Recibir rango de fechas en lugar de semana
-        $fechaInicio = Carbon::parse($request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d')));
-        $fechaFin = Carbon::parse($request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d')));
-
-        // Generar array de todos los días dentro del rango
-        $periodo = Carbon::parse($fechaInicio)->daysUntil($fechaFin);
-
+        // Usar el nuevo sistema de fichaje
+        $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
+        $usuarioFiltro = $request->input('usuario_id');
+        
         // Obtener todos los usuarios activos
-        $users = User::where('inactive', 0)->get();
-        $arrayUsuarios = [];
-
-        $EnOficina = 8; // Horas esperadas en oficina
-        $EnOficinaviernes = 7; // Horas esperadas en oficina el viernes
-        $producido = 7; // Horas esperadas de producción
-        // Recorrido de usuarios y cálculo de horas por cada día
-        foreach ($users as $usuario) {
-            $bajas = Baja::where('admin_user_id', $usuario->id)->where('inicio', '<=', $fechaFin)->where('fin', '>=', $fechaInicio)->get();
-            $vacaciones = HolidaysPetitions::where('admin_user_id', $usuario->id)->where('from', '<=', $fechaFin)->where('to', '>=', $fechaInicio)->where('holidays_status_id', 1)->get();
-            $todosLosDias = [];
-            foreach ($periodo as $dia) {
-                if (!in_array($dia->format('l'), ['Saturday', 'Sunday'])) { // Excluir fines de semana
-                    $esBaja = false;
-                    $esVacaciones = false;
-
-                    // Comprobar si el día está en un rango de baja
-                    foreach ($bajas as $baja) {
-                        if ($dia->between(Carbon::parse($baja->inicio), Carbon::parse($baja->fin))) {
-                            $esBaja = true;
-                            break;
-                        }
-                    }
-
-                    // Comprobar si el día está en un rango de vacaciones
-                    foreach ($vacaciones as $vacacion) {
-                        if ($dia->between(Carbon::parse($vacacion->from), Carbon::parse($vacacion->to))) {
-                            $esVacaciones = true;
-                            break;
-                        }
-                    }
-
-                    // Si no es baja ni vacaciones, lo añadimos al array de días válidos
-                    if (!$esBaja && !$esVacaciones) {
-                        $todosLosDias[$dia->format('Y-m-d')] = $dia->copy();
-                    }
-                }
-            }
-            if ($usuario->id != 81 && $usuario->id != 52) { // Filtro de usuarios específicos
-                $datosUsuario = [
-                    'id' => $usuario->id,
-                    'usuario' => $usuario->name . ' ' . $usuario->surname,
-                    'departamento' => $usuario->departamento->name,
-                    'access_level_id' => $usuario->access_level_id,
-                    'horas_trabajadas' => [],
-                    'horas_producidas' => []
-                ];
-
-                $totalHorasTrabajadas = 0;
-                $totalHorasProducidas = 0;
-                $horasEsperadas = 0;
-                $horasProducidasEsperadas = 0;
-                // Calcular horas por cada día dentro del rango
-                foreach ($todosLosDias as $fecha => $dia) {
-                    $horaHorasTrabajadasdia = 0;
-                    $minutoHorasTrabajadasdia = 0;
-                    $horaHorasProducidasdia = 0;
-                    $minutoHorasProducidasdia = 0;
-
-                    $jornadas = Jornada::where('admin_user_id', $usuario->id)
-                    ->whereDate('start_time', $dia)
-                    ->whereNotNull('end_time')
-                    ->exists(); // Verifica si el usuario inició jornada
-                    if ($jornadas) {
-                        $horasTrabajadas = $this->horasTrabajadasDia($dia, $usuario->id);
-                        $horasProducidas = $this->tiempoProducidoDia($dia, $usuario->id);
-                        $totalHorasTrabajadas += $horasTrabajadas;
-                        $totalHorasProducidas += $horasProducidas;
-                        $horaHorasTrabajadasdia = floor($horasTrabajadas / 60);
-                        $minutoHorasTrabajadasdia = ($horasTrabajadas % 60);
-                        $horaHorasProducidasdia = floor($horasProducidas / 60);
-                        $minutoHorasProducidasdia = ($horasProducidas % 60);
-                        $horaInicio = $this->horaInicioJornada($dia, $usuario->id);
-                        $datosUsuario['horas_trabajadas'][$fecha] = "$horaHorasTrabajadasdia h $minutoHorasTrabajadasdia min";
-                        $datosUsuario['horas_producidas'][$fecha] = "$horaHorasProducidasdia h $minutoHorasProducidasdia min";
-                        $datosUsuario['inicio_jornada'][$fecha] = $horaInicio;
-
-                        $horasEsperadaspordia = ($dia->format('l') === 'Friday') ? $EnOficinaviernes * 60 : $EnOficina * 60;
-                        $horasProducidasEsperadasPordia = $producido * 60;
-
-                        $horasEsperadas += $horasEsperadaspordia;
-                        $horasProducidasEsperadas += $horasProducidasEsperadasPordia;
-
-                    }
-                }
-
-                $totalhorasEsperadas = floor($horasEsperadas / 60);
-                $totalminutoProducidasEsperadas = ($horasEsperadas % 60);
-
-                $totalhorasProducidasEsperadas = floor($horasProducidasEsperadas / 60);
-                $totalminutoProducidasDiaEsperadas = ($horasProducidasEsperadas % 60);
-
-                $horaHorasTrabajadas = floor($totalHorasTrabajadas / 60);
-                $minutoHorasTrabajadas = ($totalHorasTrabajadas % 60);
-
-                $horaHorasProducidas = floor($totalHorasProducidas / 60);
-                $minutoHorasProducidas = ($totalHorasProducidas % 60);
-
-                $datosUsuario['total_horas_trabajadas_esperadas'] = "$totalhorasEsperadas h $totalminutoProducidasEsperadas min";
-                $datosUsuario['total_horas_producidas_esperadas'] = ($usuario->access_level_id == 5) ? "$totalhorasProducidasEsperadas h $totalminutoProducidasDiaEsperadas min" : '';
-                $datosUsuario['total_horas_trabajadas'] = "$horaHorasTrabajadas h $minutoHorasTrabajadas min";
-                $datosUsuario['total_horas_producidas'] = "$horaHorasProducidas h $minutoHorasProducidas min";
-                $arrayUsuarios[] = $datosUsuario;
-            }
+        $usuarios = User::where('inactive', 0)->get();
+        
+        // Construir query base para fichajes
+        $query = \App\Models\Fichaje::with('user')
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+        
+        // Aplicar filtro de usuario si está seleccionado
+        if ($usuarioFiltro) {
+            $query->where('user_id', $usuarioFiltro);
         }
-
-        return view('horas.index', ['usuarios' => $arrayUsuarios, 'todosLosDias' => array_keys($todosLosDias)]);
+        
+        // Obtener fichajes con paginación
+        $fichajes = $query->orderBy('fecha', 'desc')
+                         ->orderBy('created_at', 'desc')
+                         ->paginate(20);
+        
+        // Calcular estadísticas
+        $estadisticas = $this->calcularEstadisticasFichaje($fechaInicio, $fechaFin, $usuarioFiltro);
+        
+        return view('horas.index', compact(
+            'fichajes', 
+            'usuarios', 
+            'fechaInicio', 
+            'fechaFin', 
+            'usuarioFiltro',
+            'estadisticas'
+        ));
+    }
+    
+    private function calcularEstadisticasFichaje($fechaInicio, $fechaFin, $usuarioFiltro = null)
+    {
+        $query = \App\Models\Fichaje::whereBetween('fecha', [$fechaInicio, $fechaFin]);
+        
+        if ($usuarioFiltro) {
+            $query->where('user_id', $usuarioFiltro);
+        }
+        
+        $fichajes = $query->get();
+        
+        return [
+            'total_jornadas' => $fichajes->count(),
+            'total_tiempo_trabajado' => $fichajes->sum('tiempo_trabajado'),
+            'total_tiempo_pausa' => $fichajes->sum('tiempo_pausa'),
+            'jornadas_completas' => $fichajes->whereNotNull('hora_salida')->count(),
+            'jornadas_activas' => $fichajes->whereNull('hora_salida')->count(),
+        ];
     }
     public function jornadas(Request $request)
     {
@@ -224,7 +160,13 @@ class HorasController extends Controller
     {
         $fechaInicio = Carbon::parse($request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d')));
         $fechaFin = Carbon::parse($request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d')));
-        return Excel::download(new JornadasExport($fechaInicio, $fechaFin), 'jornadas_semanales.xlsx');
+        $usuarioId = $request->input('usuario_id');
+        $departamentoId = $request->input('departamento_id');
+        $año = $request->input('año');
+        $mes = $request->input('mes');
+        $buscar = $request->input('buscar');
+        
+        return Excel::download(new JornadasFichajeExport($fechaInicio, $fechaFin, $usuarioId, $departamentoId, $año, $mes, $buscar), 'jornadas_fichaje.xlsx');
     }
 
     public function vacaciones($ini, $fin, $id){

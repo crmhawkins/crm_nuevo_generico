@@ -18,6 +18,7 @@ use App\Http\Controllers\Petitions\PetitionController;
 use App\Http\Controllers\Budgets\BudgetController;
 use App\Http\Controllers\Tasks\TasksController;
 use App\Http\Controllers\Budgets\BudgetConceptsController;
+use App\Http\Controllers\FichajeController;
 use App\Http\Controllers\Calendar\CalendarController;
 use App\Http\Controllers\Contabilidad\CuentasContableController;
 use App\Http\Controllers\Contabilidad\DiarioCajaController;
@@ -638,5 +639,24 @@ Route::group(['prefix' => 'laravel-filemanager'], function () {
 // Route::post('/portal/setPin', [PortalClientesController::class, 'setPin'])->name('portal.setPin');
 // Route::get('/portal/presupuesto/{id}', [PortalClientesController::class, 'showBudget'])->name('portal.showBudget');
 // Route::get('/portal/factura/{id}', [PortalClientesController::class, 'showInvoice'])->name('portal.showInvoice');
+
+// Rutas del Sistema de Fichaje
+Route::prefix('fichaje')->group(function () {
+    Route::get('/login', [FichajeController::class, 'showLogin'])->name('fichaje.login');
+    Route::post('/login', [FichajeController::class, 'login'])->name('fichaje.login.post');
+    Route::post('/logout', [FichajeController::class, 'logout'])->name('fichaje.logout');
+    Route::get('/dashboard', [FichajeController::class, 'dashboard'])->name('fichaje.dashboard')->middleware('fichaje.auth');
+    Route::post('/cambiar-metodo', [FichajeController::class, 'cambiarMetodoLogin'])->name('fichaje.cambiar-metodo')->middleware('fichaje.auth');
+    
+            // Rutas de fichaje
+            Route::post('/entrada', [FichajeController::class, 'ficharEntrada'])->name('fichaje.entrada')->middleware('fichaje.auth');
+            Route::post('/salida', [FichajeController::class, 'ficharSalida'])->name('fichaje.salida')->middleware('fichaje.auth');
+            Route::post('/pausa', [FichajeController::class, 'ficharPausa'])->name('fichaje.pausa')->middleware('fichaje.auth');
+            Route::post('/filtrar-jornadas', [FichajeController::class, 'filtrarJornadas'])->name('fichaje.filtrar-jornadas')->middleware('fichaje.auth');
+            
+            // Rutas de jornadas con fichaje
+            Route::get('/jornadas', [\App\Http\Controllers\Fichaje\JornadasFichajeController::class, 'index'])->name('fichaje.jornadas');
+            Route::post('/jornadas/export', [\App\Http\Controllers\Fichaje\JornadasFichajeController::class, 'exportar'])->name('fichaje.jornadas.export');
+});
 
 
