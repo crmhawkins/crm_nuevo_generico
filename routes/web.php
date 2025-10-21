@@ -203,6 +203,9 @@ Route::get('/user/show/{id}', [UserController::class, 'show'])->name('users.show
 Route::post('/user/destroy', [UserController::class, 'destroy'])->name('users.delete');
 Route::post('/user/avatar/{id}', [UserController::class, 'avatar'])->name('users.avatar');
 
+// Jornadas de Usuario
+Route::get('/users/{id}/jornadas', [\App\Http\Controllers\Users\UserJornadasController::class, 'index'])->name('users.jornadas');
+
 // Clients (CLIENTES)
 Route::get('/clients', [ClientController::class, 'index'])->name('clientes.index');
 Route::get('/client/create', [ClientController::class, 'create'])->name('clientes.create');
@@ -642,6 +645,11 @@ Route::group(['prefix' => 'laravel-filemanager'], function () {
 
 // Rutas del Sistema de Fichaje
 Route::prefix('fichaje')->group(function () {
+    // Redirección principal de /fichaje a /fichaje/dashboard
+    Route::get('/', function () {
+        return redirect()->route('fichaje.dashboard');
+    })->name('fichaje.index');
+    
     Route::get('/login', [FichajeController::class, 'showLogin'])->name('fichaje.login');
     Route::post('/login', [FichajeController::class, 'login'])->name('fichaje.login.post');
     Route::post('/logout', [FichajeController::class, 'logout'])->name('fichaje.logout');
@@ -654,9 +662,6 @@ Route::prefix('fichaje')->group(function () {
             Route::post('/pausa', [FichajeController::class, 'ficharPausa'])->name('fichaje.pausa')->middleware('fichaje.auth');
             Route::post('/filtrar-jornadas', [FichajeController::class, 'filtrarJornadas'])->name('fichaje.filtrar-jornadas')->middleware('fichaje.auth');
             
-            // Rutas de jornadas con fichaje
-            Route::get('/jornadas', [\App\Http\Controllers\Fichaje\JornadasFichajeController::class, 'index'])->name('fichaje.jornadas');
-            Route::post('/jornadas/export', [\App\Http\Controllers\Fichaje\JornadasFichajeController::class, 'exportar'])->name('fichaje.jornadas.export');
 });
 
 

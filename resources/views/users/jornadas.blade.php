@@ -1,10 +1,8 @@
 @extends('layouts.app')
 
-@section('titulo', 'Jornadas Por Fecha')
+@section('titulo', 'Jornadas de ' . $usuario->name)
 
 @section('css')
-<link rel="stylesheet" href="assets/vendors/simple-datatables/style.css">
-<link rel="stylesheet" href="{{ asset('assets/vendors/choices.js/choices.min.css') }}" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
     /* Reset y base */
@@ -50,10 +48,77 @@
         font-weight: 400;
     }
     
-    /* Cards de estadísticas */
+    .user-info-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .user-avatar-large {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 2rem;
+        margin-right: 20px;
+    }
+    
+    .user-details h3 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    
+    .user-details p {
+        margin: 5px 0 0 0;
+        color: #6c757d;
+        font-size: 1rem;
+    }
+    
+    .user-badges {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .badge-modern {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-department {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .badge-position {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: white;
+    }
+    
+    .badge-access {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+    }
+    
+    /* Estadísticas */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px;
         margin-bottom: 30px;
     }
@@ -61,48 +126,49 @@
     .stat-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border-radius: 20px;
+        border-radius: 15px;
         padding: 25px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
     
     .stat-icon {
         width: 60px;
         height: 60px;
-        border-radius: 15px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        margin: 0 auto 15px;
         font-size: 1.5rem;
-        margin-bottom: 15px;
+        color: white;
     }
     
-    .stat-icon.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .stat-icon.success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
-    .stat-icon.warning { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; }
-    .stat-icon.info { background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%); color: white; }
+    .stat-icon.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-icon.success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .stat-icon.warning {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    }
+    
+    .stat-icon.info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    }
     
     .stat-value {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: 700;
         color: #2c3e50;
         margin-bottom: 5px;
@@ -112,16 +178,14 @@
         color: #6c757d;
         font-size: 0.9rem;
         font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
-    /* Panel de filtros */
+    /* Filtros */
     .filters-panel {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
         border-radius: 20px;
-        padding: 30px;
+        padding: 25px;
         margin-bottom: 30px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -141,12 +205,12 @@
     
     .filter-input {
         width: 100%;
-        padding: 12px 16px;
+        padding: 12px 15px;
         border: 2px solid #e9ecef;
-        border-radius: 12px;
-        font-size: 0.9rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
         transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.9);
     }
     
     .filter-input:focus {
@@ -157,10 +221,10 @@
     }
     
     .btn-modern {
-        padding: 12px 24px;
-        border-radius: 12px;
+        padding: 12px 25px;
+        border-radius: 10px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         border: none;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -182,15 +246,15 @@
         color: white;
     }
     
-    .btn-success-modern {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    .btn-secondary-modern {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         color: white;
-        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
     }
     
-    .btn-success-modern:hover {
+    .btn-secondary-modern:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
         color: white;
     }
     
@@ -226,7 +290,7 @@
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        text-align: center;
+        text-align: left;
         border: none;
     }
     
@@ -234,7 +298,7 @@
         padding: 18px 15px;
         border-bottom: 1px solid #f8f9fa;
         font-size: 0.9rem;
-        text-align: center;
+        text-align: left;
         transition: all 0.3s ease;
     }
     
@@ -247,79 +311,58 @@
         border-bottom: none;
     }
     
-    /* Badges modernos */
-    .badge-modern {
-        padding: 8px 16px;
-        border-radius: 20px;
+    .estado-badge {
+        padding: 6px 12px;
+        border-radius: 15px;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
     }
     
-    .badge-success-modern {
+    .estado-trabajando {
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-    }
-    
-    .badge-warning-modern {
-        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
-    }
-    
-    .badge-secondary-modern {
-        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-    }
-    
-    .badge-info-modern {
-        background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
-    }
-    
-    /* Estados */
-    .estado-trabajando {
-        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-        color: #0c5460;
-        border: 1px solid #bee5eb;
     }
     
     .estado-pausa {
-        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        color: #856404;
-        border: 1px solid #ffeaa7;
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: white;
     }
     
     .estado-salida {
-        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
     }
     
-    .estado-entrada {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    /* Tiempo trabajado */
     .tiempo-trabajado {
         color: #28a745;
-        font-weight: 700;
-        font-size: 1rem;
+        font-weight: 600;
     }
     
     .tiempo-pausa {
         color: #ffc107;
-        font-weight: 700;
-        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .breadcrumb-item a {
+        color: #6b7280;
+        transition: color 0.2s ease;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: #6366f1;
+    }
+    
+    .breadcrumb-item.active {
+        color: #374151;
+        font-weight: 500;
     }
     
     /* Sin datos */
@@ -345,52 +388,35 @@
         opacity: 0.8;
     }
     
-    /* Paginación moderna */
-    .pagination-modern {
-        display: flex;
-        justify-content: center;
-        margin-top: 30px;
-    }
-    
-    .pagination-modern .page-link {
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(102, 126, 234, 0.2);
-        color: #667eea;
-        padding: 10px 15px;
-        margin: 0 2px;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-    }
-    
-    .pagination-modern .page-link:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        transform: translateY(-2px);
-    }
-    
-    .pagination-modern .page-item.active .page-link {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-color: #667eea;
-    }
-    
     /* Responsive */
     @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+        .header-title {
+            font-size: 2rem;
         }
         
-        .modern-table {
-            font-size: 0.8rem;
+        .user-info-card {
+            padding: 20px;
+        }
+        
+        .user-avatar-large {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .table-container {
+            padding: 20px;
         }
         
         .modern-table th,
         .modern-table td {
             padding: 12px 8px;
-        }
-        
-        .header-title {
-            font-size: 2rem;
         }
     }
 </style>
@@ -403,23 +429,72 @@
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h1 class="header-title">
-                        <i class="fas fa-clock me-3"></i>Jornadas
+                        <i class="fas fa-clock me-3"></i>Jornadas de {{ $usuario->name }}
                     </h1>
-                    <p class="header-subtitle">Listado de jornadas por fechas</p>
+                    <p class="header-subtitle">Historial detallado de jornadas laborales con información de pausas</p>
                 </div>
                 <div class="col-md-4 text-end">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb justify-content-md-end">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Jornadas</li>
+                            <li class="breadcrumb-item">
+                                <a href="{{route('dashboard')}}" class="text-decoration-none">
+                                    <i class="fa-solid fa-home me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="{{route('users.index')}}" class="text-decoration-none">
+                                    <i class="fa-solid fa-users me-1"></i>Usuarios
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="fa-solid fa-clock me-1"></i>Jornadas
+                            </li>
                         </ol>
                     </nav>
                 </div>
             </div>
         </div>
 
+        {{-- Información del usuario --}}
+        <div class="user-info-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <div class="user-avatar-large">
+                            {{ substr($usuario->name, 0, 1) }}{{ substr($usuario->surname, 0, 1) }}
+                        </div>
+                        <div class="user-details">
+                            <h3>{{ $usuario->name }} {{ $usuario->surname }}</h3>
+                            <p><i class="fas fa-envelope me-2"></i>{{ $usuario->email }}</p>
+                            <div class="user-badges">
+                                @if($usuario->departamento)
+                                    <span class="badge-modern badge-department">
+                                        <i class="fas fa-building me-1"></i>{{ $usuario->departamento->name }}
+                                    </span>
+                                @endif
+                                @if($usuario->posicion)
+                                    <span class="badge-modern badge-position">
+                                        <i class="fas fa-briefcase me-1"></i>{{ $usuario->posicion->name }}
+                                    </span>
+                                @endif
+                                @if($usuario->acceso)
+                                    <span class="badge-modern badge-access">
+                                        <i class="fas fa-shield-alt me-1"></i>{{ $usuario->acceso->name }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ route('users.index') }}" class="btn-modern btn-secondary-modern">
+                        <i class="fas fa-arrow-left"></i>Volver a Usuarios
+                    </a>
+                </div>
+            </div>
+        </div>
+
         {{-- Estadísticas --}}
-        @if(isset($estadisticas))
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon primary">
@@ -449,53 +524,51 @@
                 <div class="stat-value">{{ sprintf('%02d:%02d', floor($estadisticas['total_tiempo_trabajado'] / 60), $estadisticas['total_tiempo_trabajado'] % 60) }}</div>
                 <div class="stat-label">Tiempo Total</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value">{{ sprintf('%02d:%02d', floor($estadisticas['promedio_horas_dia'] / 60), $estadisticas['promedio_horas_dia'] % 60) }}</div>
+                <div class="stat-label">Promedio/Día</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="stat-value">{{ $estadisticas['dias_trabajados'] }}</div>
+                <div class="stat-label">Días Trabajados</div>
+            </div>
         </div>
-        @endif
 
         {{-- Panel de filtros --}}
         <div class="filters-panel">
-            <form action="{{ route('horas.index') }}" method="GET">
+            <form action="{{ route('users.jornadas', $usuario->id) }}" method="GET">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="filter-group">
                             <label class="filter-label">
                                 <i class="fas fa-calendar-alt me-2"></i>Fecha Inicio
                             </label>
-                            <input type="date" name="fecha_inicio" class="filter-input" value="{{ $fechaInicio ?? '' }}">
+                            <input type="date" name="fecha_inicio" class="filter-input" value="{{ $fechaInicio }}">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="filter-group">
                             <label class="filter-label">
                                 <i class="fas fa-calendar-alt me-2"></i>Fecha Fin
                             </label>
-                            <input type="date" name="fecha_fin" class="filter-input" value="{{ $fechaFin ?? '' }}">
+                            <input type="date" name="fecha_fin" class="filter-input" value="{{ $fechaFin }}">
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-user me-2"></i>Empleado
-                            </label>
-                            <select name="usuario_id" class="filter-input">
-                                <option value="">-- Todos los empleados --</option>
-                                @foreach($usuarios as $usuario)
-                                    <option value="{{ $usuario->id }}" {{ ($usuarioFiltro ?? '') == $usuario->id ? 'selected' : '' }}>
-                                        {{ $usuario->name }} {{ $usuario->surname }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="filter-group">
                             <label class="filter-label">&nbsp;</label>
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn-modern btn-primary-modern">
                                     <i class="fas fa-search"></i>Filtrar
                                 </button>
-                                <a href="{{ route('horas.export', ['fecha_inicio' => $fechaInicio ?? '', 'fecha_fin' => $fechaFin ?? '', 'usuario_id' => $usuarioFiltro ?? '']) }}" class="btn-modern btn-success-modern">
-                                    <i class="fas fa-file-excel"></i>Excel
+                                <a href="{{ route('users.jornadas', $usuario->id) }}" class="btn-modern btn-secondary-modern">
+                                    <i class="fas fa-refresh"></i>Limpiar
                                 </a>
                             </div>
                         </div>
@@ -504,16 +577,14 @@
             </form>
         </div>
 
-        {{-- Tabla de fichajes --}}
+        {{-- Tabla de jornadas --}}
         <div class="table-container">
-            @if($fichajes->count() > 0)
+            @if($jornadas->count() > 0)
                 <div class="table-responsive">
                     <table class="modern-table">
                         <thead>
                             <tr>
                                 <th><i class="fas fa-calendar me-2"></i>Fecha</th>
-                                <th><i class="fas fa-user me-2"></i>Empleado</th>
-                                <th><i class="fas fa-building me-2"></i>Departamento</th>
                                 <th><i class="fas fa-sign-in-alt me-2"></i>Entrada</th>
                                 <th><i class="fas fa-sign-out-alt me-2"></i>Salida</th>
                                 <th><i class="fas fa-clock me-2"></i>Tiempo Trabajado</th>
@@ -523,40 +594,24 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($fichajes as $fichaje)
+                            @foreach($jornadas as $jornada)
                             <tr>
-                                <td><strong>{{ $fichaje->fecha->format('d/m/Y') }}</strong></td>
+                                <td><strong>{{ $jornada->fecha->format('d/m/Y') }}</strong></td>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-size: 0.8rem;">
-                                            {{ substr($fichaje->user->name ?? 'U', 0, 1) }}{{ substr($fichaje->user->surname ?? 'N', 0, 1) }}
-                                        </div>
-                                        <div>
-                                            <strong>{{ $fichaje->user ? ($fichaje->user->name . ' ' . $fichaje->user->surname) : 'Usuario no encontrado' }}</strong>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge-modern badge-info-modern">
-                                        <i class="fas fa-building"></i>
-                                        {{ $fichaje->user && $fichaje->user->departamento ? $fichaje->user->departamento->name : 'Sin departamento' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($fichaje->hora_entrada)
-                                        <span class="badge-modern badge-success-modern">
+                                    @if($jornada->hora_entrada)
+                                        <span class="badge-modern badge-department">
                                             <i class="fas fa-sign-in-alt"></i>
-                                            {{ $fichaje->hora_entrada->format('H:i:s') }}
+                                            {{ $jornada->hora_entrada->format('H:i:s') }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($fichaje->hora_salida)
-                                        <span class="badge-modern badge-warning-modern">
+                                    @if($jornada->hora_salida)
+                                        <span class="badge-modern badge-position">
                                             <i class="fas fa-sign-out-alt"></i>
-                                            {{ $fichaje->hora_salida->format('H:i:s') }}
+                                            {{ $jornada->hora_salida->format('H:i:s') }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>
@@ -566,15 +621,15 @@
                                     <i class="fas fa-clock me-1"></i>
                                     @php
                                         $tiempoTrabajado = 0;
-                                        if ($fichaje->hora_entrada) {
-                                            $horaSalida = $fichaje->hora_salida ?? now();
-                                            $tiempoTotal = $fichaje->hora_entrada->diffInMinutes($horaSalida);
+                                        if ($jornada->hora_entrada) {
+                                            $horaSalida = $jornada->hora_salida ?? now();
+                                            $tiempoTotal = $jornada->hora_entrada->diffInMinutes($horaSalida);
                                             
                                             // Calcular tiempo de pausa
                                             $tiempoPausa = 0;
-                                            if ($fichaje->hora_pausa_inicio) {
-                                                $horaPausaFin = $fichaje->hora_pausa_fin ?? now();
-                                                $tiempoPausa = $fichaje->hora_pausa_inicio->diffInMinutes($horaPausaFin);
+                                            if ($jornada->hora_pausa_inicio) {
+                                                $horaPausaFin = $jornada->hora_pausa_fin ?? now();
+                                                $tiempoPausa = $jornada->hora_pausa_inicio->diffInMinutes($horaPausaFin);
                                             }
                                             
                                             $tiempoTrabajado = max(0, $tiempoTotal - $tiempoPausa);
@@ -586,37 +641,37 @@
                                     <i class="fas fa-pause me-1"></i>
                                     @php
                                         $tiempoPausa = 0;
-                                        if ($fichaje->hora_pausa_inicio) {
-                                            $horaPausaFin = $fichaje->hora_pausa_fin ?? now();
-                                            $tiempoPausa = $fichaje->hora_pausa_inicio->diffInMinutes($horaPausaFin);
+                                        if ($jornada->hora_pausa_inicio) {
+                                            $horaPausaFin = $jornada->hora_pausa_fin ?? now();
+                                            $tiempoPausa = $jornada->hora_pausa_inicio->diffInMinutes($horaPausaFin);
                                         }
                                     @endphp
                                     {{ sprintf('%02d:%02d', floor($tiempoPausa / 60), $tiempoPausa % 60) }}
                                 </td>
                                 <td>
-                                    @if($fichaje->hora_pausa_inicio)
-                                        @if($fichaje->hora_pausa_fin)
-                                            <span class="badge-modern badge-success-modern">
+                                    @if($jornada->hora_pausa_inicio)
+                                        @if($jornada->hora_pausa_fin)
+                                            <span class="badge-modern badge-department">
                                                 <i class="fas fa-stopwatch"></i>
-                                                {{ $fichaje->hora_pausa_inicio->format('H:i') }} - {{ $fichaje->hora_pausa_fin->format('H:i') }}
+                                                {{ $jornada->hora_pausa_inicio->format('H:i') }} - {{ $jornada->hora_pausa_fin->format('H:i') }}
                                             </span>
                                         @else
-                                            <span class="badge-modern badge-warning-modern">
+                                            <span class="badge-modern badge-position">
                                                 <i class="fas fa-play"></i>
-                                                {{ $fichaje->hora_pausa_inicio->format('H:i') }} - En curso
+                                                {{ $jornada->hora_pausa_inicio->format('H:i') }} - En curso
                                             </span>
                                         @endif
                                     @else
-                                        <span class="badge-modern badge-secondary-modern">
+                                        <span class="badge-modern badge-access">
                                             <i class="fas fa-minus"></i>
                                             Sin pausas
                                         </span>
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge-modern estado-{{ $fichaje->estado }}">
-                                        <i class="fas fa-{{ $fichaje->estado === 'trabajando' ? 'play' : ($fichaje->estado === 'pausa' ? 'pause' : ($fichaje->estado === 'salida' ? 'stop' : 'play-circle')) }}"></i>
-                                        {{ ucfirst($fichaje->estado) }}
+                                    <span class="estado-badge estado-{{ $jornada->estado }}">
+                                        <i class="fas fa-{{ $jornada->estado === 'trabajando' ? 'play' : ($jornada->estado === 'pausa' ? 'pause' : ($jornada->estado === 'salida' ? 'stop' : 'play-circle')) }}"></i>
+                                        {{ ucfirst($jornada->estado) }}
                                     </span>
                                 </td>
                             </tr>
@@ -624,16 +679,16 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 {{-- Paginación --}}
-                <div class="pagination-modern">
-                    {{ $fichajes->links() }}
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $jornadas->links() }}
                 </div>
             @else
                 <div class="no-data">
                     <i class="fas fa-clock"></i>
                     <h4>No se encontraron jornadas</h4>
-                    <p>No hay registros de fichaje para el período seleccionado.</p>
+                    <p>No hay registros de jornadas para el período seleccionado.</p>
                 </div>
             @endif
         </div>
@@ -641,7 +696,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     // Animaciones suaves
     $(document).ready(function() {
@@ -654,7 +708,7 @@
                 }, 300).css('transform', 'translateY(0)');
             }, index * 100);
         });
-        
+
         // Efecto hover en las filas de la tabla
         $('.modern-table tbody tr').hover(
             function() {
@@ -666,5 +720,4 @@
         );
     });
 </script>
-@include('partials.toast')
 @endsection

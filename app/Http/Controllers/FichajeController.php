@@ -7,6 +7,7 @@ use App\Models\Fichaje;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 
@@ -27,10 +28,18 @@ class FichajeController extends Controller
         \Log::info('Login attempt - Datos recibidos:', $request->all());
         
         $validator = Validator::make($request->all(), [
-            'identificador' => 'required|string',
-            'pin_code' => 'required|string',
             'metodo' => 'required|in:pin,password'
         ]);
+        
+        // Validar campos según el método
+        if ($request->metodo === 'pin') {
+            $validator->addRules(['pin_code' => 'required|string|size:4|regex:/^[0-9]{4}$/']);
+        } else {
+            $validator->addRules([
+                'identificador' => 'required|string',
+                'password' => 'required|string'
+            ]);
+        }
 
         if ($validator->fails()) {
             \Log::info('Validación falló:', $validator->errors()->toArray());
@@ -312,3 +321,4 @@ class FichajeController extends Controller
         ]);
     }
 }
+

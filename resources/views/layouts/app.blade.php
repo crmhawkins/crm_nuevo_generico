@@ -39,6 +39,88 @@
         <script src="{{ asset('build/assets/app-bf7e6802.js') }}"></script>
         @laravelViewsStyles
         {{-- @vite(['resources/sass/app.scss', 'resources/js/app.js']) --}}
+        
+        <!-- Custom Styles for Navbar Layout -->
+        <style>
+            /* Reset any sidebar margins */
+            #main {
+                margin-left: 0 !important;
+                margin-top: 0 !important;
+                width: 100% !important;
+            }
+            
+            .main-content {
+                margin-top: 0;
+                min-height: calc(100vh - 60px);
+                background-color: #f8fafc;
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+            }
+            
+            body {
+                background-color: #f8fafc;
+                margin: 0;
+                padding: 0;
+            }
+            
+            /* Ensure full width */
+            .container-fluid {
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+            
+            /* Smooth transitions */
+            * {
+                transition: all 0.3s ease;
+            }
+            
+            /* Card styling improvements */
+            .card {
+                border: none;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                border-radius: 0.75rem;
+            }
+            
+            .card:hover {
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                transform: translateY(-2px);
+            }
+            
+            /* Override any existing sidebar styles */
+            #sidebar {
+                display: none !important;
+            }
+            
+            /* Hide any LOGO text that might be appearing */
+            .logo-text-large,
+            .header-logo,
+            .main-logo {
+                display: none !important;
+            }
+            
+            /* Force full width layout */
+            .contenedor {
+                margin-left: 0 !important;
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Override any potential sidebar margins */
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            #app {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+        </style>
 </head>
 <body class="" style="overflow-x: hidden">
     <div id="app">
@@ -51,11 +133,12 @@
         </div>
         <div class="css-96uzu9"></div>
 
-        @include('layouts.sidebar')
+        <!-- Navbar -->
+        @include('layouts.navbar')
 
-        <main id="main">
-            @include('layouts.topBar')
-            <div class="contenedor p-4">
+        <!-- Main Content -->
+        <main id="main" class="main-content">
+            <div class="container-fluid px-4 py-3">
                 @yield('content')
             </div>
         </main>
@@ -74,12 +157,43 @@
     @laravelViewsScripts
     <script>
          document.addEventListener('DOMContentLoaded', function() {
-            let accessLevel = {{ auth()->user()->access_level_id}};
-            // Verificar si el nivel de acceso del usuario es 4
-            if (accessLevel == 5 || accessLevel == 6) {
-                $("#sidebar").remove();
-                $("#main").css("margin-left", "0px");
-            }
+            // El navbar ya está configurado para mostrar/ocultar elementos según el nivel de acceso
+            // No necesitamos lógica adicional aquí para el sidebar ya que usamos navbar
+            
+            // Ocultar cualquier elemento que contenga "LOGO" gigante
+            const elements = document.querySelectorAll('*');
+            elements.forEach(element => {
+                if (element.textContent && element.textContent.trim() === 'LOGO' && element.tagName !== 'SCRIPT') {
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Inicializar todos los dropdowns de Bootstrap
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
+            });
+            
+            // Asegurar que los dropdowns funcionen correctamente
+            document.querySelectorAll('.dropdown-toggle').forEach(function(dropdownToggle) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Cerrar otros dropdowns abiertos
+                    document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
+                        if (menu !== this.nextElementSibling) {
+                            menu.classList.remove('show');
+                        }
+                    }.bind(this));
+                    
+                    // Toggle del dropdown actual
+                    var dropdownMenu = this.nextElementSibling;
+                    if (dropdownMenu) {
+                        dropdownMenu.classList.toggle('show');
+                    }
+                });
+            });
         });
         document.addEventListener("DOMContentLoaded", function() {
             var loader = document.getElementById('loadingOverlay');

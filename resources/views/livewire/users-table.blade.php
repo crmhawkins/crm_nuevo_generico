@@ -1,100 +1,165 @@
 <div>
-    <div class="filtros row mb-4">
-        <div class="col-md-6">
-            <div class="flex flex-row justify-start">
-                <div class="mr-3">
-                    <label for="">Nº</label>
-                    <select wire:model="perPage" class="form-select">
-                        <option value="10">10 por página</option>
-                        <option value="25">25 por página</option>
-                        <option value="15">50 por página</option>
+    {{-- Filtros modernos --}}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0">
+                    <label class="form-label mb-1">
+                        <i class="fas fa-list me-1"></i>Mostrar
+                    </label>
+                    <select wire:model="perPage" class="form-select" style="width: 80px;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
                         <option value="all">Todo</option>
                     </select>
                 </div>
-                <div class="w-75">
-                    <label for="">Buscar</label>
-                    <input wire:model.debounce.300ms="buscar" type="text" class="form-control w-100" placeholder="Escriba la palabra a buscar...">
+                <div class="flex-grow-1">
+                    <label class="form-label mb-1">
+                        <i class="fas fa-search me-1"></i>Buscar
+                    </label>
+                    <input wire:model.debounce.300ms="buscar" type="text" class="form-control" placeholder="Buscar usuarios...">
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="flex flex-row justify-end">
-                <div class="mr-3">
-                    <label for="">Departamentos</label>
-                    <select wire:model="selectedDepartamento" name="" id="" class="form-select ">
-                        <option value="">-- Seleccione un Gestor --</option>
-                        @foreach ($departamentos as $departamento)
-                            <option value="{{$departamento->id}}">{{$departamento->name}}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="">Nivel de Accesos</label>
-                    <select wire:model="selectedNivel" name="" id="" class="form-select ">
-                        <option value="">-- Seleccione un Nivel --</option>
-                        @foreach ($niveles as $nivele)
-                            <option value="{{$nivele->id}}">{{$nivele->name}}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
+        <div class="col-md-3">
+            <label class="form-label mb-1">
+                <i class="fas fa-building me-1"></i>Departamento
+            </label>
+            <select wire:model="selectedDepartamento" class="form-select">
+                <option value="">-- Todos los departamentos --</option>
+                @foreach ($departamentos as $departamento)
+                    <option value="{{$departamento->id}}">{{$departamento->name}}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label mb-1">
+                <i class="fas fa-shield-alt me-1"></i>Nivel de Acceso
+            </label>
+            <select wire:model="selectedNivel" class="form-select">
+                <option value="">-- Todos los niveles --</option>
+                @foreach ($niveles as $nivele)
+                    <option value="{{$nivele->id}}">{{$nivele->name}}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <a href="{{ route('users.create') }}" class="btn btn-primary w-100">
+                <i class="fas fa-plus me-2"></i>Nuevo Usuario
+            </a>
         </div>
     </div>
-    {{-- {{dd($users)}} --}}
-    @if ( $users )
-        {{-- Filtros --}}
-        {{-- Tabla --}}
+
+    @if ( $users && $users->count() > 0 )
+        {{-- Tabla moderna --}}
         <div class="table-responsive">
-             <table class="table table-hover">
-                <thead class="header-table">
+            <table class="modern-table">
+                <thead>
                     <tr>
-                        <th class="text-center" style="font-size:0.75rem">AVATAR</th>
+                        <th class="text-center">
+                            <i class="fas fa-user-circle me-2"></i>Avatar
+                        </th>
                         @foreach ([
-                            'name' => 'NOMBRE',
-                            'acceso' => 'NIVEL DE ACCESO',
-                            'departamento' => 'DEPARTAMENTO',
-                            'cargo' => 'CARGO',
+                            'name' => 'Nombre',
+                            'acceso' => 'Nivel de Acceso',
+                            'departamento' => 'Departamento',
+                            'cargo' => 'Cargo',
                         ] as $field => $label)
-                            <th class="px-3" style="font-size:0.75rem">
-                                <a href="#" wire:click.prevent="sortBy('{{ $field }}')">
-                                    {{ $label }}
+                            <th>
+                                <a href="#" wire:click.prevent="sortBy('{{ $field }}')" class="text-white text-decoration-none">
+                                    <i class="fas fa-{{ $field === 'name' ? 'user' : ($field === 'acceso' ? 'shield-alt' : ($field === 'departamento' ? 'building' : 'briefcase')) }} me-2"></i>{{ $label }}
                                     @if ($sortColumn == $field)
-                                        <span>{!! $sortDirection == 'asc' ? '&#9650;' : '&#9660;' !!}</span>
+                                        <i class="fas fa-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
                                     @endif
                                 </a>
                             </th>
                         @endforeach
-                        <th class="text-center" style="font-size:0.75rem">ACCIONES</th>
+                        <th class="text-center">
+                            <i class="fas fa-cogs me-2"></i>Acciones
+                        </th>
+                    </tr>
                 </thead>
-
                 <tbody>
                     @foreach ( $users as $user )
-                        <tr class="clickable-row" data-href="{{route('users.edit', $user->id)}}">
-                            <td>
-
-                            </td>
-                            <td>{{$user->name}}</td>
-                            <td>{{$user->acceso}}</td>
-                            <td>{{$user->departamento}}</td>
-                            <td>{{$user->cargo}}</td>
-                            <td class="flex flex-row justify-evenly align-middle" style="min-width: 120px">
-                                <a class="" href="{{route('users.show', $user->id)}}"><img src="{{asset('assets/icons/eye.svg')}}" alt="Mostrar usuario"></a>
-                                <a class="" href="{{route('users.edit', $user->id)}}"><img src="{{asset('assets/icons/edit.svg')}}" alt="Mostrar usuario"></a>
-                                <a class="delete" data-id="{{$user->id}}" href=""><img src="{{asset('assets/icons/trash.svg')}}" alt="Mostrar usuario"></a>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td class="text-center">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                {{ substr($user->name, 0, 1) }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <strong>{{ $user->name }}</strong>
+                                    @if($user->surname)
+                                        <br><small class="text-muted">{{ $user->surname }}</small>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @if($user->acceso)
+                                <span class="badge-modern badge-{{ strtolower(str_replace(' ', '', $user->acceso)) }}">
+                                    {{ $user->acceso }}
+                                </span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($user->departamento)
+                                <span class="badge-modern badge-personal">
+                                    <i class="fas fa-building me-1"></i>{{ $user->departamento }}
+                                </span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($user->cargo)
+                                <span class="badge-modern badge-gestor">
+                                    <i class="fas fa-briefcase me-1"></i>{{ $user->cargo }}
+                                </span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{route('users.jornadas', $user->id)}}" class="action-btn info" title="Ver jornadas">
+                                    <i class="fas fa-clock"></i>
+                                </a>
+                                <a href="{{route('users.edit', $user->id)}}" class="action-btn edit" title="Editar usuario">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="#" class="action-btn delete" data-id="{{$user->id}}" title="Eliminar usuario">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                     @endforeach
                 </tbody>
             </table>
-            {{ $users->links() }}
+            
+            {{-- Paginación --}}
+            @if($perPage !== 'all' && $users->hasPages())
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $users->links() }}
+                </div>
+            @endif
         </div>
     @else
-        <div class="text-center py-4">
-            <h3 class="text-center fs-3">No se encontraron registros de <strong>USUARIOS</strong></h3>
-            <p class="mt-2">Pulse el boton superior para crear algun usuario.</p>
+        <div class="no-data">
+            <i class="fas fa-users"></i>
+            <h4>No se encontraron usuarios</h4>
+            <p>No hay registros de usuarios en el sistema.</p>
+            <a href="{{ route('users.create') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Crear Primer Usuario
+            </a>
         </div>
     @endif
-    {{-- {{$users}} --}}
 </div>
 @section('scripts')
 

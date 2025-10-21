@@ -375,9 +375,6 @@
                         <small class="text-muted">{{ Auth::user()->departamento->name ?? 'Sin departamento' }}</small>
                     </div>
                 </div>
-                <a href="{{ route('fichaje.jornadas') }}" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-history me-2"></i>Ver Jornadas
-                </a>
                 <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                 </button>

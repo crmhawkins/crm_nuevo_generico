@@ -1,62 +1,96 @@
-@section('css')
-<link rel="stylesheet" href="{{asset('assets/vendors/choices.js/choices.min.css')}}" />
-@endsection
 <div>
-    <div class="filtros row mb-4">
-        <div class="col-md-6 col-sm-12">
-            <div class="flex flex-row justify-start">
-                <div class="mr-3">
-                    <label for="">Nº</label>
-                    <select wire:model="perPage" class="form-select">
+    {{-- Filtros modernos --}}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0">
+                    <label class="form-label mb-1">
+                        <i class="fas fa-list me-1"></i>Mostrar
+                    </label>
+                    <select wire:model="perPage" class="form-select" style="width: 80px;">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="all">Todo</option>
                     </select>
                 </div>
-                <div class="w-75">
-                    <label for="">Buscar</label>
-                    <input wire:model.debounce.300ms="buscar" type="text" class="form-control w-100" placeholder="Escriba la palabra a buscar...">
+                <div class="flex-grow-1">
+                    <label class="form-label mb-1">
+                        <i class="fas fa-search me-1"></i>Buscar
+                    </label>
+                    <input wire:model.debounce.300ms="buscar" type="text" class="form-control" placeholder="Escriba el nombre del departamento...">
                 </div>
             </div>
         </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <a href="{{ route('departamento.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nuevo Departamento
+            </a>
+        </div>
     </div>
-    {{-- {{dd($users)}} --}}
-    @if ( $departamentos )
-        {{-- Filtros --}}
-        {{-- Tabla --}}
+
+    @if ( $departamentos && $departamentos->count() > 0 )
+        {{-- Tabla moderna --}}
         <div class="table-responsive">
-             <table class="table table-hover">
-                <thead class="header-table">
-                    <th class="px-3">
-                        <a href="#" wire:click.prevent="sortBy('name')">
-                            NOMBRE
-                            @if ($sortColumn == 'name')
-                                <span>{!! $sortDirection == 'asc' ? '&#9650;' : '&#9660;' !!}</span>
-                            @endif
-                        </a>
-                    </th>
-                    <th class="text-center" style="font-size:0.75rem">ACCIONES</th>
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="#" wire:click.prevent="sortBy('name')" class="text-white text-decoration-none">
+                                <i class="fas fa-building me-2"></i>Nombre del Departamento
+                                @if ($sortColumn == 'name')
+                                    <i class="fas fa-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                @endif
+                            </a>
+                        </th>
+                        <th class="text-center">
+                            <i class="fas fa-cogs me-2"></i>Acciones
+                        </th>
+                    </tr>
                 </thead>
                 <tbody>
                     @foreach ( $departamentos as $departamento )
-                    <tr class="clickable-row" data-href="{{route('departamento.edit', $departamento->id)}}">
-                            <td>{{$departamento->name}}</td>
-                            <td class="flex flex-row justify-evenly align-middle" style="min-width: 120px">
-                                <a class="" href="{{route('departamento.edit', $departamento->id)}}"><img src="{{asset('assets/icons/edit.svg')}}" alt="Editar departamento"></a>
-                                <a class="delete" data-id="{{$departamento->id}}" href=""><img src="{{asset('assets/icons/trash.svg')}}" alt="Eliminar departamento"></a>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                    {{ substr($departamento->name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <strong>{{ $departamento->name }}</strong>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{route('departamento.edit', $departamento->id)}}" class="action-btn edit" title="Editar departamento">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="#" class="action-btn delete" data-id="{{$departamento->id}}" title="Eliminar departamento">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                     @endforeach
                 </tbody>
             </table>
-            @if($perPage !== 'all')
-                {{ $departamentos->links() }}
+            
+            {{-- Paginación --}}
+            @if($perPage !== 'all' && $departamentos->hasPages())
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $departamentos->links() }}
+                </div>
             @endif
         </div>
     @else
-        <div class="text-center py-4">
-            <h3 class="text-center fs-3">No se encontraron registros de <strong>DEPARTAMENTOS</strong></h3>
+        <div class="no-data">
+            <i class="fas fa-building"></i>
+            <h4>No se encontraron departamentos</h4>
+            <p>No hay registros de departamentos en el sistema.</p>
+            <a href="{{ route('departamento.create') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Crear Primer Departamento
+            </a>
         </div>
     @endif
 </div>

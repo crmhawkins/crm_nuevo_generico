@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Horas;
 
 use App\Exports\JornadasExport;
+use App\Exports\JornadasFichajeExport;
 use App\Http\Controllers\Controller;
 use App\Models\Alerts\Alert;
 use App\Models\Bajas\Baja;
@@ -66,17 +67,55 @@ class HorasController extends Controller
         
         $fichajes = $query->get();
         
+        // Calcular tiempo trabajado dinámicamente
+        $totalTiempoTrabajado = 0;
+        $totalTiempoPausa = 0;
+        
+        foreach ($fichajes as $fichaje) {
+            $tiempoTrabajado = $this->calcularTiempoTrabajadoFichaje($fichaje);
+            $tiempoPausa = $this->calcularTiempoPausaFichaje($fichaje);
+            
+            $totalTiempoTrabajado += $tiempoTrabajado;
+            $totalTiempoPausa += $tiempoPausa;
+        }
+        
         return [
             'total_jornadas' => $fichajes->count(),
-            'total_tiempo_trabajado' => $fichajes->sum('tiempo_trabajado'),
-            'total_tiempo_pausa' => $fichajes->sum('tiempo_pausa'),
+            'total_tiempo_trabajado' => $totalTiempoTrabajado,
+            'total_tiempo_pausa' => $totalTiempoPausa,
             'jornadas_completas' => $fichajes->whereNotNull('hora_salida')->count(),
             'jornadas_activas' => $fichajes->whereNull('hora_salida')->count(),
         ];
     }
+    
+    private function calcularTiempoTrabajadoFichaje($fichaje)
+    {
+        if (!$fichaje->hora_entrada) {
+            return 0;
+        }
+        
+        $horaSalida = $fichaje->hora_salida ?? now();
+        $tiempoTotal = $fichaje->hora_entrada->diffInMinutes($horaSalida);
+        
+        // Restar tiempo de pausa si existe
+        $tiempoPausa = $this->calcularTiempoPausaFichaje($fichaje);
+        
+        return max(0, $tiempoTotal - $tiempoPausa);
+    }
+    
+    private function calcularTiempoPausaFichaje($fichaje)
+    {
+        if (!$fichaje->hora_pausa_inicio) {
+            return 0;
+        }
+        
+        $horaPausaFin = $fichaje->hora_pausa_fin ?? now();
+        return $fichaje->hora_pausa_inicio->diffInMinutes($horaPausaFin);
+    }
     public function jornadas(Request $request)
     {
-        return view('horas.jornadas');
+        // Usar el mismo método que indexHoras para obtener datos de fichaje
+        return $this->indexHoras($request);
     }
 
     public function create()
@@ -94,36 +133,90 @@ class HorasController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'admin_user_id' => 'required',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date',
+            'admin_user_id' => 'required|exists:users,id',
+            'fecha' => 'required|date',
+            'hora_entrada' => 'nullable|date_format:H:i',
+            'hora_salida' => 'nullable|date_format:H:i',
+            'hora_pausa_inicio' => 'nullable|date_format:H:i',
+            'hora_pausa_fin' => 'nullable|date_format:H:i',
+            'estado' => 'required|in:trabajando,pausa,salida',
         ], [
             'admin_user_id.required' => 'El campo "Usuario" es requerido',
-            'start_time.required' => 'El campo "Hora de inicio" es requerido',
-            'end_time.required' => 'El campo "Hora de fin" es requerido',
-            'start_time.date' => 'El campo "Hora de inicio" debe ser una fecha valida',
-            'end_time.date' => 'El campo "Hora de fin" debe ser una fecha valida',
+            'admin_user_id.exists' => 'El usuario seleccionado no existe',
+            'fecha.required' => 'El campo "Fecha" es requerido',
+            'fecha.date' => 'El campo "Fecha" debe ser una fecha válida',
+            'hora_entrada.date_format' => 'El campo "Hora de entrada" debe tener formato HH:MM',
+            'hora_salida.date_format' => 'El campo "Hora de salida" debe tener formato HH:MM',
+            'hora_pausa_inicio.date_format' => 'El campo "Inicio de pausa" debe tener formato HH:MM',
+            'hora_pausa_fin.date_format' => 'El campo "Fin de pausa" debe tener formato HH:MM',
+            'estado.required' => 'El campo "Estado" es requerido',
+            'estado.in' => 'El estado debe ser: trabajando, pausa o salida',
         ]);
 
-        $validatedData['start_time'] = Carbon::parse($validatedData['start_time']);
-        $validatedData['end_time'] = Carbon::parse($validatedData['end_time']);
-        $validatedData['is_active'] = false;
+        try {
+            // Crear el fichaje usando el nuevo sistema
+            $fichajeData = [
+                'user_id' => $validatedData['admin_user_id'],
+                'fecha' => $validatedData['fecha'],
+                'estado' => $validatedData['estado'],
+            ];
 
-        $jornada = Jornada::create($validatedData);
+            // Agregar horas si están presentes
+            if ($validatedData['hora_entrada']) {
+                $fichajeData['hora_entrada'] = $validatedData['fecha'] . ' ' . $validatedData['hora_entrada'];
+            }
 
-        if (!$jornada) {
-            return redirect()->back()->with('toast', [
-                'icon' => 'error',
-                'mensaje' => 'Error al crear la Jornada'
-            ]);
-        }else{
+            if ($validatedData['hora_salida']) {
+                $fichajeData['hora_salida'] = $validatedData['fecha'] . ' ' . $validatedData['hora_salida'];
+            }
+
+            if ($validatedData['hora_pausa_inicio']) {
+                $fichajeData['hora_pausa_inicio'] = $validatedData['fecha'] . ' ' . $validatedData['hora_pausa_inicio'];
+            }
+
+            if ($validatedData['hora_pausa_fin']) {
+                $fichajeData['hora_pausa_fin'] = $validatedData['fecha'] . ' ' . $validatedData['hora_pausa_fin'];
+            }
+
+            // Calcular tiempo trabajado si hay entrada y salida
+            if ($validatedData['hora_entrada'] && $validatedData['hora_salida']) {
+                $entrada = Carbon::parse($fichajeData['hora_entrada']);
+                $salida = Carbon::parse($fichajeData['hora_salida']);
+                $fichajeData['tiempo_trabajado'] = $entrada->diffInMinutes($salida);
+            } else {
+                $fichajeData['tiempo_trabajado'] = 0;
+            }
+
+            // Calcular tiempo de pausa si hay inicio y fin de pausa
+            if ($validatedData['hora_pausa_inicio'] && $validatedData['hora_pausa_fin']) {
+                $pausaInicio = Carbon::parse($fichajeData['hora_pausa_inicio']);
+                $pausaFin = Carbon::parse($fichajeData['hora_pausa_fin']);
+                $fichajeData['tiempo_pausa'] = $pausaInicio->diffInMinutes($pausaFin);
+            } else {
+                $fichajeData['tiempo_pausa'] = 0;
+            }
+
+            // Crear el fichaje
+            $fichaje = \App\Models\Fichaje::create($fichajeData);
+
+            if (!$fichaje) {
+                return redirect()->back()->with('toast', [
+                    'icon' => 'error',
+                    'mensaje' => 'Error al crear la jornada'
+                ]);
+            }
+
             return redirect()->route('horas.listado')->with('toast', [
                 'icon' => 'success',
-                'mensaje' => 'La Jornada se actualizo correctamente'
+                'mensaje' => 'La jornada se creó correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('toast', [
+                'icon' => 'error',
+                'mensaje' => 'Error al crear la jornada: ' . $e->getMessage()
             ]);
         }
-
-
     }
 
     public function update(Request $request, $id)
