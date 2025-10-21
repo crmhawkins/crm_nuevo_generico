@@ -226,7 +226,6 @@
         <div class="form-container">
             <form action="{{route('user.update',$usuario->id)}}" method="POST">
                 @csrf
-                @method('PUT')
                 
                 <div class="row">
                     <div class="col-md-6">
