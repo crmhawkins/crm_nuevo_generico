@@ -42,4 +42,9 @@ class Fichaje extends Model
         $minutos = $this->tiempo_trabajado % 60;
         return sprintf('%02d:%02d', $horas, $minutos);
     }
+
+    public function pausas()
+    {
+        return $this->hasMany(\App\Models\FichajePausa::class, 'fichaje_id');
+    }
 }

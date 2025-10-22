@@ -392,9 +392,10 @@
             <div class="timer-display" id="timer">
                 @if($fichajeHoy->hora_entrada && !$fichajeHoy->hora_salida)
                     @php
-                        $horas = floor($tiempoTrabajado / 60);
-                        $minutos = $tiempoTrabajado % 60;
-                        $segundos = 0; // Para el timer en vivo
+                        $segundosTotales = isset($tiempoTrabajadoSegundos) ? $tiempoTrabajadoSegundos : ($tiempoTrabajado * 60);
+                        $horas = floor($segundosTotales / 3600);
+                        $minutos = floor(($segundosTotales % 3600) / 60);
+                        $segundos = $segundosTotales % 60;
                     @endphp
                     {{ sprintf('%02d:%02d:%02d', $horas, $minutos, $segundos) }}
                 @else
@@ -435,28 +436,48 @@
                 
                 <div class="info-row">
                     <span><i class="fas fa-stopwatch me-2"></i>Tiempo Trabajado:</span>
-                    <span style="color: #51cf66; font-weight: 600;">{{ sprintf('%02d:%02d', floor($tiempoTrabajado / 60), $tiempoTrabajado % 60) }}</span>
+                    @php
+                        $tt = isset($tiempoTrabajadoSegundos) ? $tiempoTrabajadoSegundos : ($tiempoTrabajado * 60);
+                        $h = floor($tt/3600); $m = floor(($tt%3600)/60); $s = $tt%60;
+                    @endphp
+                    <span style="color: #51cf66; font-weight: 600;">{{ sprintf('%02d:%02d:%02d', $h, $m, $s) }}</span>
                 </div>
                 
-                @if($fichajeHoy->hora_pausa_inicio)
                 <div class="info-row">
                     <span><i class="fas fa-pause-circle me-2"></i>Pausas del día:</span>
                     <span>
-                        @if($fichajeHoy->hora_pausa_inicio && $fichajeHoy->hora_pausa_fin)
-                            {{ $fichajeHoy->hora_pausa_inicio->format('H:i') }} - {{ $fichajeHoy->hora_pausa_fin->format('H:i') }}
-                        @elseif($fichajeHoy->hora_pausa_inicio && !$fichajeHoy->hora_pausa_fin)
-                            <span style="color: #ffd43b; font-weight: 600;">{{ $fichajeHoy->hora_pausa_inicio->format('H:i') }} - En curso</span>
+                        @php
+                            $pausas = [];
+                            if (method_exists($fichajeHoy, 'pausas')) {
+                                $pausas = $fichajeHoy->pausas()->orderBy('created_at')->get();
+                            }
+                        @endphp
+                        @if(count($pausas) > 0)
+                            @foreach($pausas as $i => $p)
+                                <span class="badge bg-light text-dark" style="margin-right:6px;">
+                                    {{ $p->inicio ? \Carbon\Carbon::parse($p->inicio)->format('H:i:s') : '-' }} - {{ $p->fin ? \Carbon\Carbon::parse($p->fin)->format('H:i:s') : 'En curso' }}
+                                </span>
+                            @endforeach
+                        @elseif($fichajeHoy->hora_pausa_inicio)
+                            @if($fichajeHoy->hora_pausa_fin)
+                                <span class="badge bg-light text-dark">{{ $fichajeHoy->hora_pausa_inicio->format('H:i:s') }} - {{ $fichajeHoy->hora_pausa_fin->format('H:i:s') }}</span>
+                            @else
+                                <span class="badge bg-warning text-dark">{{ $fichajeHoy->hora_pausa_inicio->format('H:i:s') }} - En curso</span>
+                            @endif
+                        @else
+                            Sin pausas
                         @endif
                     </span>
                 </div>
-                @endif
                 
-                @if($fichajeHoy->tiempo_pausa > 0)
                 <div class="info-row">
                     <span>Tiempo Total en Pausa:</span>
-                    <span>{{ sprintf('%02d:%02d', floor($fichajeHoy->tiempo_pausa / 60), $fichajeHoy->tiempo_pausa % 60) }}</span>
+                    @php
+                        $tp = isset($tiempoPausaSegundosTotal) ? $tiempoPausaSegundosTotal : (($fichajeHoy->tiempo_pausa ?? 0) * 60);
+                        $h = floor($tp/3600); $m = floor(($tp%3600)/60); $s = $tp%60;
+                    @endphp
+                    <span>{{ sprintf('%02d:%02d:%02d', $h, $m, $s) }}</span>
                 </div>
-                @endif
             </div>
             
             <div class="action-buttons">
@@ -551,19 +572,72 @@
                     </thead>
                     <tbody id="jornadas-tbody">
                         @forelse($jornadas as $jornada)
+                        @php
+                            // Obtener todas las pausas del día
+                            $pausasTexto = 'Sin pausas';
+                            if (method_exists($jornada, 'pausas')) {
+                                $pausas = $jornada->pausas()->orderBy('created_at')->get();
+                                if ($pausas->count() > 0) {
+                                    $pausasArray = [];
+                                    foreach ($pausas as $p) {
+                                        $inicio = $p->inicio ? \Carbon\Carbon::parse($p->inicio)->format('H:i:s') : '-';
+                                        $fin = $p->fin ? \Carbon\Carbon::parse($p->fin)->format('H:i:s') : 'En curso';
+                                        $pausasArray[] = $inicio . ' - ' . $fin;
+                                    }
+                                    $pausasTexto = implode(', ', $pausasArray);
+                                }
+                            } elseif ($jornada->hora_pausa_inicio) {
+                                $inicio = $jornada->hora_pausa_inicio->format('H:i:s');
+                                $fin = $jornada->hora_pausa_fin ? $jornada->hora_pausa_fin->format('H:i:s') : 'En curso';
+                                $pausasTexto = $inicio . ' - ' . $fin;
+                            }
+
+                            // Calcular tiempo trabajado y pausa en segundos
+                            $tiempoTrabajadoSegundos = 0;
+                            $tiempoPausaSegundos = 0;
+                            
+                            if ($jornada->hora_entrada) {
+                                $horaSalida = $jornada->hora_salida ?? now();
+                                $tiempoTotalSegundos = $jornada->hora_entrada->diffInSeconds($horaSalida);
+                                
+                                if (method_exists($jornada, 'pausas')) {
+                                    $pausas = $jornada->pausas()->orderBy('created_at')->get();
+                                    foreach ($pausas as $p) {
+                                        if ($p->inicio) {
+                                            $inicio = \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->inicio)->format('H:i:s'));
+                                            $fin = $p->fin ? \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->fin)->format('H:i:s')) : now();
+                                            $tiempoPausaSegundos += $inicio->diffInSeconds($fin);
+                                        }
+                                    }
+                                } else {
+                                    if ($jornada->hora_pausa_inicio) {
+                                        $inicio = \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . $jornada->hora_pausa_inicio->format('H:i:s'));
+                                        $fin = $jornada->hora_pausa_fin ? \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . $jornada->hora_pausa_fin->format('H:i:s')) : now();
+                                        $tiempoPausaSegundos = $inicio->diffInSeconds($fin);
+                                    }
+                                }
+                                
+                                $tiempoTrabajadoSegundos = max(0, $tiempoTotalSegundos - $tiempoPausaSegundos);
+                            }
+                        @endphp
                         <tr>
                             <td>{{ $jornada->fecha->format('d/m/Y') }}</td>
                             <td>{{ $jornada->hora_entrada ? $jornada->hora_entrada->format('H:i:s') : '-' }}</td>
                             <td>{{ $jornada->hora_salida ? $jornada->hora_salida->format('H:i:s') : '-' }}</td>
-                            <td>{{ sprintf('%02d:%02d', floor($jornada->tiempo_trabajado / 60), $jornada->tiempo_trabajado % 60) }}</td>
-                            <td>{{ sprintf('%02d:%02d', floor($jornada->tiempo_pausa / 60), $jornada->tiempo_pausa % 60) }}</td>
-                            <td>
-                                @if($jornada->hora_pausa_inicio)
-                                    @if($jornada->hora_pausa_fin)
-                                        {{ $jornada->hora_pausa_inicio->format('H:i') }} - {{ $jornada->hora_pausa_fin->format('H:i') }}
-                                    @else
-                                        <span style="color: #ffd43b;">{{ $jornada->hora_pausa_inicio->format('H:i') }} - En curso</span>
-                                    @endif
+                            <td><span class="text-success fw-bold">{{ sprintf('%02d:%02d:%02d', floor($tiempoTrabajadoSegundos / 3600), floor(($tiempoTrabajadoSegundos % 3600) / 60), $tiempoTrabajadoSegundos % 60) }}</span></td>
+                            <td><span class="text-warning fw-bold">{{ sprintf('%02d:%02d:%02d', floor($tiempoPausaSegundos / 3600), floor(($tiempoPausaSegundos % 3600) / 60), $tiempoPausaSegundos % 60) }}</span></td>
+                            <td style="max-width: 300px; word-wrap: break-word;">
+                                @if($pausasTexto !== 'Sin pausas')
+                                    @php
+                                        $pausasArray = explode(', ', $pausasTexto);
+                                    @endphp
+                                    @foreach($pausasArray as $pausa)
+                                        @php
+                                            $isEnCurso = str_contains($pausa, 'En curso');
+                                            $badgeClass = $isEnCurso ? 'bg-warning text-dark' : 'bg-light text-dark';
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}" style="margin-right: 4px; margin-bottom: 2px; display: inline-block;">{{ $pausa }}</span>
+                                    @endforeach
                                 @else
                                     Sin pausas
                                 @endif
@@ -597,38 +671,42 @@
         @if($fichajeHoy->hora_entrada && !$fichajeHoy->hora_salida && $fichajeHoy->estado !== 'pausa')
             startTime = new Date('{{ $fichajeHoy->fecha->format('Y-m-d') }} {{ $fichajeHoy->hora_entrada->format('H:i:s') }}');
             // Mostrar tiempo trabajado actual desde el servidor
-            document.getElementById('timer').textContent = '{{ sprintf("%02d:%02d:%02d", floor($tiempoTrabajado / 60), $tiempoTrabajado % 60, 0) }}';
+            document.getElementById('timer').textContent = '{{ sprintf("%02d:%02d:%02d", floor(($tiempoTrabajado*60) / 3600), floor((($tiempoTrabajado*60) % 3600) / 60), (($tiempoTrabajado*60) % 60)) }}';
             updateTimer();
             timerInterval = setInterval(updateTimer, 1000);
         @elseif($fichajeHoy->hora_entrada && !$fichajeHoy->hora_salida && $fichajeHoy->estado === 'pausa')
             // Si está en pausa, mostrar tiempo trabajado sin actualizar
-            document.getElementById('timer').textContent = '{{ sprintf("%02d:%02d:%02d", floor($tiempoTrabajado / 60), $tiempoTrabajado % 60, 0) }}';
+            document.getElementById('timer').textContent = (function(){
+                const s={{ isset($tiempoTrabajadoSegundos)?$tiempoTrabajadoSegundos:($tiempoTrabajado*60) }};
+                const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+                return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+            })();
         @endif
         
         function updateTimer() {
             if (startTime) {
                 const now = new Date();
-                const diff = now - startTime;
+                const diff = now - startTime; // milisegundos
                 
-                // Calcular tiempo total en minutos
-                const totalMinutes = Math.floor(diff / (1000 * 60));
+                // Calcular tiempo total en segundos
+                const totalSeconds = Math.floor(diff / 1000);
                 
-                // Tiempo de pausa acumulado desde el backend
-                let tiempoPausaTotal = {{ $fichajeHoy->tiempo_pausa ?? 0 }};
+                // Tiempo de pausa acumulado desde el backend (en segundos)
+                let tiempoPausaTotalSeconds = {{ ($fichajeHoy->tiempo_pausa ?? 0) * 60 }};
                 
                 // Si está en pausa, sumar tiempo de pausa actual
                 @if($fichajeHoy->estado === 'pausa' && $fichajeHoy->hora_pausa_inicio)
                     const inicioPausa = new Date('{{ $fichajeHoy->fecha->format('Y-m-d') }} {{ $fichajeHoy->hora_pausa_inicio->format('H:i:s') }}');
-                    const tiempoPausaActual = Math.floor((now - inicioPausa) / (1000 * 60));
-                    tiempoPausaTotal += tiempoPausaActual;
+                    const tiempoPausaActualSeconds = Math.floor((now - inicioPausa) / 1000);
+                    tiempoPausaTotalSeconds += tiempoPausaActualSeconds;
                 @endif
                 
-                // Tiempo trabajado = tiempo total - tiempo de pausa
-                const tiempoTrabajado = Math.max(0, totalMinutes - tiempoPausaTotal);
+                // Tiempo trabajado = tiempo total - tiempo de pausa (en segundos)
+                const workedSeconds = Math.max(0, totalSeconds - tiempoPausaTotalSeconds);
                 
-                const hours = Math.floor(tiempoTrabajado / 60);
-                const minutes = tiempoTrabajado % 60;
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                const hours = Math.floor(workedSeconds / 3600);
+                const minutes = Math.floor((workedSeconds % 3600) / 60);
+                const seconds = workedSeconds % 60;
                 
                 document.getElementById('timer').textContent = 
                     String(hours).padStart(2, '0') + ':' + 
@@ -818,21 +896,34 @@
                 return;
             }
             
-            tbody.innerHTML = jornadas.map(jornada => `
-                <tr>
-                    <td>${jornada.fecha}</td>
-                    <td>${jornada.hora_entrada}</td>
-                    <td>${jornada.hora_salida}</td>
-                    <td>${jornada.tiempo_trabajado}</td>
-                    <td>${jornada.tiempo_pausa}</td>
-                    <td>${jornada.pausas}</td>
-                    <td>
-                        <span class="estado-badge estado-${jornada.estado.toLowerCase()}">
-                            ${jornada.estado}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = jornadas.map(jornada => {
+                // Formatear pausas con badges
+                let pausasHtml = 'Sin pausas';
+                if (jornada.pausas && jornada.pausas !== 'Sin pausas') {
+                    const pausasArray = jornada.pausas.split(', ');
+                    pausasHtml = pausasArray.map(pausa => {
+                        const isEnCurso = pausa.includes('En curso');
+                        const badgeClass = isEnCurso ? 'bg-warning text-dark' : 'bg-light text-dark';
+                        return `<span class="badge ${badgeClass}" style="margin-right: 4px; margin-bottom: 2px; display: inline-block;">${pausa}</span>`;
+                    }).join('');
+                }
+                
+                return `
+                    <tr>
+                        <td>${jornada.fecha}</td>
+                        <td>${jornada.hora_entrada}</td>
+                        <td>${jornada.hora_salida}</td>
+                        <td><span class="text-success fw-bold">${jornada.tiempo_trabajado}</span></td>
+                        <td><span class="text-warning fw-bold">${jornada.tiempo_pausa}</span></td>
+                        <td style="max-width: 300px; word-wrap: break-word;">${pausasHtml}</td>
+                        <td>
+                            <span class="estado-badge estado-${jornada.estado.toLowerCase()}">
+                                ${jornada.estado}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
     </script>
 </body>

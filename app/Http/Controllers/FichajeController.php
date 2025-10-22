@@ -123,28 +123,49 @@ class FichajeController extends Controller
             ]);
         }
         
-            // Calcular tiempo trabajado descontando pausas
-            $tiempoTrabajado = 0;
-            $tiempoPausaTotal = $fichajeHoy->tiempo_pausa ?? 0;
-            
+            // Calcular tiempo trabajado descontando pausas (con precisión de segundos)
+            $tiempoTrabajadoSegundos = 0;
+            $tiempoPausaTotalSegundos = ($fichajeHoy->tiempo_pausa ?? 0) * 60; // el acumulado almacenado es en minutos
+
             if ($fichajeHoy->hora_entrada) {
                 $inicio = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $fichajeHoy->hora_entrada->format('H:i:s'));
                 $ahora = Carbon::now();
-                
-                // Calcular tiempo total desde entrada
-                $tiempoTotal = $inicio->diffInMinutes($ahora);
-                
-                // Si hay pausa en curso, sumar tiempo de pausa actual
+
+                // Calcular tiempo total desde entrada en segundos
+                $tiempoTotalSegundos = $inicio->diffInSeconds($ahora);
+
+                // Si hay pausa en curso, sumar tiempo de pausa actual en segundos
                 if ($fichajeHoy->estado === 'pausa' && $fichajeHoy->hora_pausa_inicio) {
                     $inicioPausa = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $fichajeHoy->hora_pausa_inicio->format('H:i:s'));
-                    $tiempoPausaActual = round($inicioPausa->diffInSeconds($ahora) / 60, 2);
-                    $tiempoPausaTotal = ($fichajeHoy->tiempo_pausa ?? 0) + $tiempoPausaActual;
+                    $tiempoPausaActualSegundos = $inicioPausa->diffInSeconds($ahora);
+                    $tiempoPausaTotalSegundos = ($fichajeHoy->tiempo_pausa ?? 0) * 60 + $tiempoPausaActualSegundos;
                 }
-                
-                // Tiempo trabajado = tiempo total - tiempo de pausa
-                $tiempoTrabajado = max(0, $tiempoTotal - $tiempoPausaTotal);
+
+                // Tiempo trabajado = tiempo total - tiempo de pausa (en segundos)
+                $tiempoTrabajadoSegundos = max(0, $tiempoTotalSegundos - $tiempoPausaTotalSegundos);
             }
+
+            // También calcular en minutos para elementos de UI que lo usan en mm
+            $tiempoTrabajado = (int) floor($tiempoTrabajadoSegundos / 60);
         
+        // Calcular total de pausa del día en segundos (sumando registros de pausas)
+        $tiempoPausaSegundosTotal = 0;
+        if (method_exists($fichajeHoy, 'pausas')) {
+            $pausas = $fichajeHoy->pausas()->orderBy('created_at')->get();
+            foreach ($pausas as $p) {
+                $inicio = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . ($p->inicio ? Carbon::parse($p->inicio)->format('H:i:s') : '00:00:00'));
+                $fin = $p->fin ? Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . Carbon::parse($p->fin)->format('H:i:s')) : Carbon::now();
+                $tiempoPausaSegundosTotal += max(0, $inicio->diffInSeconds($fin));
+            }
+        } else {
+            // Compatibilidad: usar campos simples de pausa si no existen registros
+            if ($fichajeHoy->hora_pausa_inicio) {
+                $inicio = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $fichajeHoy->hora_pausa_inicio->format('H:i:s'));
+                $fin = $fichajeHoy->hora_pausa_fin ? Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $fichajeHoy->hora_pausa_fin->format('H:i:s')) : Carbon::now();
+                $tiempoPausaSegundosTotal += $inicio->diffInSeconds($fin);
+            }
+        }
+
         // Obtener historial de jornadas del usuario
         $jornadas = Fichaje::where('user_id', $user->id)
                           ->orderBy('fecha', 'desc')
@@ -152,7 +173,9 @@ class FichajeController extends Controller
                           ->limit(20)
                           ->get();
         
-        return view('dashboards.dashboard_fichaje_funcional', compact('fichajeHoy', 'tiempoTrabajado', 'jornadas'));
+        return view('dashboards.dashboard_fichaje_funcional', compact('fichajeHoy', 'tiempoTrabajado', 'jornadas'))
+            ->with('tiempoTrabajadoSegundos', $tiempoTrabajadoSegundos)
+            ->with('tiempoPausaSegundosTotal', $tiempoPausaSegundosTotal);
     }
 
     public function cambiarMetodoLogin(Request $request)
@@ -257,6 +280,26 @@ class FichajeController extends Controller
                 'estado' => 'trabajando',
                 'tiempo_pausa' => $tiempoPausaTotal
             ]);
+
+            // Cerrar la última pausa abierta (si existe)
+            try {
+                $pausaAbierta = \App\Models\FichajePausa::where('fichaje_id', $fichaje->id)
+                    ->whereNull('fin')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                if ($pausaAbierta) {
+                    $pausaAbierta->update(['fin' => $horaPausaFin->format('H:i:s')]);
+                } else {
+                    // Si no hay registro abierto, crear uno completo para no perder histórico
+                    \App\Models\FichajePausa::create([
+                        'fichaje_id' => $fichaje->id,
+                        'inicio' => $horaPausaInicio->format('H:i:s'),
+                        'fin' => $horaPausaFin->format('H:i:s'),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                // noop
+            }
             
             return response()->json(['success' => true, 'message' => 'Pausa finalizada']);
         } else {
@@ -265,6 +308,16 @@ class FichajeController extends Controller
                 'hora_pausa_inicio' => Carbon::now()->format('H:i:s'),
                 'estado' => 'pausa'
             ]);
+            // Crear registro de pausa abierta (fin null)
+            try {
+                \App\Models\FichajePausa::create([
+                    'fichaje_id' => $fichaje->id,
+                    'inicio' => Carbon::now()->format('H:i:s'),
+                    'fin' => null,
+                ]);
+            } catch (\Throwable $e) {
+                // noop
+            }
             
             return response()->json(['success' => true, 'message' => 'Pausa iniciada']);
         }
@@ -303,19 +356,65 @@ class FichajeController extends Controller
         return response()->json([
             'success' => true,
             'jornadas' => $jornadas->map(function($jornada) {
+                // Obtener todas las pausas del día
+                $pausasTexto = 'Sin pausas';
+                if (method_exists($jornada, 'pausas')) {
+                    $pausas = $jornada->pausas()->orderBy('created_at')->get();
+                    if ($pausas->count() > 0) {
+                        $pausasArray = [];
+                        foreach ($pausas as $p) {
+                            $inicio = $p->inicio ? \Carbon\Carbon::parse($p->inicio)->format('H:i:s') : '-';
+                            $fin = $p->fin ? \Carbon\Carbon::parse($p->fin)->format('H:i:s') : 'En curso';
+                            $pausasArray[] = $inicio . ' - ' . $fin;
+                        }
+                        $pausasTexto = implode(', ', $pausasArray);
+                    }
+                } elseif ($jornada->hora_pausa_inicio) {
+                    // Fallback para fichajes antiguos sin tabla de pausas
+                    $inicio = $jornada->hora_pausa_inicio->format('H:i:s');
+                    $fin = $jornada->hora_pausa_fin ? $jornada->hora_pausa_fin->format('H:i:s') : 'En curso';
+                    $pausasTexto = $inicio . ' - ' . $fin;
+                }
+
+                // Calcular tiempo trabajado y pausa en segundos
+                $tiempoTrabajadoSegundos = 0;
+                $tiempoPausaSegundos = 0;
+                
+                if ($jornada->hora_entrada) {
+                    $horaSalida = $jornada->hora_salida ?? now();
+                    $tiempoTotalSegundos = $jornada->hora_entrada->diffInSeconds($horaSalida);
+                    
+                    // Calcular tiempo de pausa total
+                    if (method_exists($jornada, 'pausas')) {
+                        $pausas = $jornada->pausas()->orderBy('created_at')->get();
+                        foreach ($pausas as $p) {
+                            if ($p->inicio) {
+                                $inicio = \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->inicio)->format('H:i:s'));
+                                $fin = $p->fin ? \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->fin)->format('H:i:s')) : now();
+                                $tiempoPausaSegundos += $inicio->diffInSeconds($fin);
+                            }
+                        }
+                    } else {
+                        // Fallback para fichajes antiguos
+                        if ($jornada->hora_pausa_inicio) {
+                            $inicio = \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . $jornada->hora_pausa_inicio->format('H:i:s'));
+                            $fin = $jornada->hora_pausa_fin ? \Carbon\Carbon::parse($jornada->fecha->format('Y-m-d') . ' ' . $jornada->hora_pausa_fin->format('H:i:s')) : now();
+                            $tiempoPausaSegundos = $inicio->diffInSeconds($fin);
+                        }
+                    }
+                    
+                    $tiempoTrabajadoSegundos = max(0, $tiempoTotalSegundos - $tiempoPausaSegundos);
+                }
+
                 return [
                     'id' => $jornada->id,
                     'fecha' => $jornada->fecha->format('d/m/Y'),
                     'hora_entrada' => $jornada->hora_entrada ? $jornada->hora_entrada->format('H:i:s') : '-',
                     'hora_salida' => $jornada->hora_salida ? $jornada->hora_salida->format('H:i:s') : '-',
-                    'tiempo_trabajado' => sprintf('%02d:%02d', floor($jornada->tiempo_trabajado / 60), $jornada->tiempo_trabajado % 60),
-                    'tiempo_pausa' => sprintf('%02d:%02d', floor($jornada->tiempo_pausa / 60), $jornada->tiempo_pausa % 60),
+                    'tiempo_trabajado' => sprintf('%02d:%02d:%02d', floor($tiempoTrabajadoSegundos / 3600), floor(($tiempoTrabajadoSegundos % 3600) / 60), $tiempoTrabajadoSegundos % 60),
+                    'tiempo_pausa' => sprintf('%02d:%02d:%02d', floor($tiempoPausaSegundos / 3600), floor(($tiempoPausaSegundos % 3600) / 60), $tiempoPausaSegundos % 60),
                     'estado' => ucfirst($jornada->estado),
-                    'pausas' => $jornada->hora_pausa_inicio ? 
-                        ($jornada->hora_pausa_fin ? 
-                            $jornada->hora_pausa_inicio->format('H:i') . ' - ' . $jornada->hora_pausa_fin->format('H:i') : 
-                            $jornada->hora_pausa_inicio->format('H:i') . ' - En curso') : 
-                        'Sin pausas'
+                    'pausas' => $pausasTexto
                 ];
             })
         ]);

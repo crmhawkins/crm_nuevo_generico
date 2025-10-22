@@ -565,47 +565,98 @@
                                 <td class="tiempo-trabajado">
                                     <i class="fas fa-clock me-1"></i>
                                     @php
-                                        $tiempoTrabajado = 0;
+                                        $tiempoTrabajadoSegundos = 0;
+                                        $tiempoPausaSegundos = 0;
+                                        
                                         if ($fichaje->hora_entrada) {
                                             $horaSalida = $fichaje->hora_salida ?? now();
-                                            $tiempoTotal = $fichaje->hora_entrada->diffInMinutes($horaSalida);
+                                            $tiempoTotalSegundos = $fichaje->hora_entrada->diffInSeconds($horaSalida);
                                             
-                                            // Calcular tiempo de pausa
-                                            $tiempoPausa = 0;
-                                            if ($fichaje->hora_pausa_inicio) {
-                                                $horaPausaFin = $fichaje->hora_pausa_fin ?? now();
-                                                $tiempoPausa = $fichaje->hora_pausa_inicio->diffInMinutes($horaPausaFin);
+                                            // Calcular tiempo de pausa total en segundos
+                                            if (method_exists($fichaje, 'pausas')) {
+                                                $pausas = $fichaje->pausas()->orderBy('created_at')->get();
+                                                foreach ($pausas as $p) {
+                                                    if ($p->inicio) {
+                                                        $inicio = \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->inicio)->format('H:i:s'));
+                                                        $fin = $p->fin ? \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->fin)->format('H:i:s')) : now();
+                                                        $tiempoPausaSegundos += $inicio->diffInSeconds($fin);
+                                                    }
+                                                }
+                                            } else {
+                                                // Fallback para fichajes antiguos
+                                                if ($fichaje->hora_pausa_inicio) {
+                                                    $inicio = \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . $fichaje->hora_pausa_inicio->format('H:i:s'));
+                                                    $fin = $fichaje->hora_pausa_fin ? \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . $fichaje->hora_pausa_fin->format('H:i:s')) : now();
+                                                    $tiempoPausaSegundos = $inicio->diffInSeconds($fin);
+                                                }
                                             }
                                             
-                                            $tiempoTrabajado = max(0, $tiempoTotal - $tiempoPausa);
+                                            $tiempoTrabajadoSegundos = max(0, $tiempoTotalSegundos - $tiempoPausaSegundos);
                                         }
                                     @endphp
-                                    {{ sprintf('%02d:%02d', floor($tiempoTrabajado / 60), $tiempoTrabajado % 60) }}
+                                    {{ sprintf('%02d:%02d:%02d', floor($tiempoTrabajadoSegundos / 3600), floor(($tiempoTrabajadoSegundos % 3600) / 60), $tiempoTrabajadoSegundos % 60) }}
                                 </td>
                                 <td class="tiempo-pausa">
                                     <i class="fas fa-pause me-1"></i>
                                     @php
-                                        $tiempoPausa = 0;
-                                        if ($fichaje->hora_pausa_inicio) {
-                                            $horaPausaFin = $fichaje->hora_pausa_fin ?? now();
-                                            $tiempoPausa = $fichaje->hora_pausa_inicio->diffInMinutes($horaPausaFin);
+                                        $tiempoPausaSegundos = 0;
+                                        
+                                        if (method_exists($fichaje, 'pausas')) {
+                                            $pausas = $fichaje->pausas()->orderBy('created_at')->get();
+                                            foreach ($pausas as $p) {
+                                                if ($p->inicio) {
+                                                    $inicio = \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->inicio)->format('H:i:s'));
+                                                    $fin = $p->fin ? \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . \Carbon\Carbon::parse($p->fin)->format('H:i:s')) : now();
+                                                    $tiempoPausaSegundos += $inicio->diffInSeconds($fin);
+                                                }
+                                            }
+                                        } else {
+                                            // Fallback para fichajes antiguos
+                                            if ($fichaje->hora_pausa_inicio) {
+                                                $inicio = \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . $fichaje->hora_pausa_inicio->format('H:i:s'));
+                                                $fin = $fichaje->hora_pausa_fin ? \Carbon\Carbon::parse($fichaje->fecha->format('Y-m-d') . ' ' . $fichaje->hora_pausa_fin->format('H:i:s')) : now();
+                                                $tiempoPausaSegundos = $inicio->diffInSeconds($fin);
+                                            }
                                         }
                                     @endphp
-                                    {{ sprintf('%02d:%02d', floor($tiempoPausa / 60), $tiempoPausa % 60) }}
+                                    {{ sprintf('%02d:%02d:%02d', floor($tiempoPausaSegundos / 3600), floor(($tiempoPausaSegundos % 3600) / 60), $tiempoPausaSegundos % 60) }}
                                 </td>
-                                <td>
-                                    @if($fichaje->hora_pausa_inicio)
-                                        @if($fichaje->hora_pausa_fin)
-                                            <span class="badge-modern badge-success-modern">
-                                                <i class="fas fa-stopwatch"></i>
-                                                {{ $fichaje->hora_pausa_inicio->format('H:i') }} - {{ $fichaje->hora_pausa_fin->format('H:i') }}
+                                <td style="max-width: 300px; word-wrap: break-word;">
+                                    @php
+                                        // Obtener todas las pausas del día
+                                        $pausasTexto = 'Sin pausas';
+                                        if (method_exists($fichaje, 'pausas')) {
+                                            $pausas = $fichaje->pausas()->orderBy('created_at')->get();
+                                            if ($pausas->count() > 0) {
+                                                $pausasArray = [];
+                                                foreach ($pausas as $p) {
+                                                    $inicio = $p->inicio ? \Carbon\Carbon::parse($p->inicio)->format('H:i:s') : '-';
+                                                    $fin = $p->fin ? \Carbon\Carbon::parse($p->fin)->format('H:i:s') : 'En curso';
+                                                    $pausasArray[] = $inicio . ' - ' . $fin;
+                                                }
+                                                $pausasTexto = implode(', ', $pausasArray);
+                                            }
+                                        } elseif ($fichaje->hora_pausa_inicio) {
+                                            $inicio = $fichaje->hora_pausa_inicio->format('H:i:s');
+                                            $fin = $fichaje->hora_pausa_fin ? $fichaje->hora_pausa_fin->format('H:i:s') : 'En curso';
+                                            $pausasTexto = $inicio . ' - ' . $fin;
+                                        }
+                                    @endphp
+                                    @if($pausasTexto !== 'Sin pausas')
+                                        @php
+                                            $pausasArray = explode(', ', $pausasTexto);
+                                        @endphp
+                                        @foreach($pausasArray as $pausa)
+                                            @php
+                                                $isEnCurso = str_contains($pausa, 'En curso');
+                                                $badgeClass = $isEnCurso ? 'badge-warning-modern' : 'badge-success-modern';
+                                                $iconClass = $isEnCurso ? 'fas fa-play' : 'fas fa-stopwatch';
+                                            @endphp
+                                            <span class="badge-modern {{ $badgeClass }}" style="margin-right: 4px; margin-bottom: 2px; display: inline-block;">
+                                                <i class="{{ $iconClass }}"></i>
+                                                {{ $pausa }}
                                             </span>
-                                        @else
-                                            <span class="badge-modern badge-warning-modern">
-                                                <i class="fas fa-play"></i>
-                                                {{ $fichaje->hora_pausa_inicio->format('H:i') }} - En curso
-                                            </span>
-                                        @endif
+                                        @endforeach
                                     @else
                                         <span class="badge-modern badge-secondary-modern">
                                             <i class="fas fa-minus"></i>
