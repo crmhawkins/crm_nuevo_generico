@@ -593,7 +593,7 @@
                             }
 
                             // Calcular tiempo trabajado y pausa en segundos
-                            $tiempoTrabajadoSegundos = 0;
+                            $tiempoTrabajadoSegundosJornada = 0;
                             $tiempoPausaSegundos = 0;
                             
                             if ($jornada->hora_entrada) {
@@ -617,14 +617,14 @@
                                     }
                                 }
                                 
-                                $tiempoTrabajadoSegundos = max(0, $tiempoTotalSegundos - $tiempoPausaSegundos);
+                                $tiempoTrabajadoSegundosJornada = max(0, $tiempoTotalSegundos - $tiempoPausaSegundos);
                             }
                         @endphp
                         <tr>
                             <td>{{ $jornada->fecha->format('d/m/Y') }}</td>
                             <td>{{ $jornada->hora_entrada ? $jornada->hora_entrada->format('H:i:s') : '-' }}</td>
                             <td>{{ $jornada->hora_salida ? $jornada->hora_salida->format('H:i:s') : '-' }}</td>
-                            <td><span class="text-success fw-bold">{{ sprintf('%02d:%02d:%02d', floor($tiempoTrabajadoSegundos / 3600), floor(($tiempoTrabajadoSegundos % 3600) / 60), $tiempoTrabajadoSegundos % 60) }}</span></td>
+                            <td><span class="text-success fw-bold">{{ sprintf('%02d:%02d:%02d', floor($tiempoTrabajadoSegundosJornada / 3600), floor(($tiempoTrabajadoSegundosJornada % 3600) / 60), $tiempoTrabajadoSegundosJornada % 60) }}</span></td>
                             <td><span class="text-warning fw-bold">{{ sprintf('%02d:%02d:%02d', floor($tiempoPausaSegundos / 3600), floor(($tiempoPausaSegundos % 3600) / 60), $tiempoPausaSegundos % 60) }}</span></td>
                             <td style="max-width: 300px; word-wrap: break-word;">
                                 @if($pausasTexto !== 'Sin pausas')
@@ -667,20 +667,46 @@
         let timerInterval;
         let startTime = null;
         
-        // Inicializar timer si hay entrada y no está en pausa
-        @if($fichajeHoy->hora_entrada && !$fichajeHoy->hora_salida && $fichajeHoy->estado !== 'pausa')
-            startTime = new Date('{{ $fichajeHoy->fecha->format('Y-m-d') }} {{ $fichajeHoy->hora_entrada->format('H:i:s') }}');
-            // Mostrar tiempo trabajado actual desde el servidor
-            document.getElementById('timer').textContent = '{{ sprintf("%02d:%02d:%02d", floor(($tiempoTrabajado*60) / 3600), floor((($tiempoTrabajado*60) % 3600) / 60), (($tiempoTrabajado*60) % 60)) }}';
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
-        @elseif($fichajeHoy->hora_entrada && !$fichajeHoy->hora_salida && $fichajeHoy->estado === 'pausa')
-            // Si está en pausa, mostrar tiempo trabajado sin actualizar
-            document.getElementById('timer').textContent = (function(){
-                const s={{ isset($tiempoTrabajadoSegundos)?$tiempoTrabajadoSegundos:($tiempoTrabajado*60) }};
-                const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
-                return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
-            })();
+        // Debug: mostrar estado
+        console.log('Estado del fichaje: {{ $fichajeHoy->estado }}');
+        console.log('Hora entrada: {{ $fichajeHoy->hora_entrada }}');
+        console.log('Hora salida: {{ $fichajeHoy->hora_salida }}');
+        
+        // Inicializar timer
+        @if($fichajeHoy->hora_entrada && !$fichajeHoy->hora_salida)
+            @if($fichajeHoy->estado === 'pausa')
+                // Si está en pausa, mostrar tiempo trabajado sin actualizar
+                console.log('EJECUTANDO CONDICIÓN PAUSA');
+                console.log('tiempoTrabajadoSegundos: {{ isset($tiempoTrabajadoSegundos) ? $tiempoTrabajadoSegundos : "NO DEFINIDO" }}');
+                console.log('tiempoTrabajado: {{ $tiempoTrabajado }}');
+                console.log('tiempoTrabajado * 60: {{ $tiempoTrabajado * 60 }}');
+                document.getElementById('timer').textContent = (function(){
+                    const s={{ isset($tiempoTrabajadoSegundos) ? $tiempoTrabajadoSegundos : ($tiempoTrabajado * 60) }};
+                    console.log('Segundos calculados:', s);
+                    console.log('Tipo de s:', typeof s);
+                    const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+                    const result = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+                    console.log('Resultado final:', result);
+                    return result;
+                })();
+            @else
+                // Si está trabajando, iniciar timer dinámico
+                console.log('EJECUTANDO CONDICIÓN TRABAJANDO');
+                // Usar el tiempo trabajado calculado correctamente por el backend
+                let tiempoTrabajadoBase = {{ isset($tiempoTrabajadoSegundos) ? $tiempoTrabajadoSegundos : ($tiempoTrabajado * 60) }};
+                
+                // Mostrar el tiempo trabajado actual
+                document.getElementById('timer').textContent = (function(){
+                    const s = tiempoTrabajadoBase;
+                    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
+                    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+                })();
+                
+                // Iniciar timer que actualiza cada segundo
+                startTime = new Date();
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+            @endif
         @endif
         
         function updateTimer() {
@@ -688,30 +714,24 @@
                 const now = new Date();
                 const diff = now - startTime; // milisegundos
                 
-                // Calcular tiempo total en segundos
-                const totalSeconds = Math.floor(diff / 1000);
+                // Calcular tiempo transcurrido desde la última actualización
+                const tiempoTranscurrido = Math.floor(diff / 1000);
                 
-                // Tiempo de pausa acumulado desde el backend (en segundos)
-                let tiempoPausaTotalSeconds = {{ ($fichajeHoy->tiempo_pausa ?? 0) * 60 }};
+                // Obtener el tiempo base calculado por el backend
+                const tiempoTrabajadoBase = {{ isset($tiempoTrabajadoSegundos) ? $tiempoTrabajadoSegundos : ($tiempoTrabajado * 60) }};
                 
-                // Si está en pausa, sumar tiempo de pausa actual
-                @if($fichajeHoy->estado === 'pausa' && $fichajeHoy->hora_pausa_inicio)
-                    const inicioPausa = new Date('{{ $fichajeHoy->fecha->format('Y-m-d') }} {{ $fichajeHoy->hora_pausa_inicio->format('H:i:s') }}');
-                    const tiempoPausaActualSeconds = Math.floor((now - inicioPausa) / 1000);
-                    tiempoPausaTotalSeconds += tiempoPausaActualSeconds;
-                @endif
+                // Calcular tiempo trabajado actual = tiempo base + tiempo transcurrido
+                let tiempoTrabajadoActual = tiempoTrabajadoBase + tiempoTranscurrido;
                 
-                // Tiempo trabajado = tiempo total - tiempo de pausa (en segundos)
-                const workedSeconds = Math.max(0, totalSeconds - tiempoPausaTotalSeconds);
+                const hours = Math.floor(tiempoTrabajadoActual / 3600);
+                const minutes = Math.floor((tiempoTrabajadoActual % 3600) / 60);
+                const seconds = tiempoTrabajadoActual % 60;
                 
-                const hours = Math.floor(workedSeconds / 3600);
-                const minutes = Math.floor((workedSeconds % 3600) / 60);
-                const seconds = workedSeconds % 60;
-                
-                document.getElementById('timer').textContent = 
-                    String(hours).padStart(2, '0') + ':' + 
+                const tiempoFormateado = String(hours).padStart(2, '0') + ':' + 
                     String(minutes).padStart(2, '0') + ':' + 
                     String(seconds).padStart(2, '0');
+                
+                document.getElementById('timer').textContent = tiempoFormateado;
             }
         }
         

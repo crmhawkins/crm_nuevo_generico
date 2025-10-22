@@ -125,7 +125,7 @@ class FichajeController extends Controller
         
             // Calcular tiempo trabajado descontando pausas (con precisión de segundos)
             $tiempoTrabajadoSegundos = 0;
-            $tiempoPausaTotalSegundos = ($fichajeHoy->tiempo_pausa ?? 0) * 60; // el acumulado almacenado es en minutos
+            $tiempoPausaTotalSegundos = 0;
 
             if ($fichajeHoy->hora_entrada) {
                 $inicio = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $fichajeHoy->hora_entrada->format('H:i:s'));
@@ -134,11 +134,16 @@ class FichajeController extends Controller
                 // Calcular tiempo total desde entrada en segundos
                 $tiempoTotalSegundos = $inicio->diffInSeconds($ahora);
 
-                // Si hay pausa en curso, sumar tiempo de pausa actual en segundos
-                if ($fichajeHoy->estado === 'pausa' && $fichajeHoy->hora_pausa_inicio) {
-                    $inicioPausa = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $fichajeHoy->hora_pausa_inicio->format('H:i:s'));
-                    $tiempoPausaActualSegundos = $inicioPausa->diffInSeconds($ahora);
-                    $tiempoPausaTotalSegundos = ($fichajeHoy->tiempo_pausa ?? 0) * 60 + $tiempoPausaActualSegundos;
+                // Calcular tiempo de pausa total desde la tabla fichaje_pausas
+                if (method_exists($fichajeHoy, 'pausas')) {
+                    $pausas = $fichajeHoy->pausas()->orderBy('created_at')->get();
+                    foreach ($pausas as $pausa) {
+                        if ($pausa->inicio) {
+                            $inicioPausa = Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $pausa->inicio->format('H:i:s'));
+                            $finPausa = $pausa->fin ? Carbon::parse($fichajeHoy->fecha->format('Y-m-d') . ' ' . $pausa->fin->format('H:i:s')) : $ahora;
+                            $tiempoPausaTotalSegundos += $inicioPausa->diffInSeconds($finPausa);
+                        }
+                    }
                 }
 
                 // Tiempo trabajado = tiempo total - tiempo de pausa (en segundos)
