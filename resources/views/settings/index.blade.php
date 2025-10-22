@@ -336,8 +336,6 @@
                 <div class="form-container">
                     <form id="config-form" action="{{ $configuracion ? route('configuracion.update', $configuracion->id) : route('configuracion.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        @if ($configuracion)
-                            @method('PUT')
                         @endif
 
                         {{-- Sección de Logo --}}
