@@ -14,6 +14,26 @@ class FacturaeOrderFixExtension
     }
 
     /**
+     * Método llamado después de firmar (requerido por la biblioteca)
+     * No necesitamos modificar el XML después de firmar
+     */
+    public function __onAfterSign($xml)
+    {
+        // Simplemente devolver el XML sin modificar
+        return $xml;
+    }
+
+    /**
+     * Método para obtener datos adicionales de la extensión (requerido por la biblioteca)
+     * Nuestra extensión no agrega datos adicionales al XML
+     */
+    public function __getAdditionalData()
+    {
+        // Devolver null o string vacío ya que no agregamos datos adicionales
+        return null;
+    }
+
+    /**
      * Corrige el orden de los elementos XML antes de firmar
      * Orden requerido: Items -> TaxesOutputs -> InvoiceTotals
      */
