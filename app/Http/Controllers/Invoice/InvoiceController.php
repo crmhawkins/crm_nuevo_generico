@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use josemmo\Facturae\Facturae;
@@ -399,161 +400,325 @@ class InvoiceController extends Controller
 
     public function electronica(Request $request)
     {
-        $factura = Invoice::find($request->id);
-        $empresa = CompanyDetails::first();
-        $cliente = Client::where('id', $factura->client_id)->first();
-        $conceptos = InvoiceConcepts::where('invoice_id', $factura->id)->get();
-
-        $fac = new Facturae();
-
-        $partes = explode('-', $factura->reference);
-
-        $numero = $partes[0];
-        $serie = $partes[1];
-        $fac->setNumber($numero,$serie);
-
-        // Asignamos la fecha
-        $fecha = Carbon::parse($factura->created_at)->format('Y-m-d');
-        $fechafinal = Carbon::parse($factura->expiration_date)->format('Y-m-d');
-        $fac->setIssueDate($fecha);
-        $fac->setBillingPeriod($fecha, $fechafinal);
-
-        // Incluimos los datos del vendedor
-        $fac->setSeller(new FacturaeParty([
-            "taxNumber" => $empresa->nif,
-            "name"      => $empresa->company_name,
-            "address"   => $empresa->address,
-            "postCode"  => $empresa->postCode,
-            "town"      => $empresa->town,
-            "province"  => $empresa->province
-        ]));
-
-        if ($cliente->tipoCliente == 1) {
-            $camposRequeridos = [
-                'CIF' => $cliente->cif,
-                'Nombre' => $cliente->name,
-                'Primer Apellido' => $cliente->primerApellido,
-                'Segundo Apellido' => $cliente->segundoApellido,
-                'Dirección' => $cliente->address,
-                'Código Postal' => $cliente->zipcode,
-                'Ciudad' => $cliente->city,
-                'Provincia' => $cliente->province
-            ];
-        } else {
-            $camposRequeridos = [
-                'CIF' => $cliente->cif,
-                'Nombre de la Empresa' => $cliente->company,
-                'Dirección' => $cliente->address,
-                'Código Postal' => $cliente->zipcode,
-                'Ciudad' => $cliente->city,
-                'Provincia' => $cliente->province
-            ];
-        }
-
-        // Verificar si hay algún campo vacío
-        $camposFaltantes = [];
-        foreach ($camposRequeridos as $campo => $valor) {
-            if (empty($valor)) {
-                $camposFaltantes[] = $campo;
+        try {
+            // Validar que existe el ID
+            if (!$request->id) {
+                return response()->json([
+                    'error' => 'No se proporcionó el ID de la factura.',
+                    'status' => false
+                ], 400);
             }
-        }
-        if (!empty($camposFaltantes)) {
-            $mensaje = "Por favor, rellena los siguientes campos: " . implode(", ", $camposFaltantes);
 
-            return response()->json(['error' => $mensaje, 'status' => false]);
+            $factura = Invoice::find($request->id);
+            if (!$factura) {
+                return response()->json([
+                    'error' => 'La factura no existe o no se encontró.',
+                    'status' => false
+                ], 404);
+            }
 
-        }
+            $empresa = CompanyDetails::first();
+            if (!$empresa) {
+                return response()->json([
+                    'error' => 'No se encontró la configuración de la empresa. Por favor, complete la configuración en el panel de administración.',
+                    'status' => false
+                ], 404);
+            }
 
-        if($cliente->tipoCliente == 1){
-            $fac->setBuyer(new FacturaeParty([
-                "isLegalEntity" => false,       // Importante!
-                "taxNumber"     => $cliente->cif,
-                "name"          => $cliente->name,
-                "firstSurname"  => $cliente->primerApellido,
-                "lastSurname"   => $cliente->segundoApellido,
-                "address"       => $cliente->address,
-                "postCode"      => $cliente->zipcode,
-                "town"          => $cliente->city,
-                "province"      => $cliente->province
+            $cliente = Client::where('id', $factura->client_id)->first();
+            if (!$cliente) {
+                return response()->json([
+                    'error' => 'No se encontró el cliente asociado a esta factura.',
+                    'status' => false
+                ], 404);
+            }
+
+            $conceptos = InvoiceConcepts::where('invoice_id', $factura->id)->get();
+            if ($conceptos->isEmpty()) {
+                return response()->json([
+                    'error' => 'La factura no tiene conceptos asociados. Por favor, agregue al menos un concepto antes de generar la factura electrónica.',
+                    'status' => false
+                ], 400);
+            }
+
+            $fac = new Facturae();
+
+            // Validar que la referencia tiene el formato correcto
+            if (empty($factura->reference) || strpos($factura->reference, '-') === false) {
+                return response()->json([
+                    'error' => 'La referencia de la factura no tiene el formato correcto (debe ser: número-serie).',
+                    'status' => false
+                ], 400);
+            }
+
+            $partes = explode('-', $factura->reference);
+            if (count($partes) < 2) {
+                return response()->json([
+                    'error' => 'La referencia de la factura no tiene el formato correcto. Debe contener al menos un guion (-).',
+                    'status' => false
+                ], 400);
+            }
+
+            $numero = $partes[0];
+            $serie = $partes[1];
+            
+            if (empty($numero) || empty($serie)) {
+                return response()->json([
+                    'error' => 'La referencia de la factura está incompleta. Falta el número o la serie.',
+                    'status' => false
+                ], 400);
+            }
+
+            $fac->setNumber($numero, $serie);
+
+            // Validar y asignar fechas
+            if (empty($factura->created_at)) {
+                return response()->json([
+                    'error' => 'La factura no tiene fecha de creación. Por favor, verifique la factura.',
+                    'status' => false
+                ], 400);
+            }
+
+            if (empty($factura->expiration_date)) {
+                return response()->json([
+                    'error' => 'La factura no tiene fecha de vencimiento. Por favor, agregue una fecha de vencimiento.',
+                    'status' => false
+                ], 400);
+            }
+
+            try {
+                $fecha = Carbon::parse($factura->created_at)->format('Y-m-d');
+                $fechafinal = Carbon::parse($factura->expiration_date)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Error al procesar las fechas de la factura: ' . $e->getMessage(),
+                    'status' => false
+                ], 400);
+            }
+
+            $fac->setIssueDate($fecha);
+            $fac->setBillingPeriod($fecha, $fechafinal);
+
+            // Validar datos de la empresa
+            if (empty($empresa->nif)) {
+                return response()->json([
+                    'error' => 'El NIF de la empresa no está configurado. Por favor, complete la configuración de la empresa.',
+                    'status' => false
+                ], 400);
+            }
+
+            if (empty($empresa->company_name)) {
+                return response()->json([
+                    'error' => 'El nombre de la empresa no está configurado. Por favor, complete la configuración de la empresa.',
+                    'status' => false
+                ], 400);
+            }
+
+            // Incluimos los datos del vendedor
+            $fac->setSeller(new FacturaeParty([
+                "taxNumber" => $empresa->nif,
+                "name"      => $empresa->company_name,
+                "address"   => $empresa->address ?? '',
+                "postCode"  => $empresa->postCode ?? '',
+                "town"      => $empresa->town ?? '',
+                "province"  => $empresa->province ?? ''
             ]));
-        }else {
-            $fac->setBuyer(new FacturaeParty([
-                "isLegalEntity" => true,       // Importante!
-                "taxNumber"     => $cliente->cif,
-                "name"          => $cliente->company,
-                "address"       => $cliente->address,
-                "postCode"      => $cliente->zipcode,
-                "town"          => $cliente->city,
-                "province"      => $cliente->province,
-            ]));
-        }
 
-        $retencion = floatval($factura->retencion_percentage);
-        $iva = floatval($factura->iva_percentage);
-
-        foreach ($conceptos as $concepto) {
-            // Evitar divisiones por cero
-            $unidad = max(1, $concepto->units);
-
-            $item = [
-                "articleCode" => $concepto->services_category_id,
-                "name" => $concepto->title,
-                "unitPriceWithoutTax" => $concepto->total_no_discount / $unidad,
-                "quantity" => $concepto->units,
-                "taxes" => []
-            ];
-
-            // Añadir IVA si aplica
-            if ($iva > 0) {
-                $item["taxes"][Facturae::TAX_IVA] = $iva;
-            }
-
-            // Añadir retención IRPF si aplica
-            if ($retencion > 0) {
-                $item["taxes"][Facturae::TAX_IRPF] = $retencion;
-            }
-
-            // Añadir descuento si existe
-            if ($concepto->discount > 0) {
-                $item["discounts"] = [
-                    ["reason" => "Descuento", "amount" => $concepto->discount]
+            // Validar campos del cliente según tipo
+            if ($cliente->tipoCliente == 1) {
+                $camposRequeridos = [
+                    'CIF' => $cliente->cif,
+                    'Nombre' => $cliente->name,
+                    'Primer Apellido' => $cliente->primerApellido,
+                    'Segundo Apellido' => $cliente->segundoApellido,
+                    'Dirección' => $cliente->address,
+                    'Código Postal' => $cliente->zipcode,
+                    'Ciudad' => $cliente->city,
+                    'Provincia' => $cliente->province
+                ];
+            } else {
+                $camposRequeridos = [
+                    'CIF' => $cliente->cif,
+                    'Nombre de la Empresa' => $cliente->company,
+                    'Dirección' => $cliente->address,
+                    'Código Postal' => $cliente->zipcode,
+                    'Ciudad' => $cliente->city,
+                    'Provincia' => $cliente->province
                 ];
             }
 
-            $fac->addItem(new FacturaeItem($item));
-        }
+            // Verificar si hay algún campo vacío
+            $camposFaltantes = [];
+            foreach ($camposRequeridos as $campo => $valor) {
+                if (empty($valor)) {
+                    $camposFaltantes[] = $campo;
+                }
+            }
+            if (!empty($camposFaltantes)) {
+                $mensaje = "Por favor, complete los siguientes campos del cliente en su ficha: " . implode(", ", $camposFaltantes);
+                return response()->json([
+                    'error' => $mensaje,
+                    'status' => false
+                ], 400);
+            }
 
-        $certificado = $empresa->certificado;
-        $contrasena = $empresa->contrasena;
+            // Configurar comprador según tipo
+            if($cliente->tipoCliente == 1){
+                $fac->setBuyer(new FacturaeParty([
+                    "isLegalEntity" => false,
+                    "taxNumber"     => $cliente->cif,
+                    "name"          => $cliente->name,
+                    "firstSurname"  => $cliente->primerApellido,
+                    "lastSurname"   => $cliente->segundoApellido,
+                    "address"       => $cliente->address,
+                    "postCode"      => $cliente->zipcode,
+                    "town"          => $cliente->city,
+                    "province"      => $cliente->province
+                ]));
+            } else {
+                $fac->setBuyer(new FacturaeParty([
+                    "isLegalEntity" => true,
+                    "taxNumber"     => $cliente->cif,
+                    "name"          => $cliente->company,
+                    "address"       => $cliente->address,
+                    "postCode"      => $cliente->zipcode,
+                    "town"          => $cliente->city,
+                    "province"      => $cliente->province,
+                ]));
+            }
 
-        if (empty($certificado)) {
-            return response()->json(['error' => 'Falta el certificado.', 'status' => false]);
+            // Procesar conceptos
+            $retencion = floatval($factura->retencion_percentage ?? 0);
+            $iva = floatval($factura->iva_percentage ?? 0);
 
-        }
-        if (empty($contrasena)) {
-            return response()->json(['error' => 'Falta la contraseña del certificado.', 'status' => false]);
+            foreach ($conceptos as $concepto) {
+                // Evitar divisiones por cero
+                $unidad = max(1, $concepto->units);
 
-        }
+                $item = [
+                    "articleCode" => $concepto->services_category_id ?? '',
+                    "name" => $concepto->title ?? 'Concepto sin título',
+                    "unitPriceWithoutTax" => $concepto->total_no_discount / $unidad,
+                    "quantity" => $concepto->units,
+                    "taxes" => []
+                ];
 
-        $encryptedStore = file_get_contents(asset('storage/'.$certificado));
-        $fac->sign($encryptedStore, null, $contrasena);
+                // Añadir IVA si aplica
+                if ($iva > 0) {
+                    $item["taxes"][Facturae::TAX_IVA] = $iva;
+                }
 
-        $fac->export($numero.'-'.$serie.".xsig");
+                // Añadir retención IRPF si aplica
+                if ($retencion > 0) {
+                    $item["taxes"][Facturae::TAX_IRPF] = $retencion;
+                }
 
-        $filePath = public_path($numero.'-'.$serie.".xsig");
+                // Añadir descuento si existe
+                if ($concepto->discount > 0) {
+                    $item["discounts"] = [
+                        ["reason" => "Descuento", "amount" => $concepto->discount]
+                    ];
+                }
 
-        if (file_exists($filePath)) {
+                $fac->addItem(new FacturaeItem($item));
+            }
+
+            // Validar certificado y contraseña
+            $certificado = $empresa->certificado;
+            $contrasena = $empresa->contrasena;
+
+            if (empty($certificado)) {
+                return response()->json([
+                    'error' => 'Falta el certificado. Por favor, suba el certificado en la configuración de la empresa.',
+                    'status' => false
+                ], 400);
+            }
+
+            if (empty($contrasena)) {
+                return response()->json([
+                    'error' => 'Falta la contraseña del certificado. Por favor, configure la contraseña en la configuración de la empresa.',
+                    'status' => false
+                ], 400);
+            }
+
+            // Verificar que el archivo del certificado existe
+            $certificadoPath = storage_path('app/public/' . $certificado);
+            if (!file_exists($certificadoPath)) {
+                return response()->json([
+                    'error' => 'El archivo del certificado no se encuentra en el servidor. Por favor, vuelva a subir el certificado.',
+                    'status' => false
+                ], 404);
+            }
+
+            // Leer el certificado
+            try {
+                $encryptedStore = file_get_contents($certificadoPath);
+                if ($encryptedStore === false) {
+                    return response()->json([
+                        'error' => 'No se pudo leer el archivo del certificado. Verifique los permisos del archivo.',
+                        'status' => false
+                    ], 500);
+                }
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Error al leer el certificado: ' . $e->getMessage(),
+                    'status' => false
+                ], 500);
+            }
+
+            // Firmar la factura
+            try {
+                $fac->sign($encryptedStore, null, $contrasena);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Error al firmar la factura electrónica: ' . $e->getMessage() . '. Verifique que el certificado y la contraseña sean correctos.',
+                    'status' => false
+                ], 500);
+            }
+
+            // Exportar la factura
+            try {
+                $fac->export($numero.'-'.$serie.".xsig");
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Error al exportar la factura electrónica: ' . $e->getMessage(),
+                    'status' => false
+                ], 500);
+            }
+
+            $filePath = public_path($numero.'-'.$serie.".xsig");
+
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'error' => 'El archivo de la factura electrónica no se generó correctamente. Verifique los permisos de escritura en el directorio público.',
+                    'status' => false
+                ], 500);
+            }
+
             return response()->download($filePath, "$numero-$serie.xsig", [
                 'Content-Type' => 'application/xsig',
                 'Content-Disposition' => 'attachment; filename="' . $numero . '-' . $serie . '.xsig"',
-            ])->deleteFileAfterSend(true); // Borra el archivo después de enviarlo
-        } else {
-            return redirect()->back()->with('toast', [
-                'icon' => 'error',
-                'mensaje' => 'El archivo no se generó correctamente.'
-            ]);
-        }
+            ])->deleteFileAfterSend(true);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Error de validación: ' . $e->getMessage(),
+                'status' => false
+            ], 422);
+
+        } catch (\Exception $e) {
+            // Log del error para debugging
+            Log::error('Error al generar factura electrónica', [
+                'factura_id' => $request->id ?? 'no proporcionado',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => 'Error inesperado al generar la factura electrónica: ' . $e->getMessage() . '. Por favor, contacte con el administrador del sistema.',
+                'status' => false
+            ], 500);
+        }
     }
 
     public function show(string $id)
