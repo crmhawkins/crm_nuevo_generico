@@ -42,8 +42,14 @@ class FacturaeOrderFixExtension
         try {
             // Si el XML está vacío o es null, devolverlo sin modificar
             if (empty($xml) || !is_string($xml)) {
+                \Illuminate\Support\Facades\Log::warning('FacturaeOrderFixExtension: XML vacío o no es string');
                 return $xml;
             }
+            
+            \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Iniciando corrección del orden XML', [
+                'xml_length' => strlen($xml),
+                'xml_preview' => substr($xml, 0, 200)
+            ]);
             
             // El XML recibido ya está completo pero sin declaración XML
             // Debe tener la estructura: <fe:Facturae>...</fe:Facturae>
@@ -190,7 +196,18 @@ class FacturaeOrderFixExtension
             // InvoiceHeader -> InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
             // La biblioteca genera: InvoiceHeader -> InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
             
+            \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Estado de elementos', [
+                'items_position' => $itemsPosition,
+                'taxesOutputs_position' => $taxesOutputsPosition,
+                'totals_position' => $totalsPosition,
+                'necesitaReordenar' => $necesitaReordenar,
+                'tiene_items' => $itemsElement !== null,
+                'tiene_taxesOutputs' => $taxesOutputsElement !== null,
+                'tiene_invoiceTotals' => $invoiceTotalsElement !== null
+            ]);
+            
             if ($necesitaReordenar && $itemsElement && $invoiceTotalsElement) {
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Iniciando reordenamiento');
                 // Buscar InvoiceIssueData (debe estar antes de Items)
                 $invoiceIssueDataElement = null;
                 foreach ($invoiceElement->childNodes as $child) {
@@ -303,6 +320,22 @@ class FacturaeOrderFixExtension
                 }
             }
 
+            // Verificar el orden final después del reordenamiento
+            if ($necesitaReordenar) {
+                $finalPositions = [];
+                $position = 0;
+                foreach ($invoiceElement->childNodes as $child) {
+                    if ($child->nodeType === XML_ELEMENT_NODE) {
+                        $tagName = $child->localName ?? $child->nodeName;
+                        $finalPositions[$tagName] = $position;
+                        $position++;
+                    }
+                }
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Orden final después del reordenamiento', [
+                    'posiciones' => $finalPositions
+                ]);
+            }
+            
             // Obtener el XML corregido
             // Usar saveXML() sin argumentos para obtener todo el documento incluyendo la declaración
             // pero luego quitarla porque Facturae la agregará después
@@ -313,6 +346,8 @@ class FacturaeOrderFixExtension
                 $xmlCorregido = substr($xmlCorregido, strpos($xmlCorregido, '>') + 1);
                 $xmlCorregido = trim($xmlCorregido);
             }
+            
+            \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: XML corregido exitosamente');
             
             return $xmlCorregido;
 
