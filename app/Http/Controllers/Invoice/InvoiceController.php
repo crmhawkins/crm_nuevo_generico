@@ -443,6 +443,14 @@ class InvoiceController extends Controller
 
             // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
             $fac = new Facturae(Facturae::SCHEMA_3_2_1);
+            
+            // Agregar extensión para corregir el orden de elementos antes de firmar usando reflexión
+            $reflection = new \ReflectionClass($fac);
+            $extensionsProperty = $reflection->getProperty('extensions');
+            $extensionsProperty->setAccessible(true);
+            $extensions = $extensionsProperty->getValue($fac);
+            $extensions[] = new \App\Extensions\FacturaeOrderFixExtension();
+            $extensionsProperty->setValue($fac, $extensions);
 
             // Validar que la referencia tiene el formato correcto
             if (empty($factura->reference) || strpos($factura->reference, '-') === false) {
@@ -760,15 +768,11 @@ class InvoiceController extends Controller
                 ], 500);
             }
 
-            // Exportar la factura
+            // Exportar la factura (la extensión corregirá el orden antes de firmar)
             try {
                 $fac->export($numero.'-'.$serie.".xsig");
                 
-                // Corregir el orden de elementos en el XML para cumplir con el esquema Facturae 3.2.1
-                // El esquema requiere: Items -> TaxesOutputs -> InvoiceTotals
-                // Pero la biblioteca genera: InvoiceTotals -> Items
                 $filePath = public_path($numero.'-'.$serie.".xsig");
-                $this->corregirOrdenXMLFactura($filePath);
                 
             } catch (\Exception $e) {
                 return response()->json([
