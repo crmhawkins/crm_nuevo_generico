@@ -801,16 +801,31 @@ class InvoiceController extends Controller
                 'status' => false
             ], 422);
 
-        } catch (\Exception $e) {
-            // Log del error para debugging
+        } catch (\Throwable $e) {
+            // Log del error para debugging con más detalles
             Log::error('Error al generar factura electrónica', [
                 'factura_id' => $request->id ?? 'no proporcionado',
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Mensaje más específico según el tipo de error
+            $mensajeError = 'Error inesperado al generar la factura electrónica.';
+            
+            if (strpos($e->getMessage(), 'sign') !== false || strpos($e->getMessage(), 'certificate') !== false) {
+                $mensajeError = 'Error al firmar la factura electrónica. Verifique que el certificado y la contraseña sean correctos.';
+            } elseif (strpos($e->getMessage(), 'export') !== false) {
+                $mensajeError = 'Error al exportar la factura electrónica. Verifique los permisos de escritura.';
+            } elseif (strpos($e->getMessage(), 'XML') !== false || strpos($e->getMessage(), 'schema') !== false) {
+                $mensajeError = 'Error en la estructura XML de la factura. Por favor, verifique los datos de la factura.';
+            } else {
+                $mensajeError = 'Error al generar la factura electrónica: ' . $e->getMessage();
+            }
+
             return response()->json([
-                'error' => 'Error inesperado al generar la factura electrónica: ' . $e->getMessage() . '. Por favor, contacte con el administrador del sistema.',
+                'error' => $mensajeError,
                 'status' => false
             ], 500);
         }

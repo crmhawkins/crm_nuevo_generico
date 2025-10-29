@@ -11,13 +11,13 @@ class FacturaeOrderFixExtension
     public function __onBeforeSign($xml)
     {
         try {
+            // Si el XML está vacío o es null, devolverlo sin modificar
+            if (empty($xml) || !is_string($xml)) {
+                return $xml;
+            }
+            
             // El XML recibido ya está completo pero sin declaración XML
             // Debe tener la estructura: <fe:Facturae>...</fe:Facturae>
-            
-            // Cargar el XML
-            $dom = new \DOMDocument();
-            $dom->preserveWhiteSpace = false;
-            $dom->formatOutput = false;
             
             // El XML puede o no tener declaración XML, manejarlo
             $xmlClean = $xml;
@@ -26,12 +26,29 @@ class FacturaeOrderFixExtension
                 $xmlClean = trim($xmlClean);
             }
             
-            // Asegurar que el XML está completo
-            if (empty($xmlClean)) {
+            // Asegurar que el XML está completo y válido
+            if (empty($xmlClean) || strlen($xmlClean) < 10) {
+                \Illuminate\Support\Facades\Log::warning('FacturaeOrderFixExtension: XML vacío o muy corto');
                 return $xml;
             }
             
-            $dom->loadXML($xmlClean);
+            // Intentar cargar el XML
+            $dom = new \DOMDocument();
+            $dom->preserveWhiteSpace = false;
+            $dom->formatOutput = false;
+            
+            // Suprimir errores de XML mal formado para manejarlos nosotros
+            libxml_use_internal_errors(true);
+            $loaded = @$dom->loadXML($xmlClean);
+            $errors = libxml_get_errors();
+            libxml_clear_errors();
+            
+            if (!$loaded || !empty($errors)) {
+                \Illuminate\Support\Facades\Log::warning('FacturaeOrderFixExtension: Error al cargar XML', [
+                    'errors' => array_map(function($e) { return $e->message; }, $errors)
+                ]);
+                return $xml; // Devolver XML original si hay errores de parseo
+            }
 
             // Registrar posibles namespaces de Facturae
             $xpath = new \DOMXPath($dom);
@@ -158,12 +175,16 @@ class FacturaeOrderFixExtension
             
             return $xmlCorregido;
 
-        } catch (\Exception $e) {
-            // En caso de error, devolver el XML original
+        } catch (\Throwable $e) {
+            // En caso de cualquier error, devolver el XML original
+            // Esto es crítico: nunca debemos romper la generación de la factura
             \Illuminate\Support\Facades\Log::error('Error al corregir orden XML en extensión Facturae', [
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
+            // Devolver el XML original para que la factura se pueda generar igualmente
             return $xml;
         }
     }
