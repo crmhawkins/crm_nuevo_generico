@@ -445,12 +445,30 @@ class InvoiceController extends Controller
             $fac = new Facturae(Facturae::SCHEMA_3_2_1);
             
             // Agregar extensión para corregir el orden de elementos antes de firmar usando reflexión
-            $reflection = new \ReflectionClass($fac);
-            $extensionsProperty = $reflection->getProperty('extensions');
-            $extensionsProperty->setAccessible(true);
-            $extensions = $extensionsProperty->getValue($fac);
-            $extensions[] = new \App\Extensions\FacturaeOrderFixExtension();
-            $extensionsProperty->setValue($fac, $extensions);
+            try {
+                $reflection = new \ReflectionClass($fac);
+                $extensionsProperty = $reflection->getProperty('extensions');
+                $extensionsProperty->setAccessible(true);
+                $extensions = $extensionsProperty->getValue($fac);
+                
+                if (!is_array($extensions)) {
+                    $extensions = [];
+                }
+                
+                $extension = new \App\Extensions\FacturaeOrderFixExtension();
+                $extensions[] = $extension;
+                $extensionsProperty->setValue($fac, $extensions);
+                
+                Log::info('Extensión FacturaeOrderFixExtension agregada correctamente', [
+                    'total_extensions' => count($extensions)
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error al agregar extensión FacturaeOrderFixExtension', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                // Continuar sin la extensión, el método de respaldo corregirá el orden
+            }
 
             // Validar que la referencia tiene el formato correcto
             if (empty($factura->reference) || strpos($factura->reference, '-') === false) {
@@ -774,6 +792,17 @@ class InvoiceController extends Controller
                 
                 $filePath = public_path($numero.'-'.$serie.".xsig");
                 
+                // Verificar que el archivo se generó
+                if (!file_exists($filePath)) {
+                    return response()->json([
+                        'error' => 'El archivo de la factura electrónica no se generó correctamente. Verifique los permisos de escritura en el directorio público.',
+                        'status' => false
+                    ], 500);
+                }
+                
+                // NOTA: No podemos corregir el XML después de firmar porque invalida la firma
+                // La corrección debe hacerse ANTES de firmar usando la extensión __onBeforeSign
+                
             } catch (\Exception $e) {
                 return response()->json([
                     'error' => 'Error al exportar la factura electrónica: ' . $e->getMessage(),
@@ -782,13 +811,6 @@ class InvoiceController extends Controller
             }
 
             $filePath = public_path($numero.'-'.$serie.".xsig");
-
-            if (!file_exists($filePath)) {
-                return response()->json([
-                    'error' => 'El archivo de la factura electrónica no se generó correctamente. Verifique los permisos de escritura en el directorio público.',
-                    'status' => false
-                ], 500);
-            }
 
             return response()->download($filePath, "$numero-$serie.xsig", [
                 'Content-Type' => 'application/xsig',
@@ -834,8 +856,8 @@ class InvoiceController extends Controller
     /**
      * Corrige el orden de los elementos en el XML de la factura electrónica
      * para cumplir con el esquema Facturae 3.2.1:
-     * Orden requerido: Items -> TaxesOutputs -> InvoiceTotals
-     * Orden actual de la biblioteca: InvoiceTotals -> Items (sin TaxesOutputs separado)
+     * Orden requerido: InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
+     * Orden actual de la biblioteca: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
      */
     private function corregirOrdenXMLFactura($filePath)
     {
@@ -888,9 +910,9 @@ class InvoiceController extends Controller
                 }
             }
 
-            // El esquema Facturae 3.2.1 requiere este orden exacto:
-            // InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
-            // Pero la biblioteca genera: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
+            // El esquema Facturae 3.2.1 requiere este orden exacto según el error del validador:
+            // InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
+            // La biblioteca genera: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
             
             // Obtener las posiciones actuales de los elementos
             $invoiceIssueDataPosition = -1;
@@ -1006,47 +1028,65 @@ class InvoiceController extends Controller
                 }
             }
 
-            // Orden correcto requerido por el esquema: 
-            // InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
-            // La biblioteca genera: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
+            // Orden correcto según el error del validador:
+            // InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
             
-            // Si creamos TaxesOutputs, actualizar su posición
-            if ($taxesOutputsElement && $taxesOutputsPosition === -1) {
-                // Se acaba de crear, no tiene posición aún
-                $taxesOutputsPosition = 999; // Valor alto para forzar reordenamiento
+            // Buscar InvoiceIssueData
+            $invoiceIssueDataElement = null;
+            foreach ($invoiceElement->childNodes as $child) {
+                if ($child->nodeType === XML_ELEMENT_NODE) {
+                    $tagName = $child->localName ?? $child->nodeName;
+                    if ($tagName === 'InvoiceIssueData') {
+                        $invoiceIssueDataElement = $child;
+                        break;
+                    }
+                }
+            }
+            
+            // Si no existe TaxesOutputs, crearlo vacío (el esquema lo requiere)
+            $taxesOutputsCreado = false;
+            if (!$taxesOutputsElement && ($itemsElement || $invoiceTotalsElement)) {
+                Log::info('corregirOrdenXMLFactura: Creando TaxesOutputs vacío (requerido por esquema)');
+                $taxesOutputsElement = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxesOutputs');
+                $taxesOutputsCreado = true;
             }
             
             // Verificar si necesitamos reordenar
             $necesitaReordenar = false;
             
-            if ($itemsPosition !== -1 && $totalsPosition !== -1 && $totalsPosition < $itemsPosition) {
-                $necesitaReordenar = true;
+            // Verificar orden: InvoiceIssueData < TaxesOutputs < Items < InvoiceTotals
+            if ($invoiceIssueDataPosition !== -1) {
+                if ($taxesOutputsPosition !== -1 && $taxesOutputsPosition <= $invoiceIssueDataPosition) {
+                    $necesitaReordenar = true;
+                }
+                if ($itemsPosition !== -1 && $taxesOutputsPosition !== -1 && $itemsPosition < $taxesOutputsPosition) {
+                    $necesitaReordenar = true;
+                }
+                if ($totalsPosition !== -1 && $itemsPosition !== -1 && $totalsPosition < $itemsPosition) {
+                    $necesitaReordenar = true;
+                }
             }
             
-            if ($taxesOutputsPosition !== -1 && $itemsPosition !== -1 && $taxesOutputsPosition < $itemsPosition) {
-                $necesitaReordenar = true;
-            }
-            
-            if ($taxesOutputsPosition !== -1 && $totalsPosition !== -1 && $taxesOutputsPosition > $totalsPosition) {
-                $necesitaReordenar = true;
-            }
-            
-            // Si TaxesOutputs fue creado, siempre necesitamos insertarlo correctamente
-            if ($taxesOutputsElement && $taxesOutputsPosition === 999) {
+            if ($taxesOutputsCreado || ($itemsPosition !== -1 && $totalsPosition !== -1 && $totalsPosition < $itemsPosition)) {
                 $necesitaReordenar = true;
             }
             
             if ($necesitaReordenar && $itemsElement && $invoiceTotalsElement) {
+                Log::info('corregirOrdenXMLFactura: Reordenando elementos');
+                
                 // Remover elementos que necesitamos reordenar
                 $nodesToReorder = [];
                 
-                // Guardar referencias antes de remover (solo si están en el DOM)
+                if ($itemsElement->parentNode === $invoiceElement) {
+                    $nodesToReorder['items'] = $itemsElement;
+                    $invoiceElement->removeChild($itemsElement);
+                }
+                
                 if ($taxesOutputsElement) {
                     if ($taxesOutputsElement->parentNode === $invoiceElement) {
                         $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
                         $invoiceElement->removeChild($taxesOutputsElement);
-                    } else {
-                        // Si no tiene parent, fue creado recientemente y solo necesita ser insertado
+                    } else if ($taxesOutputsCreado) {
                         $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
                     }
                 }
@@ -1056,25 +1096,57 @@ class InvoiceController extends Controller
                     $invoiceElement->removeChild($invoiceTotalsElement);
                 }
                 
-                // Ahora insertar en el orden correcto: Items -> TaxesOutputs -> InvoiceTotals
-                // Items ya está en su lugar, insertar TaxesOutputs después
-                $insertAfterItems = $itemsElement->nextSibling;
+                // Reinsertar en el orden correcto: InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
+                $referenceNode = $invoiceIssueDataElement;
                 
-                // Insertar TaxesOutputs después de Items
+                // 1. Insertar TaxesOutputs después de InvoiceIssueData
                 if (isset($nodesToReorder['taxesOutputs'])) {
-                    if ($insertAfterItems) {
-                        $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $insertAfterItems);
+                    if ($referenceNode) {
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $nextNode);
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
+                        }
                     } else {
                         $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
                     }
-                    // Actualizar insertAfterItems para apuntar después de TaxesOutputs
-                    $insertAfterItems = $nodesToReorder['taxesOutputs']->nextSibling;
+                    $referenceNode = $nodesToReorder['taxesOutputs'];
                 }
                 
-                // Insertar InvoiceTotals después de TaxesOutputs (o después de Items si no hay TaxesOutputs)
+                // 2. Insertar Items después de TaxesOutputs
+                if (isset($nodesToReorder['items'])) {
+                    if ($referenceNode) {
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['items'], $nextNode);
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['items']);
+                        }
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['items']);
+                    }
+                    $referenceNode = $nodesToReorder['items'];
+                }
+                
+                // 3. Insertar InvoiceTotals después de Items
                 if (isset($nodesToReorder['invoiceTotals'])) {
-                    if ($insertAfterItems) {
-                        $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $insertAfterItems);
+                    if ($referenceNode) {
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $nextNode);
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
+                        }
                     } else {
                         $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
                     }
