@@ -3,6 +3,51 @@
 @section('titulo', 'Configuración')
 
 @section('css')
+<style>
+    /* Password input container */
+    .password-input-container {
+        position: relative;
+        width: 100%;
+    }
+    
+    .password-input-container input {
+        padding-right: 45px !important;
+    }
+    
+    .password-toggle-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 5px 10px;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        border-radius: 5px;
+        z-index: 10;
+    }
+    
+    .password-toggle-btn:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #495057;
+    }
+    
+    .password-toggle-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+    
+    .password-toggle-btn i {
+        transition: all 0.3s ease;
+    }
+    
+    .password-toggle-btn:hover i {
+        transform: scale(1.1);
+    }
+</style>
 @endsection
 
 @section('content')
@@ -144,8 +189,21 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="contrasena" class="form-label">Contraseña</label>
-                                    <input type="password" class="form-control @error('contrasena') is-invalid @enderror" id="contrasena" name="contrasena" value="{{ old('contrasena', $configuracion->contrasena ?? '') }}">
+                                    <label for="contrasena" class="form-label">Contraseña del Certificado</label>
+                                    <div class="password-input-container">
+                                        <input type="password" 
+                                               class="form-control @error('contrasena') is-invalid @enderror" 
+                                               id="contrasena" 
+                                               name="contrasena" 
+                                               value="{{ old('contrasena', $configuracion->contrasena ?? '') }}"
+                                               placeholder="Ingrese la contraseña del certificado">
+                                        <button type="button" 
+                                                class="password-toggle-btn" 
+                                                onclick="togglePassword()"
+                                                aria-label="Mostrar/ocultar contraseña">
+                                            <i id="password-toggle-icon" class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                     @error('contrasena')
                                         <div class="invalid-feedback d-block">
                                             {{ $message }}
