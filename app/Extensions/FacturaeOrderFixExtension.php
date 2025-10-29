@@ -170,14 +170,18 @@ class FacturaeOrderFixExtension
                 }
             }
             
+            // Según el error del validador, el esquema Facturae 3.2.1 requiere:
+            // InvoiceHeader -> InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
+            // El error dice: "Expected is (TaxesOutputs)" donde encuentra "Items"
+            // Esto significa que TaxesOutputs debe ir DESPUÉS de InvoiceIssueData y ANTES de Items
+            
             // Verificar si realmente necesitamos reordenar
-            // Si Items está después de InvoiceIssueData y antes de TaxesOutputs, y TaxesOutputs antes de InvoiceTotals, no necesitamos reordenar
             $ordenCorrecto = false;
             if ($invoiceIssueDataPosition !== -1 && $itemsPosition !== -1 && $taxesOutputsPosition !== -1 && $totalsPosition !== -1) {
-                // Verificar: InvoiceIssueData < Items < TaxesOutputs < InvoiceTotals
-                if ($invoiceIssueDataPosition < $itemsPosition && 
-                    $itemsPosition < $taxesOutputsPosition && 
-                    $taxesOutputsPosition < $totalsPosition) {
+                // Verificar: InvoiceIssueData < TaxesOutputs < Items < InvoiceTotals
+                if ($invoiceIssueDataPosition < $taxesOutputsPosition && 
+                    $taxesOutputsPosition < $itemsPosition && 
+                    $itemsPosition < $totalsPosition) {
                     $ordenCorrecto = true;
                 }
             }
@@ -187,8 +191,8 @@ class FacturaeOrderFixExtension
                 \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: El orden ya es correcto, no se requiere reordenamiento');
             }
 
-            // El orden correcto según Facturae 3.2.1 es:
-            // InvoiceHeader -> InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
+            // El orden correcto según el error del validador es:
+            // InvoiceHeader -> InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
             // La biblioteca genera: InvoiceHeader -> InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
             
             \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Estado de elementos', [
@@ -234,11 +238,12 @@ class FacturaeOrderFixExtension
                     $invoiceElement->removeChild($invoiceTotalsElement);
                 }
 
-                // Reinsertar en el orden correcto
-                // 1. Items debe ir después de InvoiceIssueData
+                // Reinsertar en el orden correcto según el esquema:
+                // InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
                 $referenceNode = $invoiceIssueDataElement;
                 
-                if (isset($nodesToReorder['items'])) {
+                // 1. TaxesOutputs debe ir después de InvoiceIssueData (PRIMERO)
+                if (isset($nodesToReorder['taxesOutputs'])) {
                     if ($referenceNode) {
                         // Buscar el siguiente elemento después de InvoiceIssueData
                         $nextNode = $referenceNode->nextSibling;
@@ -246,9 +251,9 @@ class FacturaeOrderFixExtension
                             $nextNode = $nextNode->nextSibling;
                         }
                         if ($nextNode) {
-                            $invoiceElement->insertBefore($nodesToReorder['items'], $nextNode);
+                            $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $nextNode);
                         } else {
-                            $invoiceElement->appendChild($nodesToReorder['items']);
+                            $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
                         }
                     } else {
                         // Si no hay InvoiceIssueData, buscar InvoiceHeader
@@ -268,6 +273,37 @@ class FacturaeOrderFixExtension
                                 $nextNode = $nextNode->nextSibling;
                             }
                             if ($nextNode) {
+                                $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $nextNode);
+                            } else {
+                                $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
+                            }
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
+                        }
+                    }
+                    $referenceNode = $nodesToReorder['taxesOutputs'];
+                }
+                
+                // 2. Items debe ir después de TaxesOutputs
+                if (isset($nodesToReorder['items'])) {
+                    if ($referenceNode) {
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['items'], $nextNode);
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['items']);
+                        }
+                    } else {
+                        // Si no hay TaxesOutputs, insertar después de InvoiceIssueData
+                        if ($invoiceIssueDataElement) {
+                            $nextNode = $invoiceIssueDataElement->nextSibling;
+                            while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                                $nextNode = $nextNode->nextSibling;
+                            }
+                            if ($nextNode) {
                                 $invoiceElement->insertBefore($nodesToReorder['items'], $nextNode);
                             } else {
                                 $invoiceElement->appendChild($nodesToReorder['items']);
@@ -279,25 +315,7 @@ class FacturaeOrderFixExtension
                     $referenceNode = $nodesToReorder['items'];
                 }
                 
-                // 2. TaxesOutputs debe ir después de Items
-                if (isset($nodesToReorder['taxesOutputs'])) {
-                    if ($referenceNode) {
-                        $nextNode = $referenceNode->nextSibling;
-                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
-                            $nextNode = $nextNode->nextSibling;
-                        }
-                        if ($nextNode) {
-                            $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $nextNode);
-                        } else {
-                            $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
-                        }
-                    } else {
-                        $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
-                    }
-                    $referenceNode = $nodesToReorder['taxesOutputs'];
-                }
-                
-                // 3. InvoiceTotals debe ir después de TaxesOutputs (o Items si no hay TaxesOutputs)
+                // 3. InvoiceTotals debe ir después de Items (o TaxesOutputs si no hay Items)
                 if (isset($nodesToReorder['invoiceTotals'])) {
                     if ($referenceNode) {
                         $nextNode = $referenceNode->nextSibling;
