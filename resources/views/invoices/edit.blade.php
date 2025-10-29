@@ -131,7 +131,7 @@
                                     <div class="col-md-6 col-sm-12">
                                         <div class="form-group mb-3">
                                             <label class="mb-2 text-left" for="expiration_date">Fecha Vencimiento:</label>
-                                            <input type="date" class="form-control @error('expiration_date') is-invalid @enderror" id="expiration_date" value="{{ Carbon\Carbon::parse($factura->expiration_date)->format('Y-m-d') }}" name="expiration_date">
+                                            <input type="date" class="form-control @error('expiration_date') is-invalid @enderror" id="expiration_date" value="{{ $factura->expiration_date ? Carbon\Carbon::parse($factura->expiration_date)->format('Y-m-d') : '' }}" name="expiration_date">
                                             @error('expiration_date')
                                                     <span class="invalid-feedback" role="alert">
                                                         <strong>{{ $message }}</strong>
