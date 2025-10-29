@@ -128,18 +128,10 @@ class FacturaeOrderFixExtension
                 }
             }
 
-            // Si no existe TaxesOutputs pero hay Items o InvoiceTotals, crear TaxesOutputs vacío
-            // El esquema requiere TaxesOutputs incluso si está vacío
+            // TaxesOutputs solo existe si la biblioteca lo creó (cuando hay impuestos)
+            // No crearemos TaxesOutputs vacío porque causa problemas de namespace
+            // Si no existe, simplemente reordenaremos los elementos existentes
             $taxesOutputsCreado = false;
-            if (!$taxesOutputsElement && ($itemsElement || $invoiceTotalsElement)) {
-                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Creando TaxesOutputs vacío porque no existe (requerido por el esquema)');
-                $taxesOutputsElement = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxesOutputs');
-                $taxesOutputsCreado = true;
-                // Marcar como posición -1 para forzar reordenamiento
-                $taxesOutputsPosition = -1;
-                // Forzar reordenamiento porque creamos un nuevo elemento
-                $necesitaReordenar = true;
-            }
 
             // Obtener las posiciones actuales
             $itemsPosition = -1;
@@ -193,11 +185,18 @@ class FacturaeOrderFixExtension
             
             // Verificar si realmente necesitamos reordenar
             $ordenCorrecto = false;
-            if ($invoiceIssueDataPosition !== -1 && $itemsPosition !== -1 && $taxesOutputsPosition !== -1 && $totalsPosition !== -1) {
+            
+            // Si hay TaxesOutputs, verificar el orden completo
+            if ($invoiceIssueDataPosition !== -1 && $taxesOutputsPosition !== -1 && $itemsPosition !== -1 && $totalsPosition !== -1) {
                 // Verificar: InvoiceIssueData < TaxesOutputs < Items < InvoiceTotals
                 if ($invoiceIssueDataPosition < $taxesOutputsPosition && 
                     $taxesOutputsPosition < $itemsPosition && 
                     $itemsPosition < $totalsPosition) {
+                    $ordenCorrecto = true;
+                }
+            } elseif ($invoiceIssueDataPosition !== -1 && !$taxesOutputsElement && $itemsPosition !== -1 && $totalsPosition !== -1) {
+                // Si no hay TaxesOutputs, verificar que Items esté después de InvoiceIssueData y antes de InvoiceTotals
+                if ($invoiceIssueDataPosition < $itemsPosition && $itemsPosition < $totalsPosition) {
                     $ordenCorrecto = true;
                 }
             }
@@ -205,6 +204,13 @@ class FacturaeOrderFixExtension
             if ($ordenCorrecto) {
                 $necesitaReordenar = false;
                 \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: El orden ya es correcto, no se requiere reordenamiento');
+            } else {
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: El orden es incorrecto, se requiere reordenamiento', [
+                    'invoiceIssueData_pos' => $invoiceIssueDataPosition,
+                    'taxesOutputs_pos' => $taxesOutputsPosition,
+                    'items_pos' => $itemsPosition,
+                    'totals_pos' => $totalsPosition
+                ]);
             }
 
             // El orden correcto según el error del validador es:
@@ -222,8 +228,15 @@ class FacturaeOrderFixExtension
             ]);
             
             // Necesitamos reordenar si tenemos los elementos necesarios
-            // Si falta TaxesOutputs pero lo creamos, también necesitamos reordenar
             $tieneElementosNecesarios = $itemsElement && $invoiceTotalsElement;
+            
+            // Si TaxesOutputs existe, siempre debe estar antes de Items según el esquema
+            // Si no existe TaxesOutputs, entonces Items debe ir después de InvoiceIssueData
+            if ($taxesOutputsElement && $taxesOutputsPosition !== -1 && $itemsPosition !== -1) {
+                if ($taxesOutputsPosition > $itemsPosition) {
+                    $necesitaReordenar = true;
+                }
+            }
             
             if ($necesitaReordenar && $tieneElementosNecesarios) {
                 \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Iniciando reordenamiento');
@@ -262,10 +275,9 @@ class FacturaeOrderFixExtension
                 // InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
                 $referenceNode = $invoiceIssueDataElement;
                 
-                // 1. TaxesOutputs debe ir después de InvoiceIssueData (PRIMERO)
-                // También manejar el caso donde creamos TaxesOutputs
-                if (isset($nodesToReorder['taxesOutputs']) || $taxesOutputsCreado) {
-                    $taxesOutputsToInsert = isset($nodesToReorder['taxesOutputs']) ? $nodesToReorder['taxesOutputs'] : $taxesOutputsElement;
+                // 1. TaxesOutputs debe ir después de InvoiceIssueData (PRIMERO) - solo si existe
+                if (isset($nodesToReorder['taxesOutputs'])) {
+                    $taxesOutputsToInsert = $nodesToReorder['taxesOutputs'];
                     
                     if ($referenceNode) {
                         // Buscar el siguiente elemento después de InvoiceIssueData
@@ -305,9 +317,13 @@ class FacturaeOrderFixExtension
                         }
                     }
                     $referenceNode = $taxesOutputsToInsert;
+                } else {
+                    // Si no hay TaxesOutputs, Items debe ir después de InvoiceIssueData
+                    // Actualizar referenceNode para que Items se inserte después de InvoiceIssueData
+                    $referenceNode = $invoiceIssueDataElement;
                 }
                 
-                // 2. Items debe ir después de TaxesOutputs
+                // 2. Items debe ir después de TaxesOutputs (o después de InvoiceIssueData si no hay TaxesOutputs)
                 if (isset($nodesToReorder['items'])) {
                     if ($referenceNode) {
                         $nextNode = $referenceNode->nextSibling;

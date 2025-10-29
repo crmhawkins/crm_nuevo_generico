@@ -1047,7 +1047,14 @@ class InvoiceController extends Controller
             $taxesOutputsCreado = false;
             if (!$taxesOutputsElement && ($itemsElement || $invoiceTotalsElement)) {
                 Log::info('corregirOrdenXMLFactura: Creando TaxesOutputs vacío (requerido por esquema)');
-                $taxesOutputsElement = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxesOutputs');
+                
+                // Obtener el namespace del Invoice para usar el mismo
+                $namespaceURI = $invoiceElement->namespaceURI;
+                if ($namespaceURI) {
+                    $taxesOutputsElement = $dom->createElementNS($namespaceURI, 'TaxesOutputs');
+                } else {
+                    $taxesOutputsElement = $dom->createElement('TaxesOutputs');
+                }
                 $taxesOutputsCreado = true;
             }
             
