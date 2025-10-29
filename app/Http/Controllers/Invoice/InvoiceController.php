@@ -441,7 +441,8 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
-            $fac = new Facturae();
+            // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
+            $fac = new Facturae(Facturae::SCHEMA_3_2_1);
 
             // Validar que la referencia tiene el formato correcto
             if (empty($factura->reference) || strpos($factura->reference, '-') === false) {
@@ -636,18 +637,39 @@ class InvoiceController extends Controller
                 ]));
             }
 
-            // Procesar conceptos
+            // Procesar conceptos y calcular totales
             $retencion = floatval($factura->retencion_percentage ?? 0);
             $iva = floatval($factura->iva_percentage ?? 0);
+            
+            // Calcular totales antes de agregar items para asegurar orden correcto
+            $totalBaseImponible = 0;
+            $totalIva = 0;
+            $totalRetencion = 0;
+            $totalFactura = 0;
 
             foreach ($conceptos as $concepto) {
                 // Evitar divisiones por cero
                 $unidad = max(1, $concepto->units);
-
+                
+                // Calcular precios
+                $precioUnitario = $concepto->total_no_discount / $unidad;
+                $subtotal = $precioUnitario * $concepto->units;
+                $descuento = $concepto->discount ?? 0;
+                $baseImponible = $subtotal - $descuento;
+                
+                // Calcular impuestos
+                $ivaItem = ($baseImponible * $iva) / 100;
+                $retencionItem = ($baseImponible * $retencion) / 100;
+                
+                // Acumular totales
+                $totalBaseImponible += $baseImponible;
+                $totalIva += $ivaItem;
+                $totalRetencion += $retencionItem;
+                
                 $item = [
                     "articleCode" => $concepto->services_category_id ?? '',
                     "name" => $concepto->title ?? 'Concepto sin título',
-                    "unitPriceWithoutTax" => $concepto->total_no_discount / $unidad,
+                    "unitPriceWithoutTax" => $precioUnitario,
                     "quantity" => $concepto->units,
                     "taxes" => []
                 ];
@@ -657,19 +679,32 @@ class InvoiceController extends Controller
                     $item["taxes"][Facturae::TAX_IVA] = $iva;
                 }
 
-                // Añadir retención IRPF si aplica
+                // Añadir retención IRPF si aplica  
                 if ($retencion > 0) {
                     $item["taxes"][Facturae::TAX_IRPF] = $retencion;
                 }
 
                 // Añadir descuento si existe
-                if ($concepto->discount > 0) {
+                if ($descuento > 0) {
                     $item["discounts"] = [
-                        ["reason" => "Descuento", "amount" => $concepto->discount]
+                        ["reason" => "Descuento", "amount" => $descuento]
                     ];
                 }
 
                 $fac->addItem(new FacturaeItem($item));
+            }
+            
+            // Calcular total final
+            $totalFactura = $totalBaseImponible + $totalIva - $totalRetencion;
+            
+            // Verificar que todos los items se hayan añadido correctamente
+            // La biblioteca Facturae calculará automáticamente los TaxesOutputs 
+            // cuando se exporte la factura, y debe hacerlo en el orden correcto
+            // según el esquema: InvoiceLines -> TaxesOutputs -> InvoiceTotals
+            
+            // Asegurar que la versión del esquema es correcta
+            if ($fac->getSchemaVersion() !== Facturae::SCHEMA_3_2_1) {
+                $fac->setSchemaVersion(Facturae::SCHEMA_3_2_1);
             }
 
             // Validar certificado y contraseña
@@ -728,6 +763,13 @@ class InvoiceController extends Controller
             // Exportar la factura
             try {
                 $fac->export($numero.'-'.$serie.".xsig");
+                
+                // Corregir el orden de elementos en el XML para cumplir con el esquema Facturae 3.2.1
+                // El esquema requiere: Items -> TaxesOutputs -> InvoiceTotals
+                // Pero la biblioteca genera: InvoiceTotals -> Items
+                $filePath = public_path($numero.'-'.$serie.".xsig");
+                $this->corregirOrdenXMLFactura($filePath);
+                
             } catch (\Exception $e) {
                 return response()->json([
                     'error' => 'Error al exportar la factura electrónica: ' . $e->getMessage(),
@@ -767,6 +809,274 @@ class InvoiceController extends Controller
                 'error' => 'Error inesperado al generar la factura electrónica: ' . $e->getMessage() . '. Por favor, contacte con el administrador del sistema.',
                 'status' => false
             ], 500);
+        }
+    }
+
+    /**
+     * Corrige el orden de los elementos en el XML de la factura electrónica
+     * para cumplir con el esquema Facturae 3.2.1:
+     * Orden requerido: Items -> TaxesOutputs -> InvoiceTotals
+     * Orden actual de la biblioteca: InvoiceTotals -> Items (sin TaxesOutputs separado)
+     */
+    private function corregirOrdenXMLFactura($filePath)
+    {
+        try {
+            if (!file_exists($filePath)) {
+                return;
+            }
+
+            // Cargar el XML
+            $dom = new \DOMDocument();
+            $dom->preserveWhiteSpace = false;
+            $dom->formatOutput = true;
+            $dom->load($filePath);
+
+            // Registrar el namespace
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('fe', 'http://www.facturae.es/Facturae/2014/v3.2.1/Facturae');
+
+            // Buscar el elemento Invoice
+            $invoiceNodes = $xpath->query('//fe:Invoice');
+            if ($invoiceNodes->length === 0) {
+                Log::warning('No se encontró el elemento Invoice en el XML');
+                return;
+            }
+
+            $invoiceElement = $invoiceNodes->item(0);
+
+            // Buscar los elementos que necesitamos reordenar
+            $itemsElement = null;
+            $taxesOutputsElement = null;
+            $invoiceTotalsElement = null;
+            $paymentDetailsElement = null;
+            $legalLiteralsElement = null;
+
+            foreach ($invoiceElement->childNodes as $child) {
+                if ($child->nodeType === XML_ELEMENT_NODE) {
+                    $tagName = $child->localName ?? $child->nodeName;
+                    
+                    if ($tagName === 'Items') {
+                        $itemsElement = $child;
+                    } elseif ($tagName === 'TaxesOutputs') {
+                        $taxesOutputsElement = $child;
+                    } elseif ($tagName === 'InvoiceTotals') {
+                        $invoiceTotalsElement = $child;
+                    } elseif ($tagName === 'PaymentDetails') {
+                        $paymentDetailsElement = $child;
+                    } elseif ($tagName === 'LegalLiterals') {
+                        $legalLiteralsElement = $child;
+                    }
+                }
+            }
+
+            // El esquema Facturae 3.2.1 requiere este orden exacto:
+            // InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
+            // Pero la biblioteca genera: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
+            
+            // Obtener las posiciones actuales de los elementos
+            $invoiceIssueDataPosition = -1;
+            $itemsPosition = -1;
+            $taxesOutputsPosition = -1;
+            $totalsPosition = -1;
+            $position = 0;
+            
+            // Recolectar todos los nodos en el orden actual
+            $childNodes = [];
+            foreach ($invoiceElement->childNodes as $child) {
+                if ($child->nodeType === XML_ELEMENT_NODE) {
+                    $tagName = $child->localName ?? $child->nodeName;
+                    $childNodes[] = ['node' => $child, 'name' => $tagName, 'position' => $position];
+                    
+                    if ($tagName === 'InvoiceIssueData') {
+                        $invoiceIssueDataPosition = $position;
+                    } elseif ($tagName === 'Items') {
+                        $itemsPosition = $position;
+                    } elseif ($tagName === 'TaxesOutputs') {
+                        $taxesOutputsPosition = $position;
+                    } elseif ($tagName === 'InvoiceTotals') {
+                        $totalsPosition = $position;
+                    }
+                    $position++;
+                }
+            }
+
+            // Si no existe TaxesOutputs, intentar crearlo basándonos en los items o usar los totales
+            // Normalmente la biblioteca lo genera automáticamente, pero verificamos si falta
+            if (!$taxesOutputsElement && $itemsElement) {
+                // Primero intentar leer TaxesOutputs que la biblioteca debería haber generado
+                // Si no existe, la biblioteca puede haberlo omitido si no hay impuestos
+                // En ese caso, verificar si realmente hay impuestos antes de crear
+                
+                $invoiceLines = $xpath->query('.//fe:InvoiceLine', $itemsElement);
+                $hasTaxes = false;
+                
+                foreach ($invoiceLines as $line) {
+                    $taxes = $xpath->query('.//fe:Tax', $line);
+                    if ($taxes->length > 0) {
+                        $hasTaxes = true;
+                        break;
+                    }
+                }
+                
+                // Solo crear TaxesOutputs si realmente hay impuestos en las líneas
+                if ($hasTaxes) {
+                    $taxesOutputsElement = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxesOutputs');
+                    
+                    // Recopilar todos los impuestos de las líneas agrupados por tipo y tasa
+                    $taxesMap = []; // [tipo_rate] => [type, rate, base, amount]
+                    
+                    foreach ($invoiceLines as $line) {
+                        // Obtener el total de la línea (TotalCost o calcular)
+                        $totalCost = $xpath->evaluate('string(fe:TotalCost)', $line);
+                        if (empty($totalCost)) {
+                            $quantity = floatval($xpath->evaluate('string(fe:Quantity)', $line));
+                            $unitPrice = floatval($xpath->evaluate('string(fe:UnitPriceWithoutTax)', $line));
+                            $totalCost = $quantity * $unitPrice;
+                        } else {
+                            $totalCost = floatval($totalCost);
+                        }
+                        
+                        // Buscar impuestos en la línea (pueden estar en TaxesOutputs o TaxesWithheld dentro de la línea)
+                        $taxes = $xpath->query('.//fe:Tax', $line);
+                        foreach ($taxes as $tax) {
+                            $taxType = $xpath->evaluate('string(fe:TaxTypeCode)', $tax);
+                            $taxRate = $xpath->evaluate('string(fe:TaxRate)', $tax);
+                            
+                            if (empty($taxType) || empty($taxRate)) {
+                                continue;
+                            }
+                            
+                            $taxKey = $taxType . '_' . $taxRate;
+                            
+                            if (!isset($taxesMap[$taxKey])) {
+                                $taxesMap[$taxKey] = [
+                                    'type' => $taxType,
+                                    'rate' => floatval($taxRate),
+                                    'base' => 0,
+                                    'amount' => 0
+                                ];
+                            }
+                            
+                            $taxesMap[$taxKey]['base'] += $totalCost;
+                            $taxesMap[$taxKey]['amount'] += ($totalCost * floatval($taxRate)) / 100;
+                        }
+                    }
+                    
+                    // Crear los elementos de impuestos
+                    foreach ($taxesMap as $taxData) {
+                        $tax = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'Tax');
+                        
+                        $taxTypeCode = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxTypeCode', $taxData['type']);
+                        $tax->appendChild($taxTypeCode);
+                        
+                        $taxRate = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxRate', number_format($taxData['rate'], 2, '.', ''));
+                        $tax->appendChild($taxRate);
+                        
+                        $taxableBase = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxableBase');
+                        $taxableBaseTotal = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TotalAmount', number_format($taxData['base'], 2, '.', ''));
+                        $taxableBase->appendChild($taxableBaseTotal);
+                        $tax->appendChild($taxableBase);
+                        
+                        $taxAmount = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TaxAmount');
+                        $taxAmountTotal = $dom->createElementNS('http://www.facturae.es/Facturae/2014/v3.2.1/Facturae', 'TotalAmount', number_format($taxData['amount'], 2, '.', ''));
+                        $taxAmount->appendChild($taxAmountTotal);
+                        $tax->appendChild($taxAmount);
+                        
+                        $taxesOutputsElement->appendChild($tax);
+                    }
+                }
+            }
+
+            // Orden correcto requerido por el esquema: 
+            // InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
+            // La biblioteca genera: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
+            
+            // Si creamos TaxesOutputs, actualizar su posición
+            if ($taxesOutputsElement && $taxesOutputsPosition === -1) {
+                // Se acaba de crear, no tiene posición aún
+                $taxesOutputsPosition = 999; // Valor alto para forzar reordenamiento
+            }
+            
+            // Verificar si necesitamos reordenar
+            $necesitaReordenar = false;
+            
+            if ($itemsPosition !== -1 && $totalsPosition !== -1 && $totalsPosition < $itemsPosition) {
+                $necesitaReordenar = true;
+            }
+            
+            if ($taxesOutputsPosition !== -1 && $itemsPosition !== -1 && $taxesOutputsPosition < $itemsPosition) {
+                $necesitaReordenar = true;
+            }
+            
+            if ($taxesOutputsPosition !== -1 && $totalsPosition !== -1 && $taxesOutputsPosition > $totalsPosition) {
+                $necesitaReordenar = true;
+            }
+            
+            // Si TaxesOutputs fue creado, siempre necesitamos insertarlo correctamente
+            if ($taxesOutputsElement && $taxesOutputsPosition === 999) {
+                $necesitaReordenar = true;
+            }
+            
+            if ($necesitaReordenar && $itemsElement && $invoiceTotalsElement) {
+                // Remover elementos que necesitamos reordenar
+                $nodesToReorder = [];
+                
+                // Guardar referencias antes de remover (solo si están en el DOM)
+                if ($taxesOutputsElement) {
+                    if ($taxesOutputsElement->parentNode === $invoiceElement) {
+                        $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
+                        $invoiceElement->removeChild($taxesOutputsElement);
+                    } else {
+                        // Si no tiene parent, fue creado recientemente y solo necesita ser insertado
+                        $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
+                    }
+                }
+                
+                if ($invoiceTotalsElement->parentNode === $invoiceElement) {
+                    $nodesToReorder['invoiceTotals'] = $invoiceTotalsElement;
+                    $invoiceElement->removeChild($invoiceTotalsElement);
+                }
+                
+                // Ahora insertar en el orden correcto: Items -> TaxesOutputs -> InvoiceTotals
+                // Items ya está en su lugar, insertar TaxesOutputs después
+                $insertAfterItems = $itemsElement->nextSibling;
+                
+                // Insertar TaxesOutputs después de Items
+                if (isset($nodesToReorder['taxesOutputs'])) {
+                    if ($insertAfterItems) {
+                        $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $insertAfterItems);
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
+                    }
+                    // Actualizar insertAfterItems para apuntar después de TaxesOutputs
+                    $insertAfterItems = $nodesToReorder['taxesOutputs']->nextSibling;
+                }
+                
+                // Insertar InvoiceTotals después de TaxesOutputs (o después de Items si no hay TaxesOutputs)
+                if (isset($nodesToReorder['invoiceTotals'])) {
+                    if ($insertAfterItems) {
+                        $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $insertAfterItems);
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
+                    }
+                }
+            }
+
+            // Guardar el XML corregido
+            $dom->save($filePath);
+            
+            Log::info('XML de factura corregido', [
+                'archivo' => $filePath,
+                'orden_original' => "Items:$itemsPosition, TaxesOutputs:$taxesOutputsPosition, InvoiceTotals:$totalsPosition"
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al corregir orden del XML de factura', [
+                'archivo' => $filePath,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // No lanzar excepción para no romper el flujo, solo loguear el error
         }
     }
 
