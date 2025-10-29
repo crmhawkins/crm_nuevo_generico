@@ -479,17 +479,66 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
-            if (empty($factura->expiration_date)) {
-                return response()->json([
-                    'error' => 'La factura no tiene fecha de vencimiento. Por favor, agregue una fecha de vencimiento.',
-                    'status' => false
-                ], 400);
-            }
-
+            // Validar y procesar fechas
             try {
+                // Intentar parsear fecha de creación
                 $fecha = Carbon::parse($factura->created_at)->format('Y-m-d');
-                $fechafinal = Carbon::parse($factura->expiration_date)->format('Y-m-d');
+                
+                // Validar y parsear fecha de vencimiento
+                $expirationDate = $factura->expiration_date;
+                
+                // Verificar si la fecha existe antes de intentar parsearla
+                if (empty($expirationDate) || 
+                    $expirationDate === null ||
+                    (is_string($expirationDate) && trim($expirationDate) === '') ||
+                    $expirationDate === '0000-00-00' ||
+                    $expirationDate === '0000-00-00 00:00:00') {
+                    
+                    // Si la fecha no existe en el modelo, recargar desde la BD
+                    $factura->refresh();
+                    $expirationDate = $factura->expiration_date;
+                    
+                    // Si después de recargar sigue vacía, entonces no existe
+                    if (empty($expirationDate) || 
+                        $expirationDate === null ||
+                        (is_string($expirationDate) && trim($expirationDate) === '') ||
+                        $expirationDate === '0000-00-00' ||
+                        $expirationDate === '0000-00-00 00:00:00') {
+                        return response()->json([
+                            'error' => 'La factura no tiene fecha de vencimiento configurada. Por favor, agregue una fecha de vencimiento en el formulario de edición.',
+                            'status' => false
+                        ], 400);
+                    }
+                }
+                
+                // Intentar parsear la fecha de vencimiento
+                try {
+                    $fechafinal = Carbon::parse($expirationDate)->format('Y-m-d');
+                    
+                    // Validar que la fecha parseada sea válida (no 1970-01-01 u otra fecha por defecto)
+                    if ($fechafinal === '1970-01-01' || $fechafinal === '0000-00-00') {
+                        throw new \Exception('Fecha de vencimiento inválida');
+                    }
+                } catch (\Exception $parseError) {
+                    Log::error('Error al parsear fecha de vencimiento', [
+                        'factura_id' => $factura->id,
+                        'expiration_date' => $expirationDate,
+                        'error' => $parseError->getMessage()
+                    ]);
+                    
+                    return response()->json([
+                        'error' => 'La fecha de vencimiento no tiene un formato válido. Por favor, verifique que la fecha esté correctamente configurada.',
+                        'status' => false
+                    ], 400);
+                }
+                
             } catch (\Exception $e) {
+                Log::error('Error al procesar fechas de la factura', [
+                    'factura_id' => $factura->id ?? null,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
                 return response()->json([
                     'error' => 'Error al procesar las fechas de la factura: ' . $e->getMessage(),
                     'status' => false
