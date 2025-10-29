@@ -5,6 +5,15 @@ namespace App\Extensions;
 class FacturaeOrderFixExtension
 {
     /**
+     * Método llamado antes de exportar (requerido por la biblioteca)
+     * No necesitamos hacer nada aquí, la corrección se hace en __onBeforeSign
+     */
+    public function __onBeforeExport()
+    {
+        // No necesitamos hacer nada aquí
+    }
+
+    /**
      * Corrige el orden de los elementos XML antes de firmar
      * Orden requerido: Items -> TaxesOutputs -> InvoiceTotals
      */
