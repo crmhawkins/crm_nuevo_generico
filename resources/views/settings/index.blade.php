@@ -281,6 +281,59 @@
         color: #667eea;
     }
     
+    /* Password input container */
+    .password-input-container {
+        position: relative;
+        width: 100%;
+    }
+    
+    .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 8px 12px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        z-index: 10;
+    }
+    
+    .password-toggle-btn:hover {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .password-toggle-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+    
+    .password-input-container input {
+        padding-right: 50px !important;
+    }
+    
+    .password-toggle-btn i {
+        transition: all 0.3s ease;
+    }
+    
+    .password-toggle-btn:hover i {
+        transform: scale(1.1);
+    }
+    
+    /* Certificado actions */
+    .certificado-actions {
+        padding: 20px;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 12px;
+        border: 2px dashed rgba(102, 126, 234, 0.2);
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .header-title {
@@ -293,6 +346,10 @@
         
         .form-control, .form-select {
             padding: 12px 15px;
+        }
+        
+        .password-input-container input {
+            padding-right: 45px !important;
         }
         
         .actions-panel {
@@ -615,6 +672,82 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Sección de Certificado --}}
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-certificate"></i>Certificado
+                            </h3>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label" for="certificado">
+                                            <i class="fas fa-file-upload me-2"></i>Subir Certificado
+                                        </label>
+                                        <div class="file-input-container">
+                                            <input type="file" 
+                                                   class="file-input" 
+                                                   id="certificado" 
+                                                   name="certificado" 
+                                                   accept=".pfx,.p12"
+                                                   onchange="previewCertificado(this)">
+                                            <label for="certificado" class="file-input-label">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <span id="certificado-text">Seleccionar archivo</span>
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">Formatos soportados: .pfx, .p12</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label" for="contrasena">
+                                            <i class="fas fa-lock me-2"></i>Contraseña del Certificado
+                                        </label>
+                                        <div class="password-input-container">
+                                            <input type="password" 
+                                                   class="form-control @error('contrasena') is-invalid @enderror" 
+                                                   id="contrasena" 
+                                                   name="contrasena" 
+                                                   value="{{ $configuracion->contrasena ?? '' }}"
+                                                   placeholder="Ingrese la contraseña del certificado">
+                                            <button type="button" 
+                                                    class="password-toggle-btn" 
+                                                    onclick="togglePassword()"
+                                                    aria-label="Mostrar/ocultar contraseña">
+                                                <i id="password-toggle-icon" class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        @error('contrasena')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if(isset($configuracion->certificado) && $configuracion->certificado)
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="certificado-actions" style="margin-top: 20px; padding: 20px; background: rgba(102, 126, 234, 0.05); border-radius: 12px; border: 2px dashed rgba(102, 126, 234, 0.2);">
+                                            <label class="form-label">
+                                                <i class="fas fa-download me-2"></i>Descargar Certificado Actual:
+                                            </label>
+                                            <a href="{{ route('configuracion.download-certificado') }}" 
+                                               class="btn-modern btn-success-modern" 
+                                               style="width: auto; margin-top: 10px;">
+                                                <i class="fas fa-download"></i>Descargar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
                     </form>
                 </div>
             </div>
@@ -655,6 +788,22 @@
 @section('scripts')
 @include('partials.toast')
 <script>
+    // Función para mostrar/ocultar contraseña
+    function togglePassword() {
+        const passwordInput = document.getElementById('contrasena');
+        const toggleIcon = document.getElementById('password-toggle-icon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+    
     // Función para mostrar vista previa del logo
     function previewLogo(input) {
         if (input.files && input.files[0]) {
@@ -676,6 +825,15 @@
             
             // Actualizar el texto del label
             document.getElementById('file-text').textContent = input.files[0].name;
+        }
+    }
+    
+    // Función para actualizar el texto del certificado seleccionado
+    function previewCertificado(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('certificado-text').textContent = input.files[0].name;
+        } else {
+            document.getElementById('certificado-text').textContent = 'Seleccionar archivo';
         }
     }
 
