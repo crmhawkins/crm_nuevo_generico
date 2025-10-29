@@ -149,47 +149,42 @@ class FacturaeOrderFixExtension
             // InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
             // Pero la biblioteca genera: InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
             
-            // Verificar si necesitamos reordenar
-            $necesitaReordenar = false;
+            // Siempre reordenar para asegurar el orden correcto según Facturae 3.2.1
+            // El orden debe ser: InvoiceHeader -> InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
+            $necesitaReordenar = true; // Forzar siempre el reordenamiento para garantizar orden correcto
             
-            if ($itemsPosition !== -1 && $totalsPosition !== -1 && $totalsPosition < $itemsPosition) {
-                $necesitaReordenar = true;
-            }
+            // Buscar InvoiceIssueData como referencia
+            $invoiceIssueDataElement = null;
+            $invoiceIssueDataPosition = -1;
+            $position = 0;
             
-            if ($taxesOutputsPosition !== -1 && $itemsPosition !== -1 && $taxesOutputsPosition < $itemsPosition) {
-                $necesitaReordenar = true;
-            }
-            
-            if ($taxesOutputsPosition !== -1 && $totalsPosition !== -1 && $taxesOutputsPosition > $totalsPosition) {
-                $necesitaReordenar = true;
-            }
-
-            // También verificar si Items está después de TaxesOutputs o InvoiceTotals
-            if ($itemsElement) {
-                // Buscar InvoiceIssueData para insertar Items después de él
-                $invoiceIssueDataPosition = -1;
-                $invoiceIssueDataElement = null;
-                $position = 0;
-                
-                foreach ($invoiceElement->childNodes as $child) {
-                    if ($child->nodeType === XML_ELEMENT_NODE) {
-                        $tagName = $child->localName ?? $child->nodeName;
-                        if ($tagName === 'InvoiceIssueData') {
-                            $invoiceIssueDataPosition = $position;
-                            $invoiceIssueDataElement = $child;
-                            break;
-                        }
-                        $position++;
+            foreach ($invoiceElement->childNodes as $child) {
+                if ($child->nodeType === XML_ELEMENT_NODE) {
+                    $tagName = $child->localName ?? $child->nodeName;
+                    if ($tagName === 'InvoiceIssueData') {
+                        $invoiceIssueDataPosition = $position;
+                        $invoiceIssueDataElement = $child;
+                        break;
                     }
+                    $position++;
                 }
-                
-                // Si Items no está inmediatamente después de InvoiceIssueData, necesitamos moverlo
-                if ($invoiceIssueDataElement && $itemsPosition !== -1) {
-                    $expectedItemsPosition = $invoiceIssueDataPosition + 1;
-                    if ($itemsPosition !== $expectedItemsPosition) {
-                        $necesitaReordenar = true;
-                    }
+            }
+            
+            // Verificar si realmente necesitamos reordenar
+            // Si Items está después de InvoiceIssueData y antes de TaxesOutputs, y TaxesOutputs antes de InvoiceTotals, no necesitamos reordenar
+            $ordenCorrecto = false;
+            if ($invoiceIssueDataPosition !== -1 && $itemsPosition !== -1 && $taxesOutputsPosition !== -1 && $totalsPosition !== -1) {
+                // Verificar: InvoiceIssueData < Items < TaxesOutputs < InvoiceTotals
+                if ($invoiceIssueDataPosition < $itemsPosition && 
+                    $itemsPosition < $taxesOutputsPosition && 
+                    $taxesOutputsPosition < $totalsPosition) {
+                    $ordenCorrecto = true;
                 }
+            }
+            
+            if ($ordenCorrecto) {
+                $necesitaReordenar = false;
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: El orden ya es correcto, no se requiere reordenamiento');
             }
 
             // El orden correcto según Facturae 3.2.1 es:
