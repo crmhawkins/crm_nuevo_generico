@@ -186,8 +186,12 @@ class FacturaeOrderFixExtension
                 }
             }
 
+            // El orden correcto según Facturae 3.2.1 es:
+            // InvoiceHeader -> InvoiceIssueData -> Items -> TaxesOutputs -> InvoiceTotals
+            // La biblioteca genera: InvoiceHeader -> InvoiceIssueData -> TaxesOutputs -> InvoiceTotals -> Items
+            
             if ($necesitaReordenar && $itemsElement && $invoiceTotalsElement) {
-                // Buscar InvoiceIssueData para saber dónde insertar Items
+                // Buscar InvoiceIssueData (debe estar antes de Items)
                 $invoiceIssueDataElement = null;
                 foreach ($invoiceElement->childNodes as $child) {
                     if ($child->nodeType === XML_ELEMENT_NODE) {
@@ -199,24 +203,11 @@ class FacturaeOrderFixExtension
                     }
                 }
 
-                // Remover elementos desordenados
+                // Guardar referencias de los elementos a mover
                 $nodesToReorder = [];
                 
-                // Decidir si necesitamos remover Items
-                // Solo remover Items si NO está en la posición correcta (después de InvoiceIssueData)
-                $necesitaMoverItems = false;
-                if ($invoiceIssueDataElement && $itemsPosition !== -1) {
-                    $expectedItemsPosition = $invoiceIssueDataPosition + 1;
-                    if ($itemsPosition !== $expectedItemsPosition) {
-                        $necesitaMoverItems = true;
-                    }
-                } else {
-                    // Si no hay InvoiceIssueData o Items no está posicionado, asumir que necesita moverse
-                    $necesitaMoverItems = true;
-                }
-                
-                // Remover Items solo si necesita moverse
-                if ($necesitaMoverItems && $itemsElement->parentNode === $invoiceElement) {
+                // Remover todos los elementos que necesitamos reordenar
+                if ($itemsElement->parentNode === $invoiceElement) {
                     $nodesToReorder['items'] = $itemsElement;
                     $invoiceElement->removeChild($itemsElement);
                 }
@@ -231,69 +222,81 @@ class FacturaeOrderFixExtension
                     $invoiceElement->removeChild($invoiceTotalsElement);
                 }
 
-                // Insertar en el orden correcto: Items -> TaxesOutputs -> InvoiceTotals
-                // Primero insertar Items después de InvoiceIssueData
-                $insertPoint = null;
-                if ($invoiceIssueDataElement) {
-                    $insertAfterIssueData = $invoiceIssueDataElement->nextSibling;
-                    while ($insertAfterIssueData && $insertAfterIssueData->nodeType !== XML_ELEMENT_NODE) {
-                        $insertAfterIssueData = $insertAfterIssueData->nextSibling;
-                    }
-                    $insertPoint = $insertAfterIssueData;
-                }
+                // Reinsertar en el orden correcto
+                // 1. Items debe ir después de InvoiceIssueData
+                $referenceNode = $invoiceIssueDataElement;
                 
-                // Insertar Items primero
                 if (isset($nodesToReorder['items'])) {
-                    if ($insertPoint) {
-                        $invoiceElement->insertBefore($nodesToReorder['items'], $insertPoint);
+                    if ($referenceNode) {
+                        // Buscar el siguiente elemento después de InvoiceIssueData
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['items'], $nextNode);
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['items']);
+                        }
                     } else {
-                        // Si no hay InvoiceIssueData, insertar al principio
-                        if ($invoiceElement->firstChild) {
-                            $invoiceElement->insertBefore($nodesToReorder['items'], $invoiceElement->firstChild);
+                        // Si no hay InvoiceIssueData, buscar InvoiceHeader
+                        $invoiceHeaderElement = null;
+                        foreach ($invoiceElement->childNodes as $child) {
+                            if ($child->nodeType === XML_ELEMENT_NODE) {
+                                $tagName = $child->localName ?? $child->nodeName;
+                                if ($tagName === 'InvoiceHeader') {
+                                    $invoiceHeaderElement = $child;
+                                    break;
+                                }
+                            }
+                        }
+                        if ($invoiceHeaderElement) {
+                            $nextNode = $invoiceHeaderElement->nextSibling;
+                            while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                                $nextNode = $nextNode->nextSibling;
+                            }
+                            if ($nextNode) {
+                                $invoiceElement->insertBefore($nodesToReorder['items'], $nextNode);
+                            } else {
+                                $invoiceElement->appendChild($nodesToReorder['items']);
+                            }
                         } else {
                             $invoiceElement->appendChild($nodesToReorder['items']);
                         }
                     }
-                    // Actualizar insertPoint para el siguiente elemento
-                    $insertAfterItems = $nodesToReorder['items']->nextSibling;
-                    while ($insertAfterItems && $insertAfterItems->nodeType !== XML_ELEMENT_NODE) {
-                        $insertAfterItems = $insertAfterItems->nextSibling;
-                    }
-                    $insertPoint = $insertAfterItems;
+                    $referenceNode = $nodesToReorder['items'];
                 }
                 
-                // Insertar TaxesOutputs después de Items
+                // 2. TaxesOutputs debe ir después de Items
                 if (isset($nodesToReorder['taxesOutputs'])) {
-                    if ($insertPoint) {
-                        $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $insertPoint);
-                    } else {
-                        // Si no hay Items, insertar después de InvoiceIssueData o al principio
-                        if (isset($nodesToReorder['items'])) {
-                            $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
+                    if ($referenceNode) {
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['taxesOutputs'], $nextNode);
                         } else {
                             $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
                         }
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['taxesOutputs']);
                     }
-                    // Actualizar insertPoint
-                    $insertAfterTaxes = $nodesToReorder['taxesOutputs']->nextSibling;
-                    while ($insertAfterTaxes && $insertAfterTaxes->nodeType !== XML_ELEMENT_NODE) {
-                        $insertAfterTaxes = $insertAfterTaxes->nextSibling;
-                    }
-                    $insertPoint = $insertAfterTaxes;
-                } else {
-                    // Si no hay TaxesOutputs, mantener insertPoint después de Items
-                    if (isset($nodesToReorder['items'])) {
-                        $insertPoint = $nodesToReorder['items']->nextSibling;
-                        while ($insertPoint && $insertPoint->nodeType !== XML_ELEMENT_NODE) {
-                            $insertPoint = $insertPoint->nextSibling;
-                        }
-                    }
+                    $referenceNode = $nodesToReorder['taxesOutputs'];
                 }
-
-                // Insertar InvoiceTotals después de TaxesOutputs (o después de Items si no hay TaxesOutputs)
+                
+                // 3. InvoiceTotals debe ir después de TaxesOutputs (o Items si no hay TaxesOutputs)
                 if (isset($nodesToReorder['invoiceTotals'])) {
-                    if ($insertPoint) {
-                        $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $insertPoint);
+                    if ($referenceNode) {
+                        $nextNode = $referenceNode->nextSibling;
+                        while ($nextNode && $nextNode->nodeType !== XML_ELEMENT_NODE) {
+                            $nextNode = $nextNode->nextSibling;
+                        }
+                        if ($nextNode) {
+                            $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $nextNode);
+                        } else {
+                            $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
+                        }
                     } else {
                         $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
                     }
