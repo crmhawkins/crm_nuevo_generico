@@ -843,6 +843,15 @@ class InvoiceController extends Controller
                 $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $fac->sign($encryptedStore, $contrasena); };
                 // Último recurso legacy
                 $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $fac->sign($encryptedStore, null, $contrasena, 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'); };
+                // Intento alternativo: API basada en setCertificate() + sign() sin argumentos
+                $attempts[] = function() use ($fac, $certificadoPath, $contrasena) {
+                    if (method_exists($fac, 'setCertificate')) {
+                        $fac->setCertificate($certificadoPath, $contrasena);
+                        $fac->sign();
+                    } else {
+                        throw new \Exception('Método setCertificate no disponible');
+                    }
+                };
 
                 $signed = false;
                 foreach ($attempts as $trySign) {
