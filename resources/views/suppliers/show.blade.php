@@ -74,7 +74,7 @@
                                                 href="#list-info" role="tab">Informacion de Contacto</a>
                                             <a class="list-group-item list-group-item-action"
                                                 id="list-presupuestos-list" data-bs-toggle="list"
-                                                href="#list-presupuestos" role="tab">Presupuestos</a>
+                                                href="#list-presupuestos" role="tab">Pre-facturas</a>
                                             <a class="list-group-item list-group-item-action"
                                                 id="list-presupuestos-list" data-bs-toggle="list"
                                                 href="#list-facturas" role="tab">Facturas</a>
@@ -344,7 +344,7 @@
                                             </div>
                                             <div class="tab-pane" id="list-presupuestos" role="tabpanel"
                                                 aria-labelledby="list-presupuestos-list">
-                                                <h3 class="mb-2 fs-4 text-uppercase">Presupuestos del Cliente</h3>
+                                                <h3 class="mb-2 fs-4 text-uppercase">Pre-facturas del Cliente</h3>
                                                 <hr class="border mb-4" >
                                                 @if (count($cliente->presupuestos) > 0)
                                                     <div class="table-responsive">
@@ -373,7 +373,7 @@
                                                     </div>
                                                 @else
                                                 <div class="text-center py-4">
-                                                    <h3 class="text-center fs-4">No se encontraron registros de <strong>Presupuestos</strong></h3>
+                                                    <h3 class="text-center fs-4">No se encontraron registros de <strong>Pre-facturas</strong></h3>
                                                 </div>
                                                 @endif
                                             </div>

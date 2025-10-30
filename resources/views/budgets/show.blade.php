@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titulo', 'Ver Presupuesto')
+@section('titulo', 'Ver Pre-factura')
 
 @section('css')
     <link rel="stylesheet" href="{{asset('assets/vendors/toastify/toastify.css')}}">
@@ -11,7 +11,7 @@
     <div class="page-title card-body mb-3">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Vista del Presupuesto - {{$presupuesto->reference}}</h3>
+                <h3>Vista de la Pre-factura - {{$presupuesto->reference}}</h3>
                 <p class="text-subtitle text-muted">Previsulación un presupuesto</p>
             </div>
 
@@ -19,7 +19,7 @@
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{route('presupuestos.index')}}">Presupuestos</a></li>
+                        <li class="breadcrumb-item"><a href="{{route('presupuestos.index')}}">Pre-facturas</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Vista del presupuesto</li>
                     </ol>
                 </nav>
@@ -48,7 +48,7 @@
                                                     </div>
 
                                                     <div class="col-sm-6 text-sm-end">
-                                                        <p class="inv-list-number mt-sm-3 pb-sm-2 mt-4"><span class="inv-title">Presupuesto: </span> <span class="inv-number">{{$presupuesto->reference}}</span></p>
+                                                        <p class="inv-list-number mt-sm-3 pb-sm-2 mt-4"><span class="inv-title">Pre-factura: </span> <span class="inv-number">{{$presupuesto->reference}}</span></p>
                                                         <p class="inv-created-date mt-sm-5 mt-3"><span class="inv-title">Fecha de Emisión : </span> <span class="inv-date">{{$presupuesto->creation_date}}</span></p>
                                                     </div>
                                                 </div>

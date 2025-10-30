@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titulo', 'Presupuestos')
+@section('titulo', 'Pre-facturas')
 
 @section('css')
 <link rel="stylesheet" href="assets/vendors/simple-datatables/style.css">
@@ -21,7 +21,7 @@
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Presupuestos</li>
+                            <li class="breadcrumb-item active" aria-current="page">Pre-facturas</li>
                         </ol>
                     </nav>
 

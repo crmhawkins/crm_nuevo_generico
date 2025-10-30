@@ -89,7 +89,7 @@
     </div>
 
     <div class="form-group mb-4">
-        <label class="mb-2 text-left uppercase" style="font-weight: bold" for="budget_id">Presupuesto</label>
+        <label class="mb-2 text-left uppercase" style="font-weight: bold" for="budget_id">Pre-factura</label>
         <select class="choices w-100 form-select @error('budget_id') is-invalid @enderror" name="budget_id">
             @if ($presupuestos->count() > 0)
                 <option value="{{null}}">--- Seleccione un presupuesto ---</option>

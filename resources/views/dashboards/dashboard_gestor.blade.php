@@ -34,7 +34,7 @@
                 <div class="col-md-6">
                     <div class="side-column">
                         <div class="mb-3 card-body">
-                            <h5 class="card-title fw-bold">Presupuestos</h5>
+                            <h5 class="card-title fw-bold">Pre-facturas</h5>
                             <div class="row row-cols-1 row-cols-xl-3 g-xl-4 g-3 mb-3">
                                 <div class="col">
                                     <div class="card h-100">
@@ -61,9 +61,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <a href="{{route('presupuesto.create')}}" class="btn btn-outline-primary mb-2">Nuevo Presupuesto</a>
-                            <a href="{{route('presupuestos.indexUser')}}" class="btn btn-outline-secondary mb-2">Ver mis Presupuestos</a>
-                            <a href="{{route('presupuestos.index')}}" class="btn btn-outline-secondary mb-2">Ver todos los Presupuestos</a>
+                            <a href="{{route('presupuesto.create')}}" class="btn btn-outline-primary mb-2">Nueva Pre-factura</a>
+                            <a href="{{route('presupuestos.indexUser')}}" class="btn btn-outline-secondary mb-2">Ver mis Pre-facturas</a>
+                            <a href="{{route('presupuestos.index')}}" class="btn btn-outline-secondary mb-2">Ver todas las Pre-facturas</a>
                         </div>
                         <div class="row row-cols-1 row-cols-xl-2 g-xl-4 g-1">
                             <div class="col">

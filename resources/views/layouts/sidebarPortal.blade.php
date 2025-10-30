@@ -53,7 +53,7 @@
                 <i class="fa-solid fa-file-invoice-dollar"></i>
               </span>
               <span class="portal-sidebar__item-label">
-                Presupuestos
+                Pre-facturas
               </span>
             </a>
           </li>

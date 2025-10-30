@@ -323,12 +323,9 @@ class BudgetController extends Controller
             $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage, $retencionPercentage);
         }
 
-        if(!$data['iva']){
-            $data['iva'] = $updateBudgetQuantities['iva'];
-        }
-        if(!$data['retencion']){
-            $data['retencion'] = $updateBudgetQuantities['retencion'];
-        }
+        // Asignar siempre los importes calculados para evitar inconsistencias
+        $data['iva'] = $updateBudgetQuantities['iva'];
+        $data['retencion'] = $updateBudgetQuantities['retencion'];
         $data['discount'] = $updateBudgetQuantities['discount'];
         $data['gross'] = $updateBudgetQuantities['gross'];
         $data['base'] = $updateBudgetQuantities['base'];

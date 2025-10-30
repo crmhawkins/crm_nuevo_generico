@@ -77,8 +77,21 @@ class InvoiceController extends Controller
             'total' => 'nullable|numeric',
         ]);
 
-        // Formulario datos
+        // Recalcular en backend para asegurar consistencia y persistencia
+        $base = isset($data['base']) ? (float)$data['base'] : (float)($factura->base ?? 0);
+        $ivaPercentage = isset($data['iva_percentage']) ? (float)$data['iva_percentage'] : (float)($factura->iva_percentage ?? 0);
+        $retencionPercentage = isset($data['retencion_percentage']) ? (float)$data['retencion_percentage'] : (float)($factura->retencion_percentage ?? 0);
 
+        $iva = round(($base * $ivaPercentage) / 100, 2);
+        $retencion = round(($base * $retencionPercentage) / 100, 2);
+        $total = round($base + $iva - $retencion, 2);
+
+        $data['base'] = $base;
+        $data['iva'] = $iva;
+        $data['retencion'] = $retencion;
+        $data['total'] = $total;
+
+        // Guardar
         $facturaupdated=$factura->update($data);
 
         if($facturaupdated){
@@ -444,14 +457,16 @@ class InvoiceController extends Controller
                 // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
                 $fac = new Facturae(Facturae::SCHEMA_3_2_1);
 
-                // Establecer la política oficial de firma (XAdES-EPES) para Facturae 3.2.1
-                // Evita el error "La política de firma no es correcta" en FACE
+                // Establecer la política oficial de firma (XAdES-EPES) para Facturae 3.2.x
+                // Requerida por FACe: http://www.facturae.es/politica_de_firma_formato_facturae/3_2/politica.xml
                 if (method_exists($fac, 'setSignaturePolicy')) {
                     $policy = [
-                        'name' => 'Facturae 3.2.1 Signature Policy',
-                        'url' => 'https://www.facturae.gob.es/formato/Politica_de_firma_formato_Facturae.pdf',
+                        'name' => 'Política de Firma Facturae 3.2',
+                        'url' => 'http://www.facturae.es/politica_de_firma_formato_facturae/3_2/politica.xml',
                         'digest' => [
-                            'value' => '14EF5D2C33B15D6DD18D8F3F3C4B9B6C1B7D0FBA', // SHA-1 de la política
+                            // Hash de referencia conocido para la política 3.2 (base64, SHA-1)
+                            // FACe acepta firma SHA-256 con hash de política en SHA-1
+                            'value' => 'Ohixl6upD6av8N7pEvDABhEL6hM=',
                             'method' => 'sha1'
                         ]
                     ];
@@ -790,9 +805,16 @@ class InvoiceController extends Controller
                 ], 500);
             }
 
-            // Firmar la factura
+            // Firmar la factura (XAdES-EPES al haber política) con SHA-256 si está disponible
             try {
-                $fac->sign($encryptedStore, null, $contrasena);
+                $sha256Const = defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_SHA256')
+                    ? constant('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_SHA256')
+                    : null;
+                if ($sha256Const !== null) {
+                    $fac->sign($encryptedStore, null, $contrasena, $sha256Const);
+                } else {
+                    $fac->sign($encryptedStore, null, $contrasena);
+                }
             } catch (\Exception $e) {
                 return response()->json([
                     'error' => 'Error al firmar la factura electrónica: ' . $e->getMessage() . '. Verifique que el certificado y la contraseña sean correctos.',

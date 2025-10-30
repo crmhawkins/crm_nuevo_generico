@@ -52,6 +52,20 @@ class Budget extends Model
 
     protected $dates = ['created_at', 'updated_at', 'deleted_at'];
 
+    /**
+     * Casts para asegurar tipos numéricos consistentes
+     */
+    protected $casts = [
+        'gross' => 'float',
+        'base' => 'float',
+        'iva' => 'float',
+        'iva_percentage' => 'float',
+        'retencion' => 'float',
+        'retencion_percentage' => 'float',
+        'discount' => 'float',
+        'total' => 'float',
+    ];
+
     public function usuario()
     {
         return $this->belongsTo(\App\Models\Users\User::class, 'admin_user_id');

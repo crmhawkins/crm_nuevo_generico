@@ -108,6 +108,12 @@
                                                 <div class="col-sm-4 col-5">
                                                     <p>{{ $invoice->iva }} €</p>
                                                 </div>
+                                                <div class="col-sm-8 col-7">
+                                                    <p>Retención ({{ $invoice->retencion_percentage }}%) :</p>
+                                                </div>
+                                                <div class="col-sm-4 col-5">
+                                                    <p>{{ $invoice->retencion }} €</p>
+                                                </div>
                                                 <div class="col-sm-8 col-7 mt-3">
                                                     <h4>Total : </h4>
                                                 </div>

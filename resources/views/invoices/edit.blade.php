@@ -45,8 +45,8 @@
                                     </div>
                                     <div class="col-md-6 col-sm-12">
                                         <div class="form-group mb-3">
-                                            <label class="text-left mb-2">Presupuesto <span id="budgetLinkContainer"></span><a id="budgetAssignedClient" target="_blank" href="{{ route('presupuesto.edit', $factura->budget_id) }}"><i class="fas fa-external-link-alt"></i></a></label>
-                                            <input type="text" class="form-control @error('budget_id') is-invalid @enderror" id="budget_id" value="{{ $factura->budget->concept ??  ($factura->budget_id ? 'Presupuesto borrado' : 'Sin presupuesto asignado') }}" name="budget_id" disabled>
+                                            <label class="text-left mb-2">Pre-factura <span id="budgetLinkContainer"></span><a id="budgetAssignedClient" target="_blank" href="{{ route('presupuesto.edit', $factura->budget_id) }}"><i class="fas fa-external-link-alt"></i></a></label>
+                                            <input type="text" class="form-control @error('budget_id') is-invalid @enderror" id="budget_id" value="{{ $factura->budget->concept ??  ($factura->budget_id ? 'Pre-factura borrada' : 'Sin pre-factura asignada') }}" name="budget_id" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-sm-12">
@@ -320,12 +320,12 @@
 <script>
     $(document).ready(function() {
 
-        // Eventos para recalcular cuando cambien los porcentajes
-        $('#iva_percentage').on('change', function(){
+        // Eventos para recalcular cuando cambien/teclen los porcentajes
+        $('#iva_percentage').on('change input', function(){
             actualizarPreciosFactura();
         });
 
-        $('#retencion_percentage').on('change', function(){
+        $('#retencion_percentage').on('change input', function(){
             actualizarPreciosFactura();
         });
 
@@ -357,6 +357,9 @@
                 maximumFractionDigits: 2,
             });
         }
+
+        // Calcular al cargar la página (asegura que se muestre la retención inicial)
+        actualizarPreciosFactura();
 
         // Boton Actualizar factura
         $('#actualizarfactura').click(function(e){

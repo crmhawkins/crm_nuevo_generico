@@ -70,6 +70,22 @@ class Invoice extends Model
     ];
 
     /**
+     * Casts para asegurar tipos numéricos consistentes
+     * y evitar problemas al calcular (especialmente con columnas string antiguas).
+     */
+    protected $casts = [
+        'gross' => 'float',
+        'base' => 'float',
+        'iva' => 'float',
+        'iva_percentage' => 'float',
+        'retencion' => 'float',
+        'retencion_percentage' => 'float',
+        'discount' => 'float',
+        'discount_percentage' => 'float',
+        'total' => 'float',
+    ];
+
+    /**
      * Obtener el presupuesto al que está vinculada
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
