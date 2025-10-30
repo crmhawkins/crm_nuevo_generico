@@ -809,6 +809,9 @@ class InvoiceController extends Controller
 
             // Firmar la factura (XAdES-EPES al haber política) con SHA-256
             try {
+                // En esta versión la librería puede esperar RUTA del PFX. Usamos $certificadoPath.
+                $pfxInput = $certificadoPath;
+
                 // Detectar en tiempo de ejecución las constantes soportadas por la versión instalada
                 $algo = null;
                 if (defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_RSA_SHA256')) {
@@ -818,10 +821,10 @@ class InvoiceController extends Controller
                 }
 
                 if ($algo !== null) {
-                    $fac->sign($encryptedStore, $contrasena, $algo);
+                    $fac->sign($pfxInput, $contrasena, $algo);
                 } else {
                     // Fallback compatible: firmar con la configuración por defecto de la librería
-                    $fac->sign($encryptedStore, $contrasena);
+                    $fac->sign($pfxInput, $contrasena);
                 }
             } catch (\Exception $e) {
                 return response()->json([
