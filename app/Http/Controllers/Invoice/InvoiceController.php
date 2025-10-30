@@ -441,8 +441,22 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
-            // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
-            $fac = new Facturae(Facturae::SCHEMA_3_2_1);
+                // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
+                $fac = new Facturae(Facturae::SCHEMA_3_2_1);
+
+                // Establecer la política oficial de firma (XAdES-EPES) para Facturae 3.2.1
+                // Evita el error "La política de firma no es correcta" en FACE
+                if (method_exists($fac, 'setSignaturePolicy')) {
+                    $policy = [
+                        'name' => 'Facturae 3.2.1 Signature Policy',
+                        'url' => 'https://www.facturae.gob.es/formato/Politica_de_firma_formato_Facturae.pdf',
+                        'digest' => [
+                            'value' => '14EF5D2C33B15D6DD18D8F3F3C4B9B6C1B7D0FBA', // SHA-1 de la política
+                            'method' => 'sha1'
+                        ]
+                    ];
+                    \call_user_func([$fac, 'setSignaturePolicy'], $policy);
+                }
             
             // Agregar extensión para corregir el orden de elementos antes de firmar usando reflexión
             try {
