@@ -137,8 +137,9 @@ class FacturaeOrderFixExtension
                 // Obtener el namespace del Invoice para crear el elemento con el mismo namespace
                 $namespaceURI = $invoiceElement->namespaceURI ?? 'http://www.facturae.es/Facturae/2014/v3.2.1/Facturae';
                 
-                // Crear TaxesOutputs vacío usando el mismo namespace que Invoice
-                $taxesOutputsElement = $dom->createElementNS($namespaceURI, 'TaxesOutputs');
+                // Crear TaxesOutputs vacío SIN namespace explícito porque los hijos de <Invoice>
+                // en la salida de la librería vienen sin prefijo/namespace
+                $taxesOutputsElement = $dom->createElement('TaxesOutputs');
                 
                 // No agregar contenido, está vacío
                 $taxesOutputsCreado = true;
