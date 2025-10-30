@@ -836,18 +836,19 @@ class InvoiceController extends Controller
                 $lastError = null;
                 $attempts = [];
                 if ($algo !== null) {
-                    $attempts[] = function() use ($fac, $certificadoPath, $contrasena, $algo) { $fac->sign($certificadoPath, $contrasena, $algo); };
-                    $attempts[] = function() use ($fac, $encryptedStore, $contrasena, $algo) { $fac->sign($encryptedStore, $contrasena, $algo); };
+                    $attempts[] = function() use ($fac, $certificadoPath, $contrasena, $algo) { $r=$fac->sign($certificadoPath, $contrasena, $algo); if ($r===false) throw new \Exception('sign() devolvió false (ruta+algoritmo)'); };
+                    $attempts[] = function() use ($fac, $encryptedStore, $contrasena, $algo) { $r=$fac->sign($encryptedStore, $contrasena, $algo); if ($r===false) throw new \Exception('sign() devolvió false (contenido+algoritmo)'); };
                 }
-                $attempts[] = function() use ($fac, $certificadoPath, $contrasena) { $fac->sign($certificadoPath, $contrasena); };
-                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $fac->sign($encryptedStore, $contrasena); };
+                $attempts[] = function() use ($fac, $certificadoPath, $contrasena) { $r=$fac->sign($certificadoPath, $contrasena); if ($r===false) throw new \Exception('sign() devolvió false (ruta)'); };
+                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $r=$fac->sign($encryptedStore, $contrasena); if ($r===false) throw new \Exception('sign() devolvió false (contenido)'); };
                 // Último recurso legacy
-                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $fac->sign($encryptedStore, null, $contrasena, 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'); };
+                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $r=$fac->sign($encryptedStore, null, $contrasena, 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'); if ($r===false) throw new \Exception('sign() devolvió false (legacy 4 parámetros)'); };
                 // Intento alternativo: API basada en setCertificate() + sign() sin argumentos
                 $attempts[] = function() use ($fac, $certificadoPath, $contrasena) {
                     if (method_exists($fac, 'setCertificate')) {
                         $fac->setCertificate($certificadoPath, $contrasena);
-                        $fac->sign();
+                        $r=$fac->sign();
+                        if ($r===false) throw new \Exception('sign() devolvió false tras setCertificate()');
                     } else {
                         throw new \Exception('Método setCertificate no disponible');
                     }
