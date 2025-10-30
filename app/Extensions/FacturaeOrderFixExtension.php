@@ -109,6 +109,7 @@ class FacturaeOrderFixExtension
             // Buscar los elementos
             $itemsElement = null;
             $taxesOutputsElement = null;
+            $taxesWithheldElement = null;
             $invoiceTotalsElement = null;
             $invoiceIssueDataElement = null;
 
@@ -116,10 +117,12 @@ class FacturaeOrderFixExtension
                 if ($child->nodeType === XML_ELEMENT_NODE) {
                     $tagName = $child->localName ?? $child->nodeName;
                     
-                    if ($tagName === 'Items') {
+                            if ($tagName === 'Items') {
                         $itemsElement = $child;
                     } elseif ($tagName === 'TaxesOutputs') {
                         $taxesOutputsElement = $child;
+                            } elseif ($tagName === 'TaxesWithheld') {
+                                $taxesWithheldElement = $child;
                     } elseif ($tagName === 'InvoiceTotals') {
                         $invoiceTotalsElement = $child;
                     } elseif ($tagName === 'InvoiceIssueData') {
@@ -161,16 +164,19 @@ class FacturaeOrderFixExtension
             // Obtener las posiciones actuales
             $itemsPosition = -1;
             $taxesOutputsPosition = -1;
+            $taxesWithheldPosition = -1;
             $totalsPosition = -1;
             $position = 0;
             
             foreach ($invoiceElement->childNodes as $child) {
                 if ($child->nodeType === XML_ELEMENT_NODE) {
                     $tagName = $child->localName ?? $child->nodeName;
-                    if ($tagName === 'Items') {
+                            if ($tagName === 'Items') {
                         $itemsPosition = $position;
                     } elseif ($tagName === 'TaxesOutputs') {
                         $taxesOutputsPosition = $position;
+                            } elseif ($tagName === 'TaxesWithheld') {
+                                $taxesWithheldPosition = $position;
                     } elseif ($tagName === 'InvoiceTotals') {
                         $totalsPosition = $position;
                     }
@@ -245,10 +251,12 @@ class FacturaeOrderFixExtension
             \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Estado de elementos', [
                 'items_position' => $itemsPosition,
                 'taxesOutputs_position' => $taxesOutputsPosition,
+                'taxesWithheld_position' => $taxesWithheldPosition,
                 'totals_position' => $totalsPosition,
                 'necesitaReordenar' => $necesitaReordenar,
                 'tiene_items' => $itemsElement !== null,
                 'tiene_taxesOutputs' => $taxesOutputsElement !== null,
+                'tiene_taxesWithheld' => $taxesWithheldElement !== null,
                 'tiene_invoiceTotals' => $invoiceTotalsElement !== null
             ]);
             
@@ -302,6 +310,14 @@ class FacturaeOrderFixExtension
                     $nodesToReorder['invoiceTotals'] = $invoiceTotalsElement;
                     $invoiceElement->removeChild($invoiceTotalsElement);
                 }
+                if ($taxesWithheldElement) {
+                    if ($taxesWithheldElement->parentNode === $invoiceElement) {
+                        $nodesToReorder['taxesWithheld'] = $taxesWithheldElement;
+                        $invoiceElement->removeChild($taxesWithheldElement);
+                    } else {
+                        $nodesToReorder['taxesWithheld'] = $taxesWithheldElement;
+                    }
+                }
 
                 // Reinsertar en el orden correcto según el esquema:
                 // InvoiceIssueData -> TaxesOutputs -> Items -> InvoiceTotals
@@ -353,7 +369,19 @@ class FacturaeOrderFixExtension
                     \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: TaxesOutputs insertado después de InvoiceIssueData');
                 }
                 
-                // 2. Insertar InvoiceTotals después de TaxesOutputs (o después de InvoiceIssueData si no hay TaxesOutputs)
+                // 2. Insertar TaxesWithheld (si existe) después de TaxesOutputs
+                if (isset($nodesToReorder['taxesWithheld']) && $insertionPoint) {
+                    if ($nextAfterInsertion) {
+                        $invoiceElement->insertBefore($nodesToReorder['taxesWithheld'], $nextAfterInsertion);
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['taxesWithheld']);
+                    }
+                    $insertionPoint = $nodesToReorder['taxesWithheld'];
+                    $nextAfterInsertion = $findNextElement($insertionPoint);
+                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: TaxesWithheld insertado');
+                }
+
+                // 3. Insertar InvoiceTotals después de TaxesOutputs/TaxesWithheld (o después de InvoiceIssueData si no hay)
                 if (isset($nodesToReorder['invoiceTotals']) && $insertionPoint) {
                     if ($nextAfterInsertion) {
                         $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $nextAfterInsertion);
@@ -377,7 +405,7 @@ class FacturaeOrderFixExtension
                     \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: InvoiceTotals insertado directamente después de InvoiceIssueData (sin TaxesOutputs)');
                 }
                 
-                // 3. Insertar Items después de InvoiceTotals (último)
+                // 4. Insertar Items después de InvoiceTotals (último)
                 if (isset($nodesToReorder['items']) && $insertionPoint) {
                     if ($nextAfterInsertion) {
                         $invoiceElement->insertBefore($nodesToReorder['items'], $nextAfterInsertion);
