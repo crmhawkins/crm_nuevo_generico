@@ -353,38 +353,38 @@ class FacturaeOrderFixExtension
                     \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: TaxesOutputs insertado después de InvoiceIssueData');
                 }
                 
-                // 2. Insertar Items después de TaxesOutputs (o después de InvoiceIssueData si no hay TaxesOutputs)
-                if (isset($nodesToReorder['items']) && $insertionPoint) {
-                    if ($nextAfterInsertion) {
-                        $invoiceElement->insertBefore($nodesToReorder['items'], $nextAfterInsertion);
-                    } else {
-                        $invoiceElement->appendChild($nodesToReorder['items']);
-                    }
-                    // Actualizar el punto de inserción para el siguiente elemento
-                    $insertionPoint = $nodesToReorder['items'];
-                    $nextAfterInsertion = $findNextElement($insertionPoint);
-                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Items insertado después de TaxesOutputs');
-                } elseif (isset($nodesToReorder['items']) && $invoiceIssueDataElement) {
-                    // Si no hay TaxesOutputs, insertar Items directamente después de InvoiceIssueData
-                    $nextAfterIssueData = $findNextElement($invoiceIssueDataElement);
-                    if ($nextAfterIssueData) {
-                        $invoiceElement->insertBefore($nodesToReorder['items'], $nextAfterIssueData);
-                    } else {
-                        $invoiceElement->appendChild($nodesToReorder['items']);
-                    }
-                    $insertionPoint = $nodesToReorder['items'];
-                    $nextAfterInsertion = $findNextElement($insertionPoint);
-                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Items insertado directamente después de InvoiceIssueData (sin TaxesOutputs)');
-                }
-                
-                // 3. Insertar InvoiceTotals después de Items (último)
+                // 2. Insertar InvoiceTotals después de TaxesOutputs (o después de InvoiceIssueData si no hay TaxesOutputs)
                 if (isset($nodesToReorder['invoiceTotals']) && $insertionPoint) {
                     if ($nextAfterInsertion) {
                         $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $nextAfterInsertion);
                     } else {
                         $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
                     }
-                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: InvoiceTotals insertado después de Items');
+                    // Actualizar el punto de inserción para el siguiente elemento
+                    $insertionPoint = $nodesToReorder['invoiceTotals'];
+                    $nextAfterInsertion = $findNextElement($insertionPoint);
+                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: InvoiceTotals insertado después de TaxesOutputs/InvoiceIssueData');
+                } elseif (isset($nodesToReorder['invoiceTotals']) && $invoiceIssueDataElement) {
+                    // Si no hay TaxesOutputs, insertar InvoiceTotals directamente después de InvoiceIssueData
+                    $nextAfterIssueData = $findNextElement($invoiceIssueDataElement);
+                    if ($nextAfterIssueData) {
+                        $invoiceElement->insertBefore($nodesToReorder['invoiceTotals'], $nextAfterIssueData);
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['invoiceTotals']);
+                    }
+                    $insertionPoint = $nodesToReorder['invoiceTotals'];
+                    $nextAfterInsertion = $findNextElement($insertionPoint);
+                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: InvoiceTotals insertado directamente después de InvoiceIssueData (sin TaxesOutputs)');
+                }
+                
+                // 3. Insertar Items después de InvoiceTotals (último)
+                if (isset($nodesToReorder['items']) && $insertionPoint) {
+                    if ($nextAfterInsertion) {
+                        $invoiceElement->insertBefore($nodesToReorder['items'], $nextAfterInsertion);
+                    } else {
+                        $invoiceElement->appendChild($nodesToReorder['items']);
+                    }
+                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Items insertado después de InvoiceTotals');
                 }
             }
 
