@@ -809,8 +809,20 @@ class InvoiceController extends Controller
 
             // Firmar la factura (XAdES-EPES al haber política) con SHA-256
             try {
-                // Usar la firma soportada por la librería: certificado (PFX), contraseña y algoritmo
-                $fac->sign($encryptedStore, $contrasena, Facturae::SIGN_ALGORITHM_RSA_SHA256);
+                // Detectar en tiempo de ejecución las constantes soportadas por la versión instalada
+                $algo = null;
+                if (defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_RSA_SHA256')) {
+                    $algo = \josemmo\Facturae\Facturae::SIGN_ALGORITHM_RSA_SHA256;
+                } elseif (defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_SHA256')) {
+                    $algo = \josemmo\Facturae\Facturae::SIGN_ALGORITHM_SHA256;
+                }
+
+                if ($algo !== null) {
+                    $fac->sign($encryptedStore, $contrasena, $algo);
+                } else {
+                    // Fallback compatible: firmar con la configuración por defecto de la librería
+                    $fac->sign($encryptedStore, $contrasena);
+                }
             } catch (\Exception $e) {
                 return response()->json([
                     'error' => 'Error al firmar la factura electrónica: ' . $e->getMessage() . '. Verifique que el certificado y la contraseña sean correctos.',
