@@ -128,6 +128,18 @@ class FacturaeOrderFixExtension
                 }
             }
 
+            // Normalizar TaxesOutputs: si tiene namespace/prefijo, reemplazar por uno sin namespace
+            if ($taxesOutputsElement && ($taxesOutputsElement->prefix || $taxesOutputsElement->namespaceURI)) {
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Normalizando TaxesOutputs (quitando namespace/prefijo)');
+                $newTaxes = $dom->createElement('TaxesOutputs');
+                // Insertar el nuevo antes del antiguo para mantener posición
+                if ($taxesOutputsElement->parentNode === $invoiceElement) {
+                    $invoiceElement->insertBefore($newTaxes, $taxesOutputsElement);
+                    $invoiceElement->removeChild($taxesOutputsElement);
+                    $taxesOutputsElement = $newTaxes;
+                }
+            }
+
             // TaxesOutputs es OBLIGATORIO según el esquema, incluso si está vacío
             // Si no existe, debemos crearlo vacío ANTES de Items
             $taxesOutputsCreado = false;
