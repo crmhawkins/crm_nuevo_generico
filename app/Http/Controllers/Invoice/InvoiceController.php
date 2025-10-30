@@ -467,7 +467,7 @@ class InvoiceController extends Controller
                             // Hash de referencia conocido para la política 3.2 (base64, SHA-1)
                             // FACe acepta firma SHA-256 con hash de política en SHA-1
                             'value' => 'Ohixl6upD6av8N7pEvDABhEL6hM=',
-                            'method' => 'sha1'
+                            'method' => Facturae::DIGEST_SHA1
                         ]
                     ];
                     \call_user_func([$fac, 'setSignaturePolicy'], $policy);
@@ -809,8 +809,8 @@ class InvoiceController extends Controller
 
             // Firmar la factura (XAdES-EPES al haber política) con SHA-256
             try {
-                $rsaSha256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
-                $fac->sign($encryptedStore, null, $contrasena, $rsaSha256);
+                // Usar la firma soportada por la librería: certificado (PFX), contraseña y algoritmo
+                $fac->sign($encryptedStore, $contrasena, Facturae::SIGN_ALGORITHM_RSA_SHA256);
             } catch (\Exception $e) {
                 return response()->json([
                     'error' => 'Error al firmar la factura electrónica: ' . $e->getMessage() . '. Verifique que el certificado y la contraseña sean correctos.',
@@ -820,9 +820,9 @@ class InvoiceController extends Controller
 
             // Exportar la factura (la extensión corregirá el orden antes de firmar)
             try {
-        $fac->export($numero.'-'.$serie.".xsig");
-
-        $filePath = public_path($numero.'-'.$serie.".xsig");
+                // Exportar directamente a public_path para que luego podamos descargarlo
+                $filePath = public_path($numero.'-'.$serie.".xsig");
+                $fac->export($filePath);
 
                 // Verificar que el archivo se generó
                 if (!file_exists($filePath)) {

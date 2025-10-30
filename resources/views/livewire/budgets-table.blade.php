@@ -67,6 +67,7 @@
                             'reference' => 'REFERENCIA',
                             'client_id' => 'CLIENTE',
                             'creation_date' => 'FECHA CREACION',
+                            'budget_status_id' => 'ESTADO',
                             'base' => 'SUB TOTAL',
                             'iva' => 'IVA',
                             'retencion' => 'RETENCIÓN',
@@ -91,6 +92,7 @@
                             <td>{{$budget->reference}}</td>
                             <td>{{$budget->cliente->name ??  ($budget->client_id ? 'Cliente borrado' : 'Sin cliente asignado') }}</td>
                             <td>{{$budget->creation_date}}</td>
+                            <td>{{ $budget->estadoPresupuesto->name ?? ($budget->budget_status_id ? 'Estado borrado' : 'Sin estado') }}</td>
                             <td>{{ number_format((float)$budget->base, 2, '.', '')  }} €</td>
                             <td>{{ number_format((float)$budget->iva, 2, '.', '')  }} €</td>
                             <td>{{ number_format((float)$budget->retencion, 2, '.', '')  }} €</td>
@@ -106,7 +108,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5"></td>
+                        <td colspan="6"></td>
                         <th>Sumatorio:</th>
                         <td>{{number_format((float)$budgets->sum('total'), 2, '.', '') }}€</td>
                         <td colspan="2"></td>
