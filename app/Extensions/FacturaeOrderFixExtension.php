@@ -128,10 +128,22 @@ class FacturaeOrderFixExtension
                 }
             }
 
-            // TaxesOutputs solo existe si la biblioteca lo creó (cuando hay impuestos)
-            // No crearemos TaxesOutputs vacío porque causa problemas de namespace
-            // Si no existe, simplemente reordenaremos los elementos existentes
+            // TaxesOutputs es OBLIGATORIO según el esquema, incluso si está vacío
+            // Si no existe, debemos crearlo vacío ANTES de Items
             $taxesOutputsCreado = false;
+            if (!$taxesOutputsElement && ($itemsElement || $invoiceTotalsElement)) {
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Creando TaxesOutputs vacío (requerido por el esquema)');
+                
+                // Obtener el namespace del Invoice para crear el elemento con el mismo namespace
+                $namespaceURI = $invoiceElement->namespaceURI ?? 'http://www.facturae.es/Facturae/2014/v3.2.1/Facturae';
+                
+                // Crear TaxesOutputs vacío usando el mismo namespace que Invoice
+                $taxesOutputsElement = $dom->createElementNS($namespaceURI, 'TaxesOutputs');
+                
+                // No agregar contenido, está vacío
+                $taxesOutputsCreado = true;
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: TaxesOutputs vacío creado correctamente');
+            }
 
             // Obtener las posiciones actuales
             $itemsPosition = -1;
@@ -261,9 +273,16 @@ class FacturaeOrderFixExtension
                     $invoiceElement->removeChild($itemsElement);
                 }
                 
-                if ($taxesOutputsElement && $taxesOutputsElement->parentNode === $invoiceElement) {
-                    $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
-                    $invoiceElement->removeChild($taxesOutputsElement);
+                // TaxesOutputs: remover si ya existe, o usar el creado si es nuevo
+                if ($taxesOutputsElement) {
+                    if ($taxesOutputsElement->parentNode === $invoiceElement) {
+                        // Si ya existía y tiene parent, removerlo
+                        $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
+                        $invoiceElement->removeChild($taxesOutputsElement);
+                    } else {
+                        // Si es nuevo (creado por nosotros), agregarlo al array sin removerlo
+                        $nodesToReorder['taxesOutputs'] = $taxesOutputsElement;
+                    }
                 }
                 
                 if ($invoiceTotalsElement->parentNode === $invoiceElement) {
