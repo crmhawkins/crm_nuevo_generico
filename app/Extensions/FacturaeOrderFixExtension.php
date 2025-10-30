@@ -388,6 +388,80 @@ class FacturaeOrderFixExtension
                 }
             }
 
+            // Asegurar que TaxesOutputs de factura tenga al menos un Tax (el XSD lo exige)
+            if ($taxesOutputsElement) {
+                $hasTaxChild = false;
+                foreach ($taxesOutputsElement->childNodes as $txChild) {
+                    if ($txChild->nodeType === XML_ELEMENT_NODE && ($txChild->localName ?? $txChild->nodeName) === 'Tax') {
+                        $hasTaxChild = true;
+                        break;
+                    }
+                }
+                if (!$hasTaxChild) {
+                    \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: Agregando Tax 0% a TaxesOutputs de factura por estar vacío');
+                    $taxNode = $dom->createElement('Tax');
+                    $taxNode->appendChild($dom->createElement('TaxTypeCode', '01'));
+                    $taxNode->appendChild($dom->createElement('TaxRate', '0'));
+                    $taxableBase = $dom->createElement('TaxableBase');
+                    $taxableBase->appendChild($dom->createElement('TotalAmount', '0'));
+                    $taxNode->appendChild($taxableBase);
+                    $taxAmount = $dom->createElement('TaxAmount');
+                    $taxAmount->appendChild($dom->createElement('TotalAmount', '0'));
+                    $taxNode->appendChild($taxAmount);
+                    $taxesOutputsElement->appendChild($taxNode);
+                }
+            }
+
+            // Asegurar que cada línea tenga TaxesOutputs con al menos un Tax 0 y en el orden correcto
+            if ($itemsElement) {
+                foreach ($itemsElement->childNodes as $lineNode) {
+                    if ($lineNode->nodeType !== XML_ELEMENT_NODE) continue;
+                    $tagName = $lineNode->localName ?? $lineNode->nodeName;
+                    if ($tagName !== 'InvoiceLine') continue;
+
+                    $grossAmountNode = null;
+                    $taxesWithheldNode = null;
+                    $lineTaxesOutputs = null;
+
+                    foreach ($lineNode->childNodes as $lnChild) {
+                        if ($lnChild->nodeType !== XML_ELEMENT_NODE) continue;
+                        $lnName = $lnChild->localName ?? $lnChild->nodeName;
+                        if ($lnName === 'GrossAmount') $grossAmountNode = $lnChild;
+                        elseif ($lnName === 'TaxesWithheld') $taxesWithheldNode = $lnChild;
+                        elseif ($lnName === 'TaxesOutputs') $lineTaxesOutputs = $lnChild;
+                    }
+
+                    if (!$lineTaxesOutputs) {
+                        // Crear TaxesOutputs con Tax 0
+                        $lineTaxesOutputs = $dom->createElement('TaxesOutputs');
+                        $taxNode = $dom->createElement('Tax');
+                        $taxNode->appendChild($dom->createElement('TaxTypeCode', '01'));
+                        $taxNode->appendChild($dom->createElement('TaxRate', '0'));
+                        $taxableBase = $dom->createElement('TaxableBase');
+                        $taxableBase->appendChild($dom->createElement('TotalAmount', '0'));
+                        $taxNode->appendChild($taxableBase);
+                        $taxAmount = $dom->createElement('TaxAmount');
+                        $taxAmount->appendChild($dom->createElement('TotalAmount', '0'));
+                        $taxNode->appendChild($taxAmount);
+                        $lineTaxesOutputs->appendChild($taxNode);
+
+                        // Insertar después de TaxesWithheld si existe, si no después de GrossAmount
+                        if ($taxesWithheldNode) {
+                            $ref = $taxesWithheldNode->nextSibling;
+                            while ($ref && $ref->nodeType !== XML_ELEMENT_NODE) $ref = $ref->nextSibling;
+                            if ($ref) $lineNode->insertBefore($lineTaxesOutputs, $ref); else $lineNode->appendChild($lineTaxesOutputs);
+                        } elseif ($grossAmountNode) {
+                            $ref = $grossAmountNode->nextSibling;
+                            while ($ref && $ref->nodeType !== XML_ELEMENT_NODE) $ref = $ref->nextSibling;
+                            if ($ref) $lineNode->insertBefore($lineTaxesOutputs, $ref); else $lineNode->appendChild($lineTaxesOutputs);
+                        } else {
+                            $lineNode->appendChild($lineTaxesOutputs);
+                        }
+                        \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: TaxesOutputs (0%) insertado en línea de factura');
+                    }
+                }
+            }
+
             // Verificar el orden final después del reordenamiento
             if ($necesitaReordenar) {
                 $finalPositions = [];
