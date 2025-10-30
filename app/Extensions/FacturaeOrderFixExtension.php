@@ -495,6 +495,15 @@ class FacturaeOrderFixExtension
                 'xml_preview' => $xmlPreview,
                 'xml_length' => strlen($xmlCorregido)
             ]);
+
+            // Guardar el XML completo para inspección (ruta de almacenamiento local)
+            try {
+                $debugPath = storage_path('app/facturae_last.xml');
+                @file_put_contents($debugPath, $xmlCorregido);
+                \Illuminate\Support\Facades\Log::info('FacturaeOrderFixExtension: XML guardado para depuración', [ 'path' => $debugPath ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('FacturaeOrderFixExtension: No se pudo guardar XML de depuración', [ 'error' => $e->getMessage() ]);
+            }
             
             return $xmlCorregido;
 
