@@ -454,6 +454,22 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
+                // Forzar OpenSSL con proveedor 'legacy' en entornos OpenSSL 3 (necesario para algunos P12 antiguos)
+                try {
+                    $opensslCnf = storage_path('app/openssl_legacy.cnf');
+                    if (!file_exists($opensslCnf)) {
+                        $cnf = "openssl_conf = openssl_init\n\n[openssl_init]\nproviders = provider_sect\n\n[provider_sect]\ndefault = default_sect\nlegacy = legacy_sect\n\n[default_sect]\nactivate = 1\n\n[legacy_sect]\nactivate = 1\n";
+                        @file_put_contents($opensslCnf, $cnf);
+                    }
+                    if (file_exists($opensslCnf)) {
+                        @putenv('OPENSSL_CONF=' . $opensslCnf);
+                        // Ruta por defecto en Debian/Ubuntu; si no existe, OpenSSL usará la suya
+                        @putenv('OPENSSL_MODULES=/usr/lib/x86_64-linux-gnu/ossl-modules');
+                    }
+                } catch (\Throwable $e) {
+                    // No bloquear si falla; solo optimiza compatibilidad
+                }
+
                 // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
                 $fac = new Facturae(Facturae::SCHEMA_3_2_1);
 
@@ -809,9 +825,6 @@ class InvoiceController extends Controller
 
             // Firmar la factura (XAdES-EPES al haber política) con SHA-256
             try {
-                // En esta versión la librería puede esperar RUTA del PFX. Usamos $certificadoPath.
-                $pfxInput = $certificadoPath;
-
                 // Detectar en tiempo de ejecución las constantes soportadas por la versión instalada
                 $algo = null;
                 if (defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_RSA_SHA256')) {
@@ -820,11 +833,31 @@ class InvoiceController extends Controller
                     $algo = \josemmo\Facturae\Facturae::SIGN_ALGORITHM_SHA256;
                 }
 
+                $lastError = null;
+                $attempts = [];
                 if ($algo !== null) {
-                    $fac->sign($pfxInput, $contrasena, $algo);
-                } else {
-                    // Fallback compatible: firmar con la configuración por defecto de la librería
-                    $fac->sign($pfxInput, $contrasena);
+                    $attempts[] = function() use ($fac, $certificadoPath, $contrasena, $algo) { $fac->sign($certificadoPath, $contrasena, $algo); };
+                    $attempts[] = function() use ($fac, $encryptedStore, $contrasena, $algo) { $fac->sign($encryptedStore, $contrasena, $algo); };
+                }
+                $attempts[] = function() use ($fac, $certificadoPath, $contrasena) { $fac->sign($certificadoPath, $contrasena); };
+                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $fac->sign($encryptedStore, $contrasena); };
+                // Último recurso legacy
+                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $fac->sign($encryptedStore, null, $contrasena, 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'); };
+
+                $signed = false;
+                foreach ($attempts as $trySign) {
+                    try {
+                        $trySign();
+                        $signed = true;
+                        break;
+                    } catch (\Throwable $te) {
+                        $lastError = $te->getMessage();
+                        continue;
+                    }
+                }
+
+                if (!$signed) {
+                    throw new \Exception($lastError ?: 'No se pudo firmar con ninguno de los métodos compatibles.');
                 }
             } catch (\Exception $e) {
                 return response()->json([
