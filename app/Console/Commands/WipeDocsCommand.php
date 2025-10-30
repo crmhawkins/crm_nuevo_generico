@@ -35,9 +35,7 @@ class WipeDocsCommand extends Command
         }
 
         try {
-            DB::beginTransaction();
-
-            // Desactivar checks (MySQL/MariaDB)
+            // Desactivar checks (MySQL/MariaDB). TRUNCATE hace commit implícito; no usar transacciones aquí
             try { DB::statement('SET FOREIGN_KEY_CHECKS=0'); } catch (\Throwable $e) {}
 
             // Limpiar tablas de facturas primero
@@ -51,7 +49,6 @@ class WipeDocsCommand extends Command
             // Rehabilitar checks
             try { DB::statement('SET FOREIGN_KEY_CHECKS=1'); } catch (\Throwable $e) {}
 
-            DB::commit();
             $this->info('Tablas de Pre-facturas y Facturas vaciadas correctamente.');
 
             // Eliminar PDFs/temporales relacionados (no crítico si no existen)
@@ -62,7 +59,6 @@ class WipeDocsCommand extends Command
             $this->info('Directorios de PDFs temporales eliminados.');
             return self::SUCCESS;
         } catch (\Throwable $e) {
-            DB::rollBack();
             $this->error('Error al borrar documentos: ' . $e->getMessage());
             return self::FAILURE;
         }
