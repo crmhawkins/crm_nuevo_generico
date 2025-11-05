@@ -103,17 +103,8 @@ class ApiController extends Controller
                 ], 400);
             }
             
-            // Verificar que haya al menos 3 usuarios
-            if ($todosLosUsuarios->count() < 3) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Se necesitan al menos 3 usuarios activos para generar logs',
-                    'logs_existentes' => $countLogs
-                ], 400);
-            }
-            
-            // Seleccionar 3 usuarios aleatorios
-            $usuarios = $todosLosUsuarios->random(3);
+            // Usar todos los usuarios disponibles (sin importar la cantidad)
+            $usuarios = $todosLosUsuarios;
             
             // Acción principal (80% de probabilidad)
             $accionPrincipal = ['action' => 'Inicio de sesión', 'description' => 'El usuario ha iniciado sesión'];
