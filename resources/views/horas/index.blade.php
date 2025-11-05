@@ -202,7 +202,7 @@
         padding: 30px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        overflow: hidden;
+        overflow: visible; /* Permitir que modales floten fuera del contenedor */
     }
     
     .modern-table {
@@ -373,6 +373,12 @@
         color: white;
         border-color: #667eea;
     }
+    /* Asegurar que los modales siempre queden por encima y centrados */
+    .modal { z-index: 2000; }
+    .modal-backdrop { z-index: 1990; }
+    @media (min-height: 500px) {
+        .modal-dialog { margin-top: 10vh; }
+    }
     
     /* Responsive */
     @media (max-width: 768px) {
@@ -520,6 +526,7 @@
                                 <th><i class="fas fa-pause me-2"></i>Tiempo Pausa</th>
                                 <th><i class="fas fa-stopwatch me-2"></i>Pausas</th>
                                 <th><i class="fas fa-info-circle me-2"></i>Estado</th>
+                                <th><i class="fas fa-cog me-2"></i>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -670,12 +677,78 @@
                                         {{ ucfirst($fichaje->estado) }}
                                     </span>
                                 </td>
+                                <td>
+                                    <div class="d-inline-flex gap-2">
+                                        <button type="button" class="btn-modern btn-primary-modern" data-bs-toggle="modal" data-bs-target="#editFichaje{{ $fichaje->id }}">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </button>
+                                        <button type="button" class="btn-modern btn-success-modern" data-bs-toggle="modal" data-bs-target="#deleteFichaje{{ $fichaje->id }}">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-                
+
+                {{-- Modales fuera de la tabla para evitar problemas de posicionamiento --}}
+                @foreach($fichajes as $fichaje)
+                    <div class="modal fade" id="editFichaje{{ $fichaje->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Jornada</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="{{ route('users.jornadas.update', ['userId' => $fichaje->user_id, 'fichaje' => $fichaje->id]) }}" method="POST">
+                                    @csrf
+                                    <div class="modal-body">
+                                        <div class="mb-3 text-start">
+                                            <label class="form-label">Fecha</label>
+                                            <input type="date" name="fecha" class="form-control" value="{{ $fichaje->fecha->format('Y-m-d') }}" required>
+                                        </div>
+                                        <div class="mb-3 text-start">
+                                            <label class="form-label">Hora entrada</label>
+                                            <input type="time" step="1" name="hora_entrada" class="form-control" value="{{ $fichaje->hora_entrada ? $fichaje->hora_entrada->format('H:i:s') : '' }}">
+                                        </div>
+                                        <div class="mb-3 text-start">
+                                            <label class="form-label">Hora salida</label>
+                                            <input type="time" step="1" name="hora_salida" class="form-control" value="{{ $fichaje->hora_salida ? $fichaje->hora_salida->format('H:i:s') : '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="deleteFichaje{{ $fichaje->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Eliminar Jornada</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="{{ route('users.jornadas.delete', ['userId' => $fichaje->user_id, 'fichaje' => $fichaje->id]) }}" method="POST">
+                                    @csrf
+                                    <div class="modal-body text-start">
+                                        <p>¿Seguro que deseas eliminar la jornada del <strong>{{ $fichaje->fecha->format('d/m/Y') }}</strong> de <strong>{{ $fichaje->user ? ($fichaje->user->name . ' ' . $fichaje->user->surname) : 'Usuario' }}</strong>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
                 {{-- Paginación --}}
                 <div class="pagination-modern">
                     {{ $fichajes->links() }}
@@ -696,6 +769,10 @@
 <script>
     // Animaciones suaves
     $(document).ready(function() {
+        // Forzar que todos los modales se muevan al <body> para evitar stacking contexts
+        $(document).on('show.bs.modal', '.modal', function () {
+            $(this).appendTo('body');
+        });
         // Animación de entrada para las cards
         $('.stat-card').each(function(index) {
             $(this).css('opacity', '0').css('transform', 'translateY(20px)');

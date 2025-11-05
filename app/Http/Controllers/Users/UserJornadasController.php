@@ -7,6 +7,7 @@ use App\Models\Fichaje;
 use App\Models\Users\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserJornadasController extends Controller
 {
@@ -40,6 +41,130 @@ class UserJornadasController extends Controller
         ));
     }
     
+    public function store(Request $request, $userId)
+    {
+        $usuario = User::findOrFail($userId);
+
+        $validated = $request->validate([
+            'fecha' => 'required|date',
+            'hora_entrada' => 'nullable|string',
+            'hora_salida' => 'nullable|string',
+        ], [
+            'fecha.required' => 'La fecha es obligatoria',
+            'fecha.date' => 'La fecha no es válida',
+        ]);
+
+        $fecha = Carbon::parse($validated['fecha'])->format('Y-m-d');
+        $entrada = !empty($validated['hora_entrada']) ? $this->parseHoraFlexible($fecha, $validated['hora_entrada']) : null;
+        $salida = !empty($validated['hora_salida']) ? $this->parseHoraFlexible($fecha, $validated['hora_salida']) : null;
+
+        if ($entrada && $salida && $salida->lt($entrada)) {
+            return back()->with('toast', [
+                'icon' => 'error',
+                'mensaje' => 'La hora de salida no puede ser menor que la de entrada'
+            ]);
+        }
+
+        $estado = 'entrada';
+        if ($salida) {
+            $estado = 'salida';
+        } elseif ($entrada) {
+            $estado = 'trabajando';
+        }
+
+        Fichaje::create([
+            'user_id' => $usuario->id,
+            'fecha' => $fecha,
+            'hora_entrada' => $entrada ? $entrada->format('H:i:s') : null,
+            'hora_salida' => $salida ? $salida->format('H:i:s') : null,
+            'estado' => $estado,
+        ]);
+
+        return redirect()->route('users.jornadas', $usuario->id)->with('toast', [
+            'icon' => 'success',
+            'mensaje' => 'La jornada se creó correctamente'
+        ]);
+    }
+
+    public function update(Request $request, $userId, $fichajeId)
+    {
+        $usuario = User::findOrFail($userId);
+        $fichaje = Fichaje::where('id', $fichajeId)->where('user_id', $usuario->id)->firstOrFail();
+
+        $validated = $request->validate([
+            'fecha' => 'required|date',
+            'hora_entrada' => 'nullable|string',
+            'hora_salida' => 'nullable|string',
+        ], [
+            'fecha.required' => 'La fecha es obligatoria',
+            'fecha.date' => 'La fecha no es válida',
+            'hora_entrada.string' => 'La hora de entrada no es válida',
+            'hora_salida.string' => 'La hora de salida no es válida',
+        ]);
+
+        // Construir datetimes en base a la fecha seleccionada
+        $fecha = Carbon::parse($validated['fecha'])->format('Y-m-d');
+        $entrada = null;
+        $salida = null;
+        if (!empty($validated['hora_entrada'])) {
+            $entrada = $this->parseHoraFlexible($fecha, $validated['hora_entrada']);
+        }
+        if (!empty($validated['hora_salida'])) {
+            $salida = $this->parseHoraFlexible($fecha, $validated['hora_salida']);
+        }
+
+        if ($entrada && $salida && $salida->lt($entrada)) {
+            return back()->with('toast', [
+                'icon' => 'error',
+                'mensaje' => 'La hora de salida no puede ser menor que la de entrada'
+            ]);
+        }
+
+        $fichaje->fecha = $fecha;
+        $fichaje->hora_entrada = $entrada;
+        $fichaje->hora_salida = $salida;
+        // Estado derivado simple
+        if ($salida) {
+            $fichaje->estado = 'salida';
+        } elseif ($entrada) {
+            // Mantener estado actual si ya estaba en pausa, sino trabajando
+            $fichaje->estado = $fichaje->estado === 'pausa' ? 'pausa' : 'trabajando';
+        }
+        $fichaje->save();
+
+        return redirect()->route('users.jornadas', $usuario->id)->with('toast', [
+            'icon' => 'success',
+            'mensaje' => 'La jornada se actualizó correctamente'
+        ]);
+    }
+
+    private function parseHoraFlexible(string $fecha, string $hora)
+    {
+        $hora = trim($hora);
+        $formatos = ['H:i:s', 'H:i', 'h:i:s A', 'h:i A'];
+        foreach ($formatos as $formato) {
+            try {
+                return Carbon::createFromFormat('Y-m-d ' . $formato, $fecha . ' ' . $hora);
+            } catch (\Exception $e) {
+                // probar siguiente formato
+            }
+        }
+        // Fallback al parser de Carbon
+        return Carbon::parse($fecha . ' ' . $hora);
+    }
+
+    public function destroy(Request $request, $userId, $fichajeId)
+    {
+        $usuario = User::findOrFail($userId);
+        $fichaje = Fichaje::where('id', $fichajeId)->where('user_id', $usuario->id)->firstOrFail();
+
+        $fichaje->delete(); // Pausas se eliminan por ON DELETE CASCADE
+
+        return redirect()->route('users.jornadas', $usuario->id)->with('toast', [
+            'icon' => 'success',
+            'mensaje' => 'La jornada fue eliminada correctamente'
+        ]);
+    }
     private function calcularEstadisticasUsuario($userId, $fechaInicio, $fechaFin)
     {
         $jornadas = Fichaje::where('user_id', $userId)

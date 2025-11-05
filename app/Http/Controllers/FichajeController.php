@@ -60,10 +60,18 @@ class FichajeController extends Controller
             }
             
             \Log::info('Buscando usuario con PIN: ' . $identificador);
+            // Primero encontrar por PIN e inactividad
             $user = User::where('pin', $identificador)
-                      ->where('pin_activo', true)
                       ->where('inactive', 0)
                       ->first();
+            
+            if ($user) {
+                // Si existe pero el PIN está desactivado, dar mensaje específico
+                if (!$user->pin_activo) {
+                    \Log::info('PIN encontrado pero desactivado para el usuario ID ' . $user->id);
+                    return back()->withErrors(['login' => 'PIN desactivado para este usuario'])->withInput();
+                }
+            }
             
             \Log::info('Usuario encontrado: ' . ($user ? 'Sí' : 'No'));
         } else {
@@ -108,13 +116,15 @@ class FichajeController extends Controller
         }
 
         $hoy = Carbon::today();
-        
-        // Obtener fichaje del día actual
-        $fichajeHoy = Fichaje::where('user_id', $user->id)
-                           ->where('fecha', $hoy)
-                           ->first();
-        
-        // Si no existe fichaje para hoy, crear uno
+        // 1) Intentar usar el fichaje activo (entrada != null y salida == null), independiente del día
+        $fichajeHoy = $this->getFichajeActivo($user->id);
+        // 2) Si no hay fichaje activo, asegurar que exista el de hoy
+        if (!$fichajeHoy) {
+            $fichajeHoy = Fichaje::where('user_id', $user->id)
+                ->where('fecha', $hoy)
+                ->first();
+        }
+        // 3) Si tampoco hay registro de hoy, crear uno nuevo
         if (!$fichajeHoy) {
             $fichajeHoy = Fichaje::create([
                 'user_id' => $user->id,
@@ -229,18 +239,11 @@ class FichajeController extends Controller
     public function ficharSalida(Request $request)
     {
         $user = Auth::user();
-        $hoy = Carbon::today();
+        // Tomar el fichaje activo sin depender del día
+        $fichaje = $this->getFichajeActivo($user->id);
         
-        $fichaje = Fichaje::where('user_id', $user->id)
-                         ->where('fecha', $hoy)
-                         ->first();
-        
-        if (!$fichaje || !$fichaje->hora_entrada) {
+        if (!$fichaje) {
             return response()->json(['success' => false, 'message' => 'No has fichado la entrada']);
-        }
-        
-        if ($fichaje->hora_salida) {
-            return response()->json(['success' => false, 'message' => 'Ya has fichado la salida']);
         }
         
         $fichaje->update([
@@ -254,13 +257,10 @@ class FichajeController extends Controller
     public function ficharPausa(Request $request)
     {
         $user = Auth::user();
-        $hoy = Carbon::today();
+        // Usar siempre el fichaje activo
+        $fichaje = $this->getFichajeActivo($user->id);
         
-        $fichaje = Fichaje::where('user_id', $user->id)
-                         ->where('fecha', $hoy)
-                         ->first();
-        
-        if (!$fichaje || !$fichaje->hora_entrada) {
+        if (!$fichaje) {
             return response()->json(['success' => false, 'message' => 'No has fichado la entrada']);
         }
         
@@ -326,6 +326,16 @@ class FichajeController extends Controller
             
             return response()->json(['success' => true, 'message' => 'Pausa iniciada']);
         }
+    }
+
+    private function getFichajeActivo(int $userId)
+    {
+        return Fichaje::where('user_id', $userId)
+            ->whereNotNull('hora_entrada')
+            ->whereNull('hora_salida')
+            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->first();
     }
     
     public function filtrarJornadas(Request $request)

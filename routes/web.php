@@ -205,6 +205,12 @@ Route::post('/user/avatar/{id}', [UserController::class, 'avatar'])->name('users
 
 // Jornadas de Usuario
 Route::get('/users/{id}/jornadas', [\App\Http\Controllers\Users\UserJornadasController::class, 'index'])->name('users.jornadas');
+Route::post('/users/{userId}/jornadas', [\App\Http\Controllers\Users\UserJornadasController::class, 'store'])
+    ->name('users.jornadas.store');
+Route::post('/users/{userId}/jornadas/{fichaje}/update', [\App\Http\Controllers\Users\UserJornadasController::class, 'update'])
+    ->name('users.jornadas.update');
+Route::post('/users/{userId}/jornadas/{fichaje}/delete', [\App\Http\Controllers\Users\UserJornadasController::class, 'destroy'])
+    ->name('users.jornadas.delete');
 
 // Clients (CLIENTES)
 Route::get('/clients', [ClientController::class, 'index'])->name('clientes.index');

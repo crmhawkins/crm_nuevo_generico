@@ -119,6 +119,9 @@ class UserController extends Controller
           $data['role'] = 'Admin';
           $data['inactive'] = 0;
           $data['password'] = Hash::make($data['password']);
+          if (!empty($data['pin'])) {
+              $data['pin_activo'] = 1; // activar PIN en creación cuando se define
+          }
 
         //   dd($data);
           $usuarioCreado = User::create($data);
@@ -216,6 +219,9 @@ class UserController extends Controller
 
         $data['role'] = 'Admin';
         $data['inactive'] = 0;
+        if (!empty($data['pin'])) {
+            $data['pin_activo'] = 1; // asegurar PIN activo al actualizar
+        }
 
         $user->update($data);
 
