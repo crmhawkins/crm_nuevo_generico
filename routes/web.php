@@ -657,6 +657,9 @@ Route::prefix('fichaje')->group(function () {
     })->name('fichaje.index');
     
     Route::get('/login', [FichajeController::class, 'showLogin'])->name('fichaje.login');
+    Route::get('/csrf-token', function() {
+        return response()->json(['token' => csrf_token()]);
+    })->name('fichaje.csrf-token');
     Route::post('/login', [FichajeController::class, 'login'])->name('fichaje.login.post');
     Route::post('/logout', [FichajeController::class, 'logout'])->name('fichaje.logout');
     Route::get('/dashboard', [FichajeController::class, 'dashboard'])->name('fichaje.dashboard')->middleware('fichaje.auth');

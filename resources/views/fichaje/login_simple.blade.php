@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sistema de Fichaje - Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -140,7 +141,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('fichaje.login.post') }}">
+        <form method="POST" action="{{ route('fichaje.login.post') }}" id="loginForm">
             @csrf
             
             <!-- Selector de método -->
@@ -242,6 +243,49 @@
         
         // Enfoque automático en el PIN
         pinInput.focus();
+        
+        // Actualizar token CSRF periódicamente para evitar expiración
+        const loginForm = document.getElementById('loginForm');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        
+        // Función para actualizar el token CSRF
+        function actualizarTokenCSRF() {
+            fetch('{{ route("fichaje.csrf-token") }}', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Actualizar el meta tag
+                    csrfToken.setAttribute('content', data.token);
+                    // Actualizar el input del formulario
+                    const csrfInput = loginForm.querySelector('input[name="_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = data.token;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error al actualizar token CSRF:', error);
+            });
+        }
+        
+        // Actualizar token cada 4 minutos (antes de que expire a los 5 minutos)
+        setInterval(actualizarTokenCSRF, 240000); // 4 minutos
+        
+        // Manejar errores 419 en el formulario
+        loginForm.addEventListener('submit', function(e) {
+            // Asegurar que el token esté actualizado antes de enviar
+            const csrfInput = loginForm.querySelector('input[name="_token"]');
+            if (csrfInput && csrfToken) {
+                csrfInput.value = csrfToken.getAttribute('content');
+            }
+        });
     </script>
 </body>
 </html>

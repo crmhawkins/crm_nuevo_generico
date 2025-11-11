@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sistema de Fichaje - Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -413,9 +414,44 @@
 
             // Manejo del envío del formulario
             loginForm.addEventListener('submit', function(e) {
+                // Asegurar que el token esté actualizado antes de enviar
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                const csrfInput = loginForm.querySelector('input[name="_token"]');
+                if (csrfInput && csrfToken) {
+                    csrfInput.value = csrfToken.getAttribute('content');
+                }
+                
                 loginBtn.classList.add('loading');
                 loginBtn.disabled = true;
             });
+            
+            // Actualizar token periódicamente cada 4 minutos (antes de que expire)
+            setInterval(function() {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                fetch('{{ route("fichaje.csrf-token") }}', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.token) {
+                        // Actualizar el meta tag
+                        csrfToken.setAttribute('content', data.token);
+                        // Actualizar el input del formulario
+                        const csrfInput = loginForm.querySelector('input[name="_token"]');
+                        if (csrfInput) {
+                            csrfInput.value = data.token;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al actualizar token CSRF:', error);
+                });
+            }, 240000); // 4 minutos
 
             // Efectos de hover en botones
             methodBtns.forEach(btn => {
