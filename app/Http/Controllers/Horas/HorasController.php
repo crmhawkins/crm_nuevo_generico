@@ -103,7 +103,7 @@ class HorasController extends Controller
 
                     $arrayUsuarios[] = [
                         'usuario' => $usuario->name.' '.$usuario->surname ,
-                        'departamento' => $usuario->departamento->name,
+                    'departamento' => $usuario->departamento->name,
                         'vacaciones' => $vacaciones,
                         'puntualidad' => $puntualidad,
                         'baja' => $baja,

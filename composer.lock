@@ -2351,16 +2351,16 @@
         },
         {
             "name": "josemmo/facturae-php",
-            "version": "v1.8.1",
+            "version": "v1.8.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/josemmo/Facturae-PHP.git",
-                "reference": "c7f01f5d00a82bcaa1bdb9cfe7029cc7d8296fc4"
+                "reference": "f4099c9479fb770bd03f9c559c054c0fea86fa44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/josemmo/Facturae-PHP/zipball/c7f01f5d00a82bcaa1bdb9cfe7029cc7d8296fc4",
-                "reference": "c7f01f5d00a82bcaa1bdb9cfe7029cc7d8296fc4",
+                "url": "https://api.github.com/repos/josemmo/Facturae-PHP/zipball/f4099c9479fb770bd03f9c559c054c0fea86fa44",
+                "reference": "f4099c9479fb770bd03f9c559c054c0fea86fa44",
                 "shasum": ""
             },
             "require": {
@@ -2402,9 +2402,9 @@
             ],
             "support": {
                 "issues": "https://github.com/josemmo/Facturae-PHP/issues",
-                "source": "https://github.com/josemmo/Facturae-PHP/tree/v1.8.1"
+                "source": "https://github.com/josemmo/Facturae-PHP/tree/v1.8.3"
             },
-            "time": "2024-06-16T10:13:36+00:00"
+            "time": "2025-06-22T08:30:43+00:00"
         },
         {
             "name": "laravel-views/laravel-views",
@@ -12333,12 +12333,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.1"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

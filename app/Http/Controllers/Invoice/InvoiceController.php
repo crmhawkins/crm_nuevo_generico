@@ -455,6 +455,7 @@ class InvoiceController extends Controller
             }
 
                 // Forzar OpenSSL con proveedor 'legacy' en entornos OpenSSL 3 (necesario para algunos P12 antiguos)
+                // Este error es crítico: error:0308010C:digital envelope routines::unsupported
                 try {
                     $opensslCnf = storage_path('app/openssl_legacy.cnf');
                     if (!file_exists($opensslCnf)) {
@@ -462,34 +463,44 @@ class InvoiceController extends Controller
                         @file_put_contents($opensslCnf, $cnf);
                     }
                     if (file_exists($opensslCnf)) {
+                        // Configurar OpenSSL ANTES de cualquier llamada
+                        $oldOpenSslConf = getenv('OPENSSL_CONF');
                         @putenv('OPENSSL_CONF=' . $opensslCnf);
-                        // Ruta por defecto en Debian/Ubuntu; si no existe, OpenSSL usará la suya
-                        @putenv('OPENSSL_MODULES=/usr/lib/x86_64-linux-gnu/ossl-modules');
+                        
+                        // Intentar múltiples rutas posibles para los módulos
+                        $possibleModulePaths = [
+                            '/usr/lib/x86_64-linux-gnu/ossl-modules',
+                            '/usr/lib/ossl-modules',
+                            '/usr/local/lib/ossl-modules',
+                        ];
+                        
+                        foreach ($possibleModulePaths as $modulePath) {
+                            if (is_dir($modulePath)) {
+                                @putenv('OPENSSL_MODULES=' . $modulePath);
+                                break;
+                            }
+                        }
+                        
+                        // Verificar que la configuración se aplicó
+                        Log::info('Configuración OpenSSL legacy aplicada', [
+                            'openssl_conf' => getenv('OPENSSL_CONF'),
+                            'openssl_modules' => getenv('OPENSSL_MODULES'),
+                            'openssl_version' => OPENSSL_VERSION_TEXT ?? 'unknown'
+                        ]);
                     }
                 } catch (\Throwable $e) {
-                    // No bloquear si falla; solo optimiza compatibilidad
+                    Log::warning('Error al configurar OpenSSL legacy', ['error' => $e->getMessage()]);
+                    // No bloquear si falla; intentaremos continuar
                 }
 
                 // Crear instancia de Facturae con versión 3.2.1 del esquema (compatible con validación FACE)
+                // Usando la librería tal como viene, sin modificaciones, ya que la documentación dice que es compatible con FACe
                 $fac = new Facturae(Facturae::SCHEMA_3_2_1);
-
-                // Establecer la política oficial de firma (XAdES-EPES) para Facturae 3.2.x
-                // Requerida por FACe: http://www.facturae.es/politica_de_firma_formato_facturae/3_2/politica.xml
-                if (method_exists($fac, 'setSignaturePolicy')) {
-                    $policy = [
-                        'name' => 'Política de Firma Facturae 3.2',
-                        'url' => 'http://www.facturae.es/politica_de_firma_formato_facturae/3_2/politica.xml',
-                        'digest' => [
-                            // Hash de referencia conocido para la política 3.2 (base64, SHA-1)
-                            // FACe acepta firma SHA-256 con hash de política en SHA-1
-                            'value' => 'Ohixl6upD6av8N7pEvDABhEL6hM=',
-                            'method' => Facturae::DIGEST_SHA1
-                        ]
-                    ];
-                    \call_user_func([$fac, 'setSignaturePolicy'], $policy);
-                }
             
-            // Agregar extensión para corregir el orden de elementos antes de firmar usando reflexión
+            // TEMPORALMENTE DESACTIVADA: Extensión para corregir el orden de elementos
+            // Comentada para probar si está causando problemas con la política de firma
+            // Si el error persiste, puede que la extensión esté modificando el XML después del digest
+            /*
             try {
                 $reflection = new \ReflectionClass($fac);
                 $extensionsProperty = $reflection->getProperty('extensions');
@@ -514,6 +525,8 @@ class InvoiceController extends Controller
                 ]);
                 // Continuar sin la extensión, el método de respaldo corregirá el orden
             }
+            */
+            Log::info('Extensión FacturaeOrderFixExtension temporalmente desactivada para pruebas');
 
             // Validar que la referencia tiene el formato correcto
             if (empty($factura->reference) || strpos($factura->reference, '-') === false) {
@@ -782,7 +795,7 @@ class InvoiceController extends Controller
 
             // Validar certificado y contraseña
         $certificado = $empresa->certificado;
-        $contrasena = $empresa->contrasena;
+        $contrasena = trim((string) $empresa->contrasena);
 
         if (empty($certificado)) {
                 return response()->json([
@@ -798,9 +811,24 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
-            // Verificar que el archivo del certificado existe
-            $certificadoPath = storage_path('app/public/' . $certificado);
-            if (!file_exists($certificadoPath)) {
+            // Resolver ruta del certificado de forma robusta (según cómo esté guardado)
+            $certRel = ltrim((string) $certificado, '/');
+            $pathsToTry = [];
+            // 1) Disk public (recomendado)
+            try { $pathsToTry[] = \Illuminate\Support\Facades\Storage::disk('public')->path($certRel); } catch (\Throwable $e) {}
+            // 2) storage_path app/public
+            $pathsToTry[] = storage_path('app/public/' . $certRel);
+            // 3) public_path directo (por si se guardó bajo public/)
+            $pathsToTry[] = public_path($certRel);
+            // 4) valor tal cual (por si ya es absoluto)
+            $pathsToTry[] = (string) $certificado;
+
+            $certificadoPath = null;
+            foreach ($pathsToTry as $p) {
+                if ($p && is_string($p) && file_exists($p)) { $certificadoPath = $p; break; }
+            }
+
+            if (!$certificadoPath) {
                 return response()->json([
                     'error' => 'El archivo del certificado no se encuentra en el servidor. Por favor, vuelva a subir el certificado.',
                     'status' => false
@@ -823,53 +851,267 @@ class InvoiceController extends Controller
                 ], 500);
             }
 
-            // Firmar la factura (XAdES-EPES al haber política) con SHA-256
+            // Verificación previa: validar que el P12/PFX se abre con la contraseña indicada
             try {
-                // Detectar en tiempo de ejecución las constantes soportadas por la versión instalada
-                $algo = null;
-                if (defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_RSA_SHA256')) {
-                    $algo = \josemmo\Facturae\Facturae::SIGN_ALGORITHM_RSA_SHA256;
-                } elseif (defined('josemmo\\Facturae\\Facturae::SIGN_ALGORITHM_SHA256')) {
-                    $algo = \josemmo\Facturae\Facturae::SIGN_ALGORITHM_SHA256;
+                if (!function_exists('openssl_pkcs12_read')) {
+                    return response()->json([
+                        'error' => 'OpenSSL no soporta lectura PKCS#12 en este entorno.',
+                        'status' => false
+                    ], 500);
                 }
 
-                $lastError = null;
-                $attempts = [];
-                if ($algo !== null) {
-                    $attempts[] = function() use ($fac, $certificadoPath, $contrasena, $algo) { $r=$fac->sign($certificadoPath, $contrasena, $algo); if ($r===false) throw new \Exception('sign() devolvió false (ruta+algoritmo)'); };
-                    $attempts[] = function() use ($fac, $encryptedStore, $contrasena, $algo) { $r=$fac->sign($encryptedStore, $contrasena, $algo); if ($r===false) throw new \Exception('sign() devolvió false (contenido+algoritmo)'); };
-                }
-                $attempts[] = function() use ($fac, $certificadoPath, $contrasena) { $r=$fac->sign($certificadoPath, $contrasena); if ($r===false) throw new \Exception('sign() devolvió false (ruta)'); };
-                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $r=$fac->sign($encryptedStore, $contrasena); if ($r===false) throw new \Exception('sign() devolvió false (contenido)'); };
-                // Último recurso legacy
-                $attempts[] = function() use ($fac, $encryptedStore, $contrasena) { $r=$fac->sign($encryptedStore, null, $contrasena, 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'); if ($r===false) throw new \Exception('sign() devolvió false (legacy 4 parámetros)'); };
-                // Intento alternativo: API basada en setCertificate() + sign() sin argumentos
-                $attempts[] = function() use ($fac, $certificadoPath, $contrasena) {
-                    if (method_exists($fac, 'setCertificate')) {
-                        $fac->setCertificate($certificadoPath, $contrasena);
-                        $r=$fac->sign();
-                        if ($r===false) throw new \Exception('sign() devolvió false tras setCertificate()');
-                    } else {
-                        throw new \Exception('Método setCertificate no disponible');
-                    }
-                };
+                // Variantes de contraseña para evitar problemas de codificación/copias invisibles
+                $pwdOriginal = $contrasena;
+                $pwdTrimmed = trim($pwdOriginal);
+                $pwdAscii = preg_replace('/[^\x20-\x7E]/', '', $pwdTrimmed); // quitar invisibles
+                $pwdUtf8Decode = function_exists('utf8_decode') ? @utf8_decode($pwdTrimmed) : $pwdTrimmed;
+                $pwdUtf8Encode = function_exists('utf8_encode') ? @utf8_encode($pwdTrimmed) : $pwdTrimmed;
 
-                $signed = false;
-                foreach ($attempts as $trySign) {
-                    try {
-                        $trySign();
-                        $signed = true;
+                $pwdCandidates = array_unique(array_filter([
+                    $pwdOriginal,
+                    $pwdTrimmed,
+                    $pwdAscii,
+                    $pwdUtf8Decode,
+                    $pwdUtf8Encode,
+                ], function($v){ return $v !== null; }));
+
+                $pkcs12Ok = false;
+                $pkcs12Data = [];
+                $pwdUsed = null;
+                foreach ($pwdCandidates as $candidate) {
+                    $tmpData = [];
+                    if (@openssl_pkcs12_read($encryptedStore, $tmpData, $candidate)) {
+                        $pkcs12Ok = true;
+                        $pkcs12Data = $tmpData;
+                        $pwdUsed = $candidate;
                         break;
-                    } catch (\Throwable $te) {
-                        $lastError = $te->getMessage();
-                        continue;
                     }
                 }
 
-                if (!$signed) {
-                    throw new \Exception($lastError ?: 'No se pudo firmar con ninguno de los métodos compatibles.');
+                if (!$pkcs12Ok || empty($pkcs12Data['cert']) || empty($pkcs12Data['pkey'])) {
+                    $lastOpenSslError = function_exists('openssl_error_string') ? @openssl_error_string() : null;
+                    Log::warning('PKCS12 precheck falló, se continuará intentando firmar igualmente', [
+                        'ruta' => $certificadoPath,
+                        'bytes' => strlen($encryptedStore),
+                        'openssl_error' => $lastOpenSslError,
+                        'variantes_probadas' => $pwdCandidates
+                    ]);
+                    // No abortar: continuar con el flujo de firma; la librería puede manejar algunos P12 que openssl_pkcs12_read no abre
+                } else {
+                    // En adelante usar la variante que funcionó
+                    $contrasena = $pwdUsed ?? $contrasena;
+                }
+            } catch (\Throwable $e) {
+                Log::error('Error en verificación PKCS#12', [ 'error' => $e->getMessage() ]);
+                return response()->json([
+                    'error' => 'Error al verificar el certificado PKCS#12. ' . $e->getMessage(),
+                    'status' => false
+                ], 500);
+            }
+
+            // Firmar la factura (XAdES-EPES)
+            // NOTA: La librería josemmo/facturae-php v1.8 solo acepta 3 parámetros en sign():
+            // sign($storeOrCertificate, $privateKey=null, $passphrase='')
+            // El algoritmo de firma está hardcodeado en la librería (SHA-512 por defecto)
+            // Para cambiar a SHA-256, necesitaríamos modificar la librería o usar una versión más reciente
+            try {
+                // Intentar cargar el certificado manualmente primero para verificar que funciona
+                // Esto nos permite probar múltiples variantes de contraseña antes de pasar a la librería
+                $certificadoCargado = false;
+                $contrasenaFinal = $contrasena;
+                $usarPEMDirecto = false;
+                $certificadoPEM = null;
+                $clavePrivadaPEM = null;
+                
+                // Leer el contenido del certificado
+                $certificadoContenido = file_get_contents($certificadoPath);
+                if ($certificadoContenido === false) {
+                    throw new \Exception('No se pudo leer el archivo del certificado.');
+                }
+                
+                // Probar múltiples variantes de contraseña (por si hay problemas de codificación)
+                $variantesContrasena = array_unique([
+                    $contrasena,
+                    trim($contrasena),
+                    preg_replace('/[^\x20-\x7E]/', '', trim($contrasena)), // Solo ASCII
+                ]);
+                
+                // Limpiar errores previos de OpenSSL
+                while (openssl_error_string() !== false) {}
+                
+                foreach ($variantesContrasena as $variante) {
+                    $parsed = [];
+                    // Intentar cargar el certificado con el proveedor legacy activo
+                    $result = @openssl_pkcs12_read($certificadoContenido, $parsed, $variante);
+                    
+                    if ($result) {
+                        $certificadoCargado = true;
+                        $contrasenaFinal = $variante;
+                        Log::info('Certificado PKCS#12 cargado correctamente', [
+                            'variante_usada' => $variante === $contrasena ? 'original' : 'modificada'
+                        ]);
+                        break;
+                    } else {
+                        // Recopilar todos los errores de OpenSSL
+                        $opensslErrors = [];
+                        while (($error = openssl_error_string()) !== false) {
+                            $opensslErrors[] = $error;
+                        }
+                        
+                        // Si el error es "unsupported", el proveedor legacy no está activo
+                        // Usar OpenSSL CLI con la opción -legacy como fallback
+                        if (!empty($opensslErrors) && strpos(implode(' ', $opensslErrors), 'unsupported') !== false) {
+                            Log::info('Error OpenSSL unsupported detectado, usando OpenSSL CLI con -legacy', [
+                                'errors' => $opensslErrors
+                            ]);
+                            
+                            // Usar OpenSSL CLI con la opción -legacy para extraer certificado y clave
+                            $tempCertFile = sys_get_temp_dir() . '/cert_' . uniqid() . '.p12';
+                            $tempPassFile = sys_get_temp_dir() . '/pass_' . uniqid() . '.txt';
+                            
+                            try {
+                                file_put_contents($tempCertFile, $certificadoContenido);
+                                file_put_contents($tempPassFile, $variante);
+                                
+                                // Extraer certificado y clave usando OpenSSL CLI con -legacy
+                                $command = sprintf(
+                                    'openssl pkcs12 -in %s -legacy -nodes -passin file:%s 2>&1',
+                                    escapeshellarg($tempCertFile),
+                                    escapeshellarg($tempPassFile)
+                                );
+                                
+                                $output = [];
+                                $returnVar = 0;
+                                @exec($command, $output, $returnVar);
+                                
+                                if ($returnVar === 0) {
+                                    $pemOutput = implode("\n", $output);
+                                    
+                                    // Verificar que tenemos certificado y clave privada
+                                    if (strpos($pemOutput, '-----BEGIN CERTIFICATE-----') !== false && 
+                                        strpos($pemOutput, '-----BEGIN PRIVATE KEY-----') !== false) {
+                                        
+                                        // Parsear el PEM para extraer certificado y clave
+                                        preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemOutput, $certMatches);
+                                        preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $pemOutput, $keyMatches);
+                                        
+                                        if (!empty($certMatches[0]) && !empty($keyMatches[0])) {
+                                            // Guardar en variables para usar después
+                                            $certificadoPEM = $certMatches[0];
+                                            $clavePrivadaPEM = $keyMatches[0];
+                                            
+                                            // Verificar que podemos leerlos con OpenSSL PHP
+                                            $testCert = openssl_x509_read($certificadoPEM);
+                                            $testKey = openssl_pkey_get_private($clavePrivadaPEM);
+                                            
+                                            if ($testCert !== false && $testKey !== false) {
+                                                $certificadoCargado = true;
+                                                $contrasenaFinal = $variante;
+                                                $usarPEMDirecto = true;
+                                                Log::info('Certificado PKCS#12 extraído usando OpenSSL CLI con -legacy');
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log::warning('OpenSSL CLI falló', [
+                                        'return_code' => $returnVar,
+                                        'output' => implode("\n", $output)
+                                    ]);
+                                }
+                                
+                                @unlink($tempCertFile);
+                                @unlink($tempPassFile);
+                            } catch (\Throwable $cliError) {
+                                Log::warning('Error al usar OpenSSL CLI como fallback', ['error' => $cliError->getMessage()]);
+                                @unlink($tempCertFile);
+                                @unlink($tempPassFile);
+                            }
+                        }
+                    }
+                }
+                
+                if (!$certificadoCargado) {
+                    // Recopilar todos los errores finales
+                    $finalErrors = [];
+                    while (($error = openssl_error_string()) !== false) {
+                        $finalErrors[] = $error;
+                    }
+                    
+                    $errorMessage = 'No se pudo cargar el certificado PKCS#12. ';
+                    if (!empty($finalErrors)) {
+                        $errorMessage .= 'Errores OpenSSL: ' . implode('; ', $finalErrors);
+                    } else {
+                        $errorMessage .= 'Verifique la contraseña y que el certificado sea válido.';
+                    }
+                    
+                    Log::error('No se pudo cargar el certificado PKCS#12', [
+                        'openssl_errors' => $finalErrors,
+                        'certificado_path' => $certificadoPath,
+                        'certificado_size' => strlen($certificadoContenido),
+                        'variantes_probadas' => count($variantesContrasena),
+                        'openssl_conf' => getenv('OPENSSL_CONF'),
+                        'openssl_version' => OPENSSL_VERSION_TEXT ?? 'unknown'
+                    ]);
+                    
+                    throw new \Exception($errorMessage);
+                }
+                
+                // Ahora intentar firmar con la librería
+                // Si usamos PEM directo (extraído con OpenSSL CLI), pasar certificado y clave por separado
+                if ($usarPEMDirecto && $certificadoPEM && $clavePrivadaPEM) {
+                    // Pasar certificado y clave privada en formato PEM por separado
+                    $ok = $fac->sign($certificadoPEM, $clavePrivadaPEM, '');
+                } else {
+                    // Pasar el contenido del certificado PKCS#12 directamente
+                    $ok = $fac->sign($certificadoContenido, null, $contrasenaFinal);
+                }
+
+                if ($ok === false) {
+                    // Obtener más información sobre el error
+                    $errorDetails = 'La librería devolvió false al intentar firmar. ';
+                    
+                    // Verificar si el signer puede firmar
+                    try {
+                        $signer = $fac->getSigner();
+                        $canSign = $signer->canSign();
+                        if (!$canSign) {
+                            // Intentar diagnosticar el problema
+                            $reflection = new \ReflectionClass($signer);
+                            $publicChainProp = $reflection->getProperty('publicChain');
+                            $publicChainProp->setAccessible(true);
+                            $privateKeyProp = $reflection->getProperty('privateKey');
+                            $privateKeyProp->setAccessible(true);
+                            
+                            $publicChain = $publicChainProp->getValue($signer);
+                            $privateKey = $privateKeyProp->getValue($signer);
+                            
+                            if (empty($publicChain)) {
+                                $errorDetails .= 'La cadena de certificados está vacía. ';
+                            }
+                            if (empty($privateKey)) {
+                                $errorDetails .= 'La clave privada está vacía. ';
+                            }
+                            
+                            if (empty($publicChain) && empty($privateKey)) {
+                                $errorDetails .= 'El certificado no se cargó correctamente en la librería.';
+                            }
+                        }
+                    } catch (\Exception $signerError) {
+                        $errorDetails .= 'Error al verificar el signer: ' . $signerError->getMessage();
+                    }
+                    
+                    throw new \Exception($errorDetails);
                 }
             } catch (\Exception $e) {
+                Log::error('Error al firmar factura electrónica', [
+                    'error' => $e->getMessage(),
+                    'certificado_path' => $certificadoPath,
+                    'certificado_exists' => file_exists($certificadoPath ?? ''),
+                    'openssl_error' => openssl_error_string(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
                 return response()->json([
                     'error' => 'Error al firmar la factura electrónica: ' . $e->getMessage() . '. Verifique que el certificado y la contraseña sean correctos.',
                     'status' => false
