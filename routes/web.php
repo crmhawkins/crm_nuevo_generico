@@ -397,7 +397,7 @@ Route::get('/departament', [DepartamentController::class, 'index'])->name('depar
 Route::get('/departament/create', [DepartamentController::class, 'create'])->name('departamento.create');
 Route::get('/departament/edit/{id}', [DepartamentController::class, 'edit'])->name('departamento.edit');
 Route::post('/departament/store', [DepartamentController::class, 'store'])->name('departamento.store');
-Route::post('/departament/update/{id}', [DepartamentController::class, 'update'])->name('departamento.update');
+Route::put('/departament/update/{id}', [DepartamentController::class, 'update'])->name('departamento.update');
 Route::post('/departament/destroy', [DepartamentController::class, 'destroy'])->name('departamento.delete');
 
 //Cargos
@@ -405,7 +405,7 @@ Route::get('/position', [PositionController::class, 'index'])->name('cargo.index
 Route::get('/position/create', [PositionController::class, 'create'])->name('cargo.create');
 Route::get('/position/edit/{id}', [PositionController::class, 'edit'])->name('cargo.edit');
 Route::post('/position/store', [PositionController::class, 'store'])->name('cargo.store');
-Route::post('/position/update/{id}', [PositionController::class, 'update'])->name('cargo.update');
+Route::put('/position/update/{id}', [PositionController::class, 'update'])->name('cargo.update');
 Route::post('/position/destroy', [PositionController::class, 'destroy'])->name('cargo.delete');
 
 //Contratos
