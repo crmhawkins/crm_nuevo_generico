@@ -135,4 +135,27 @@ class SettingsController extends Controller
         }
 
     }
+
+    public function downloadCertificado()
+    {
+        $configuracion = CompanyDetails::first();
+        
+        if (!$configuracion || !$configuracion->certificado) {
+            return redirect()->route('configuracion.index')->with('toast', [
+                'icon' => 'error',
+                'mensaje' => 'No hay certificado disponible para descargar.',
+            ]);
+        }
+
+        $filePath = storage_path('app/public/' . $configuracion->certificado);
+        
+        if (!file_exists($filePath)) {
+            return redirect()->route('configuracion.index')->with('toast', [
+                'icon' => 'error',
+                'mensaje' => 'El archivo del certificado no existe.',
+            ]);
+        }
+
+        return response()->download($filePath);
+    }
 }

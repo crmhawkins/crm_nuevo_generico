@@ -542,8 +542,9 @@ Route::post('/emails/delete', [EmailController::class, 'destroy'])->name('admin.
 Route::get('/statistics', [StatisticsController::class, 'index'])->name('estadistica.index');
 
 Route::get('/configuracion', [SettingsController::class, 'index'])->name('configuracion.index');
-Route::post('/configuracion/update/{id}', [SettingsController::class, 'update'])->name('configuracion.update');
+Route::put('/configuracion/update/{id}', [SettingsController::class, 'update'])->name('configuracion.update');
 Route::post('/configuracion/store', [SettingsController::class, 'store'])->name('configuracion.store');
+Route::get('/configuracion/download-certificado', [SettingsController::class, 'downloadCertificado'])->name('configuracion.download-certificado');
 
 
 Route::get('/cuentas-contables', [CuentasContableController::class, 'index'])->name('cuentasContables.index');
