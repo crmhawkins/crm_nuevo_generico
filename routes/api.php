@@ -34,4 +34,4 @@ Route::post('/Facturas', action: [ApiController::class, 'getfacturas']);
 Route::post('/Proyectos', action: [ApiController::class, 'getproyectos']);
 Route::post('/Servicios', action: [ApiController::class, 'getservicios']);
 Route::get('/checklogs', action: [ApiController::class, 'checkLogs']);
-Route::post('/addBeneficiarioName', action: [ApiController::class, 'addBeneficiarioName']);
+Route::middleware('web')->post('/addBeneficiarioName', action: [ApiController::class, 'addBeneficiarioName']);

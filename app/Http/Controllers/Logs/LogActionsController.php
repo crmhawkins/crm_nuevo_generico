@@ -21,14 +21,26 @@ class LogActionsController extends Controller
 
         // Obtener iniciales
         $iniciales = '';
-        if ($beneficiarioNombre && $beneficiarioApellidos) {
-            $iniciales = strtoupper(substr($beneficiarioNombre, 0, 1) . ' ' . substr($beneficiarioApellidos, 0, 1));
-        } elseif ($beneficiarioNombreCompleto) {
-            $palabras = explode(' ', trim($beneficiarioNombreCompleto));
-            if (count($palabras) >= 2) {
-                $iniciales = strtoupper(substr($palabras[0], 0, 1) . ' ' . substr($palabras[count($palabras) - 1], 0, 1));
+        if (!empty($beneficiarioNombreCompleto)) {
+            // Si tenemos nombre y apellidos separados, usarlos
+            if (!empty($beneficiarioNombre) && !empty($beneficiarioApellidos)) {
+                $inicialNombre = mb_substr(trim($beneficiarioNombre), 0, 1, 'UTF-8');
+                $inicialApellido = mb_substr(trim($beneficiarioApellidos), 0, 1, 'UTF-8');
+                $iniciales = strtoupper($inicialNombre . ' ' . $inicialApellido);
             } else {
-                $iniciales = strtoupper(substr($palabras[0], 0, 1));
+                // Extraer iniciales del nombre completo
+                $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
+                $palabras = array_values($palabras); // Reindexar
+                
+                if (count($palabras) >= 2) {
+                    // Primera letra del primer nombre y primera letra del último apellido
+                    $inicialNombre = mb_substr($palabras[0], 0, 1, 'UTF-8');
+                    $inicialApellido = mb_substr($palabras[count($palabras) - 1], 0, 1, 'UTF-8');
+                    $iniciales = strtoupper($inicialNombre . ' ' . $inicialApellido);
+                } elseif (count($palabras) == 1) {
+                    // Solo una palabra, usar su primera letra
+                    $iniciales = strtoupper(mb_substr($palabras[0], 0, 1, 'UTF-8'));
+                }
             }
         }
 
