@@ -1,14 +1,16 @@
 <nav id="topbar" class="navbar">
     <div class="d-flex align-items-center">
-        <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
-        <div class="d-flex d-lg-none" style="width: 100px;">
-            <header class="top-burguer">
-                <a href="#" class="burger-btn d-block d-lg-none">
-                    <i class="bi bi-list"></i>
-                </a>
-            </header>
-            <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
-        </div>
+        @if(!request()->routeIs('logs.*'))
+            <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
+            <div class="d-flex d-lg-none" style="width: 100px;">
+                <header class="top-burguer">
+                    <a href="#" class="burger-btn d-block d-lg-none">
+                        <i class="bi bi-list"></i>
+                    </a>
+                </header>
+                <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
+            </div>
+        @endif
         @if(request()->routeIs('logs.*'))
             @php
                 // Obtener datos del beneficiario del archivo JSON
