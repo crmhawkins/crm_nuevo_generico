@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class LogsTable extends Component
 {
@@ -37,12 +38,32 @@ class LogsTable extends Component
     public function render()
     {
         $this->actualizarLogs(); // Ahora se llama directamente en render para refrescar los clientes.
-        
-        // Obtener datos del beneficiario de la sesión
-        $beneficiarioNombreCompleto = Session::get('beneficiario_nombre_completo', '');
-        $beneficiarioNombre = Session::get('beneficiario_nombre', '');
-        $beneficiarioApellidos = Session::get('beneficiario_apellidos', '');
-        
+
+        // Obtener datos del beneficiario del archivo JSON (persistente)
+        $beneficiarioNombreCompleto = '';
+        $beneficiarioNombre = '';
+        $beneficiarioApellidos = '';
+
+        if (Storage::disk('local')->exists('beneficiario.json')) {
+            try {
+                $beneficiarioData = json_decode(Storage::disk('local')->get('beneficiario.json'), true);
+                if ($beneficiarioData) {
+                    $beneficiarioNombreCompleto = $beneficiarioData['nombre_completo'] ?? '';
+                    $beneficiarioNombre = $beneficiarioData['nombre'] ?? '';
+                    $beneficiarioApellidos = $beneficiarioData['apellidos'] ?? '';
+                }
+            } catch (\Exception $e) {
+                // Si hay error leyendo el archivo, usar valores vacíos
+            }
+        }
+
+        // Si no hay datos en archivo, intentar desde sesión (fallback)
+        if (empty($beneficiarioNombreCompleto)) {
+            $beneficiarioNombreCompleto = Session::get('beneficiario_nombre_completo', '');
+            $beneficiarioNombre = Session::get('beneficiario_nombre', '');
+            $beneficiarioApellidos = Session::get('beneficiario_apellidos', '');
+        }
+
         // Obtener iniciales
         $iniciales = '';
         if (!empty($beneficiarioNombreCompleto)) {
@@ -55,7 +76,7 @@ class LogsTable extends Component
                 // Extraer iniciales del nombre completo
                 $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
                 $palabras = array_values($palabras); // Reindexar
-                
+
                 if (count($palabras) >= 2) {
                     // Primera letra del primer nombre y primera letra del último apellido
                     $inicialNombre = mb_substr($palabras[0], 0, 1, 'UTF-8');
@@ -67,7 +88,7 @@ class LogsTable extends Component
                 }
             }
         }
-        
+
         return view('livewire.logs-table', [
             'logs' => $this->logs,
             'beneficiarioNombreCompleto' => $beneficiarioNombreCompleto,

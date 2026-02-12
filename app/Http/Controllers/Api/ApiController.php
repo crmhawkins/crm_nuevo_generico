@@ -14,6 +14,7 @@ use App\Models\Users\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class ApiController extends Controller
 {
@@ -285,7 +286,18 @@ class ApiController extends Controller
             }
         }
 
-        // Almacenar en sesión
+        // Almacenar en archivo JSON persistente
+        $beneficiarioData = [
+            'nombre_completo' => $nombreCompleto,
+            'nombre' => $nombre ?: $nombreBeneficiario,
+            'apellidos' => $apellidos,
+            'fecha_actualizacion' => now()->toDateTimeString()
+        ];
+
+        // Guardar en archivo JSON
+        Storage::disk('local')->put('beneficiario.json', json_encode($beneficiarioData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        // También guardar en sesión por si acaso
         Session::put('beneficiario_nombre_completo', $nombreCompleto);
         Session::put('beneficiario_nombre', $nombre ?: $nombreBeneficiario);
         Session::put('beneficiario_apellidos', $apellidos);
