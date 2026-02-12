@@ -1,64 +1,66 @@
 <nav id="topbar" class="navbar">
-    <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
-    <div class="d-flex d-lg-none" style="width: 100px;">
-        <header class="top-burguer">
-            <a href="#" class="burger-btn d-block d-lg-none">
-                <i class="bi bi-list"></i>
-            </a>
-        </header>
-        <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
-    </div>
-    @if(request()->routeIs('logs.*'))
-        @php
-            // Obtener datos del beneficiario del archivo JSON
-            $beneficiarioNombreCompleto = '';
-            $beneficiarioNombre = '';
-            $beneficiarioApellidos = '';
-            $iniciales = '';
-            
-            if (\Illuminate\Support\Facades\Storage::disk('local')->exists('beneficiario.json')) {
-                try {
-                    $beneficiarioData = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get('beneficiario.json'), true);
-                    if ($beneficiarioData) {
-                        $beneficiarioNombreCompleto = $beneficiarioData['nombre_completo'] ?? '';
-                        $beneficiarioNombre = $beneficiarioData['nombre'] ?? '';
-                        $beneficiarioApellidos = $beneficiarioData['apellidos'] ?? '';
-                        
-                        // Calcular iniciales
-                        if (!empty($beneficiarioNombreCompleto)) {
-                            if (!empty($beneficiarioNombre) && !empty($beneficiarioApellidos)) {
-                                $inicialNombre = mb_substr(trim($beneficiarioNombre), 0, 1, 'UTF-8');
-                                $inicialApellido = mb_substr(trim($beneficiarioApellidos), 0, 1, 'UTF-8');
-                                $iniciales = strtoupper($inicialNombre . ' ' . $inicialApellido);
-                            } else {
-                                $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
-                                $palabras = array_values($palabras);
-                                if (count($palabras) >= 2) {
-                                    $inicialNombre = mb_substr($palabras[0], 0, 1, 'UTF-8');
-                                    $inicialApellido = mb_substr($palabras[count($palabras) - 1], 0, 1, 'UTF-8');
-                                    $iniciales = strtoupper($inicialNombre . ' ' . $inicialApellido);
-                                } elseif (count($palabras) == 1) {
-                                    $iniciales = strtoupper(mb_substr($palabras[0], 0, 1, 'UTF-8'));
+    <div class="d-flex align-items-center">
+        <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
+        <div class="d-flex d-lg-none" style="width: 100px;">
+            <header class="top-burguer">
+                <a href="#" class="burger-btn d-block d-lg-none">
+                    <i class="bi bi-list"></i>
+                </a>
+            </header>
+            <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
+        </div>
+        @if(request()->routeIs('logs.*'))
+            @php
+                // Obtener datos del beneficiario del archivo JSON
+                $beneficiarioNombreCompleto = '';
+                $beneficiarioNombre = '';
+                $beneficiarioApellidos = '';
+                $iniciales = '';
+
+                if (\Illuminate\Support\Facades\Storage::disk('local')->exists('beneficiario.json')) {
+                    try {
+                        $beneficiarioData = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get('beneficiario.json'), true);
+                        if ($beneficiarioData) {
+                            $beneficiarioNombreCompleto = $beneficiarioData['nombre_completo'] ?? '';
+                            $beneficiarioNombre = $beneficiarioData['nombre'] ?? '';
+                            $beneficiarioApellidos = $beneficiarioData['apellidos'] ?? '';
+
+                            // Calcular iniciales
+                            if (!empty($beneficiarioNombreCompleto)) {
+                                if (!empty($beneficiarioNombre) && !empty($beneficiarioApellidos)) {
+                                    $inicialNombre = mb_substr(trim($beneficiarioNombre), 0, 1, 'UTF-8');
+                                    $inicialApellido = mb_substr(trim($beneficiarioApellidos), 0, 1, 'UTF-8');
+                                    $iniciales = strtoupper($inicialNombre . $inicialApellido);
+                                } else {
+                                    $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
+                                    $palabras = array_values($palabras);
+                                    if (count($palabras) >= 2) {
+                                        $inicialNombre = mb_substr($palabras[0], 0, 1, 'UTF-8');
+                                        $inicialApellido = mb_substr($palabras[count($palabras) - 1], 0, 1, 'UTF-8');
+                                        $iniciales = strtoupper($inicialNombre . $inicialApellido);
+                                    } elseif (count($palabras) == 1) {
+                                        $iniciales = strtoupper(mb_substr($palabras[0], 0, 1, 'UTF-8'));
+                                    }
                                 }
                             }
                         }
+                    } catch (\Exception $e) {
+                        // Si hay error, dejar valores vacíos
                     }
-                } catch (\Exception $e) {
-                    // Si hay error, dejar valores vacíos
                 }
-            }
-        @endphp
-        @if(!empty($beneficiarioNombreCompleto) && !empty($iniciales))
-            <div class="beneficiario-logo-topbar d-flex align-items-center ms-3" style="gap: 8px;">
-                <div class="beneficiario-logo-circle" style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0;">
-                    <span style="font-size: 16px; line-height: 1; letter-spacing: 1.5px; font-family: Arial, sans-serif;">{{ $iniciales }}</span>
+            @endphp
+            @if(!empty($beneficiarioNombreCompleto) && !empty($iniciales))
+                <div class="beneficiario-logo-topbar d-flex align-items-center ms-4" style="gap: 12px;">
+                    <div class="beneficiario-logo-circle" style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); flex-shrink: 0; transition: transform 0.2s ease; border: 2px solid rgba(255, 255, 255, 0.2);">
+                        <span style="font-size: 18px; line-height: 1; letter-spacing: 0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">{{ $iniciales }}</span>
+                    </div>
+                    <div class="beneficiario-nombre-topbar d-none d-md-block" style="font-size: 15px; color: #2c3e50; font-weight: 600; white-space: nowrap; letter-spacing: 0.3px;">
+                        {{ $beneficiarioNombreCompleto }}
+                    </div>
                 </div>
-                <div class="beneficiario-nombre-topbar d-none d-md-block" style="font-size: 14px; color: #495057; font-weight: 500; white-space: nowrap;">
-                    {{ $beneficiarioNombreCompleto }}
-                </div>
-            </div>
+            @endif
         @endif
-    @endif
+    </div>
     <ul class="topbar-menu d-flex align-items-center gap-3">
         <li class="dropdown notification-list">
             <a href="{{ route('admin.emailConfig.settings') }}" type="button" class="nav-link position-relative">
