@@ -27,19 +27,19 @@
             </div>
         </div>
         <section class="section pt-4">
-            @if(isset($beneficiarioNombreCompleto) && $beneficiarioNombreCompleto)
+            @if(isset($beneficiarioNombreCompleto) && !empty($beneficiarioNombreCompleto) && isset($iniciales) && !empty($iniciales))
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="row align-items-center">
-                            <div class="col-auto">
-                                <div class="beneficiario-logo" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                                    <div style="font-size: 24px; line-height: 1.2;">{{ $iniciales }}</div>
-                                    <div style="font-size: 10px; margin-top: 4px; text-align: center; max-width: 70px; overflow: hidden; text-overflow: ellipsis;">{{ $beneficiarioNombreCompleto }}</div>
+                            <div class="col-auto text-center" style="min-width: 120px;">
+                                <div class="beneficiario-logo" style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto 10px auto;">
+                                    <span style="font-size: 32px; line-height: 1; letter-spacing: 3px; font-family: Arial, sans-serif;">{{ $iniciales }}</span>
                                 </div>
+                                <div style="font-size: 11px; color: #495057; font-weight: 500; word-wrap: break-word; line-height: 1.3;">{{ $beneficiarioNombreCompleto }}</div>
                             </div>
                             <div class="col">
-                                <h5 class="mb-1">Nombre del beneficiario:</h5>
-                                <p class="mb-0 text-muted">{{ $beneficiarioNombreCompleto }}</p>
+                                <h5 class="mb-2" style="font-weight: 600; color: #212529;">Nombre del beneficiario:</h5>
+                                <p class="mb-0" style="font-size: 16px; color: #495057; font-weight: 500;">{{ $beneficiarioNombreCompleto }}</p>
                             </div>
                         </div>
                     </div>
