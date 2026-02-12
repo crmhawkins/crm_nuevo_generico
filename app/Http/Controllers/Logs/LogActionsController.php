@@ -9,12 +9,30 @@ use App\Models\Users\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Support\Facades\Session;
 
 class LogActionsController extends Controller
 {
     public function index()
     {
-        return view('logs.index');
+        $beneficiarioNombreCompleto = Session::get('beneficiario_nombre_completo', '');
+        $beneficiarioNombre = Session::get('beneficiario_nombre', '');
+        $beneficiarioApellidos = Session::get('beneficiario_apellidos', '');
+
+        // Obtener iniciales
+        $iniciales = '';
+        if ($beneficiarioNombre && $beneficiarioApellidos) {
+            $iniciales = strtoupper(substr($beneficiarioNombre, 0, 1) . ' ' . substr($beneficiarioApellidos, 0, 1));
+        } elseif ($beneficiarioNombreCompleto) {
+            $palabras = explode(' ', trim($beneficiarioNombreCompleto));
+            if (count($palabras) >= 2) {
+                $iniciales = strtoupper(substr($palabras[0], 0, 1) . ' ' . substr($palabras[count($palabras) - 1], 0, 1));
+            } else {
+                $iniciales = strtoupper(substr($palabras[0], 0, 1));
+            }
+        }
+
+        return view('logs.index', compact('beneficiarioNombreCompleto', 'iniciales'));
     }
 
     public function Clasificacion(Request $request)
