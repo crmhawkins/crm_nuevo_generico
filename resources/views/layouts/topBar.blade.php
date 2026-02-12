@@ -52,7 +52,7 @@
                 }
             @endphp
             @if(!empty($beneficiarioNombreCompleto) && !empty($iniciales))
-                <div class="beneficiario-logo-topbar d-flex align-items-center ms-4" style="gap: 12px;">
+                <div class="beneficiario-logo-topbar d-flex align-items-center ms-4" style="gap: 12px; border: 2px solid #dc3545; border-radius: 8px; padding: 8px 12px; margin-left: 16px !important; background-color: rgba(220, 53, 69, 0.05);">
                     <div class="beneficiario-logo-circle" style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); flex-shrink: 0; transition: transform 0.2s ease; border: 2px solid rgba(255, 255, 255, 0.2);">
                         <span style="font-size: 18px; line-height: 1; letter-spacing: 0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">{{ $iniciales }}</span>
                     </div>
