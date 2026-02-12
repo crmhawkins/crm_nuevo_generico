@@ -8,6 +8,7 @@ use App\Models\Users\User;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Session;
 
 class LogsTable extends Component
 {
@@ -36,8 +37,41 @@ class LogsTable extends Component
     public function render()
     {
         $this->actualizarLogs(); // Ahora se llama directamente en render para refrescar los clientes.
+        
+        // Obtener datos del beneficiario de la sesión
+        $beneficiarioNombreCompleto = Session::get('beneficiario_nombre_completo', '');
+        $beneficiarioNombre = Session::get('beneficiario_nombre', '');
+        $beneficiarioApellidos = Session::get('beneficiario_apellidos', '');
+        
+        // Obtener iniciales
+        $iniciales = '';
+        if (!empty($beneficiarioNombreCompleto)) {
+            // Si tenemos nombre y apellidos separados, usarlos
+            if (!empty($beneficiarioNombre) && !empty($beneficiarioApellidos)) {
+                $inicialNombre = mb_substr(trim($beneficiarioNombre), 0, 1, 'UTF-8');
+                $inicialApellido = mb_substr(trim($beneficiarioApellidos), 0, 1, 'UTF-8');
+                $iniciales = strtoupper($inicialNombre . ' ' . $inicialApellido);
+            } else {
+                // Extraer iniciales del nombre completo
+                $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
+                $palabras = array_values($palabras); // Reindexar
+                
+                if (count($palabras) >= 2) {
+                    // Primera letra del primer nombre y primera letra del último apellido
+                    $inicialNombre = mb_substr($palabras[0], 0, 1, 'UTF-8');
+                    $inicialApellido = mb_substr($palabras[count($palabras) - 1], 0, 1, 'UTF-8');
+                    $iniciales = strtoupper($inicialNombre . ' ' . $inicialApellido);
+                } elseif (count($palabras) == 1) {
+                    // Solo una palabra, usar su primera letra
+                    $iniciales = strtoupper(mb_substr($palabras[0], 0, 1, 'UTF-8'));
+                }
+            }
+        }
+        
         return view('livewire.logs-table', [
-            'logs' => $this->logs
+            'logs' => $this->logs,
+            'beneficiarioNombreCompleto' => $beneficiarioNombreCompleto,
+            'iniciales' => $iniciales
         ]);
     }
 
