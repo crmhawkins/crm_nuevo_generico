@@ -1,18 +1,6 @@
 <nav id="topbar" class="navbar">
     <div class="d-flex align-items-center">
-        @php
-            // Verificar si estamos en la ruta de logs usando múltiples métodos
-            $currentPath = request()->path();
-            $currentUrl = request()->url();
-            $currentRoute = request()->route() ? request()->route()->getName() : null;
-            // Usar múltiples métodos para detectar la página de logs - simplificado
-            $isLogsPage = request()->routeIs('logs.*') ||
-                         request()->is('logs') ||
-                         request()->is('logs/*') ||
-                         (str_contains($currentPath, 'logs')) ||
-                         (str_contains($currentUrl, '/logs'));
-        @endphp
-        @if(!$isLogsPage)
+        @if(!request()->routeIs('logs.index') && !request()->routeIs('logs.clasificado'))
             <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
             <div class="d-flex d-lg-none" style="width: 100px;">
                 <header class="top-burguer">
@@ -23,7 +11,7 @@
                 <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
             </div>
         @endif
-        @if($isLogsPage)
+        @if(request()->routeIs('logs.index') || request()->routeIs('logs.clasificado'))
             @php
                 // Obtener datos del beneficiario del archivo JSON
                 $beneficiarioNombreCompleto = '';
@@ -33,11 +21,8 @@
 
                 if (\Illuminate\Support\Facades\Storage::disk('local')->exists('beneficiario.json')) {
                     try {
-                        $jsonContent = \Illuminate\Support\Facades\Storage::disk('local')->get('beneficiario.json');
-                        // Asegurar que el contenido se lee correctamente con UTF-8
-                        $jsonContent = mb_convert_encoding($jsonContent, 'UTF-8', 'UTF-8');
-                        $beneficiarioData = json_decode($jsonContent, true);
-                        if ($beneficiarioData && json_last_error() === JSON_ERROR_NONE) {
+                        $beneficiarioData = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get('beneficiario.json'), true);
+                        if ($beneficiarioData) {
                             $beneficiarioNombreCompleto = $beneficiarioData['nombre_completo'] ?? '';
                             $beneficiarioNombre = $beneficiarioData['nombre'] ?? '';
                             $beneficiarioApellidos = $beneficiarioData['apellidos'] ?? '';
@@ -75,11 +60,6 @@
                         {{ $beneficiarioNombreCompleto }}
                     </div>
                 </div>
-            @else
-                {{-- Si no hay datos pero estamos en logs, mostrar un placeholder para debug --}}
-                @if(\Illuminate\Support\Facades\Storage::disk('local')->exists('beneficiario.json'))
-                    {{-- Archivo existe pero datos vacíos o con error --}}
-                @endif
             @endif
         @endif
     </div>
