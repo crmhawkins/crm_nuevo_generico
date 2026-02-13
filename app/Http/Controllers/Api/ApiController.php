@@ -233,7 +233,7 @@ class ApiController extends Controller
 
         $dataIA = [
             'modelo' => 'gpt-oss:120b-cloud',
-            'prompt' => "Obten el nombre y el apellido de este cliente, responde UNICAMENTE en formato JSON con esta forma {\"nombre\", \"apellidos\"}: " . $nombreBeneficiario
+            'prompt' => "Extrae el nombre y los apellidos del siguiente texto: \"{$nombreBeneficiario}\". Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta: {\"nombre\": \"PrimerNombre\", \"apellidos\": \"PrimerApellido SegundoApellido\"}. SIEMPRE debes incluir ambos campos: nombre y apellidos. Si solo hay un nombre, usa ese nombre y deja apellidos como cadena vacía \"\". Si hay varios nombres, usa el primero como nombre y el resto como apellidos. El JSON debe ser válido y parseable."
         ];
 
         $headers = [
@@ -253,45 +253,137 @@ class ApiController extends Controller
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
-        $nombreCompleto = $nombreBeneficiario; // Por defecto usar el nombre original
+        $nombreCompleto = trim($nombreBeneficiario); // Por defecto usar el nombre original
         $nombre = '';
         $apellidos = '';
 
         if ($httpCode === 200 && $response) {
             // Intentar parsear la respuesta JSON
             $responseData = json_decode($response, true);
+            $datosExtraidos = false;
 
             // Si la respuesta viene en un formato específico, extraer los datos
             if (isset($responseData['respuesta'])) {
                 $respuestaIA = json_decode($responseData['respuesta'], true);
                 if ($respuestaIA && isset($respuestaIA['nombre']) && isset($respuestaIA['apellidos'])) {
-                    $nombre = $respuestaIA['nombre'];
-                    $apellidos = $respuestaIA['apellidos'];
-                    $nombreCompleto = trim($nombre . ' ' . $apellidos);
+                    $nombre = trim($respuestaIA['nombre']);
+                    $apellidos = trim($respuestaIA['apellidos']);
+                    $datosExtraidos = true;
                 }
             } elseif (isset($responseData['nombre']) && isset($responseData['apellidos'])) {
-                $nombre = $responseData['nombre'];
-                $apellidos = $responseData['apellidos'];
-                $nombreCompleto = trim($nombre . ' ' . $apellidos);
+                $nombre = trim($responseData['nombre']);
+                $apellidos = trim($responseData['apellidos']);
+                $datosExtraidos = true;
             } else {
-                // Intentar extraer JSON del texto de respuesta
-                preg_match('/\{[^}]+\}/', $response, $matches);
+                // Intentar extraer JSON del texto de respuesta (buscando JSON completo)
+                preg_match('/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/', $response, $matches);
                 if (!empty($matches)) {
-                    $jsonData = json_decode($matches[0], true);
-                    if ($jsonData && isset($jsonData['nombre']) && isset($jsonData['apellidos'])) {
-                        $nombre = $jsonData['nombre'];
-                        $apellidos = $jsonData['apellidos'];
-                        $nombreCompleto = trim($nombre . ' ' . $apellidos);
+                    foreach ($matches as $match) {
+                        $jsonData = json_decode($match, true);
+                        if ($jsonData && isset($jsonData['nombre']) && isset($jsonData['apellidos'])) {
+                            $nombre = trim($jsonData['nombre']);
+                            $apellidos = trim($jsonData['apellidos']);
+                            $datosExtraidos = true;
+                            break;
+                        }
                     }
+                }
+            }
+
+            // Si se extrajeron datos correctamente, construir nombre completo
+            if ($datosExtraidos && !empty($nombre)) {
+                $nombreCompleto = trim($nombre . ' ' . $apellidos);
+            }
+        }
+
+        // Fallback: Si no se pudieron extraer nombre y apellidos, intentar extraerlos del nombre completo original
+        if (empty($nombre) || empty($apellidos)) {
+            $palabras = array_filter(explode(' ', trim($nombreCompleto)));
+            $palabras = array_values($palabras);
+
+            if (count($palabras) >= 2) {
+                // Si hay al menos 2 palabras, la primera es el nombre y el resto son apellidos
+                $nombre = $palabras[0];
+                $apellidos = implode(' ', array_slice($palabras, 1));
+                $nombreCompleto = trim($nombre . ' ' . $apellidos);
+            } elseif (count($palabras) == 1) {
+                // Si solo hay una palabra, usarla como nombre y dejar apellidos vacío
+                $nombre = $palabras[0];
+                $apellidos = '';
+                $nombreCompleto = $nombre;
+            } else {
+                // Si no hay palabras, usar el nombre completo original
+                $nombre = $nombreCompleto;
+                $apellidos = '';
+            }
+        }
+
+        // Asegurar que todos los campos estén rellenados correctamente
+        $nombre = trim($nombre);
+        $apellidos = trim($apellidos);
+        $nombreCompleto = trim($nombreCompleto);
+
+        // Si el nombre completo está vacío, usar el nombre original
+        if (empty($nombreCompleto)) {
+            $nombreCompleto = trim($nombreBeneficiario);
+        }
+
+        // Si el nombre está vacío pero hay nombre completo, extraerlo
+        if (empty($nombre) && !empty($nombreCompleto)) {
+            $palabras = array_filter(explode(' ', $nombreCompleto));
+            if (!empty($palabras)) {
+                $nombre = $palabras[0];
+                // Si no hay apellidos pero hay más palabras, usarlas como apellidos
+                if (empty($apellidos) && count($palabras) > 1) {
+                    $apellidos = implode(' ', array_slice($palabras, 1));
+                }
+            } else {
+                $nombre = $nombreCompleto;
+            }
+        }
+
+        // Si los apellidos están vacíos pero hay más palabras en el nombre completo, extraerlos
+        if (empty($apellidos) && !empty($nombreCompleto) && !empty($nombre)) {
+            $palabras = array_filter(explode(' ', $nombreCompleto));
+            if (count($palabras) > 1) {
+                // Buscar el nombre en las palabras y tomar el resto como apellidos
+                $indiceNombre = array_search($nombre, $palabras);
+                if ($indiceNombre !== false && $indiceNombre < count($palabras) - 1) {
+                    $apellidos = implode(' ', array_slice($palabras, $indiceNombre + 1));
+                } elseif (count($palabras) >= 2) {
+                    // Si no se encuentra exacto, tomar la primera como nombre y el resto como apellidos
+                    $nombre = $palabras[0];
+                    $apellidos = implode(' ', array_slice($palabras, 1));
                 }
             }
         }
 
-        // Almacenar en archivo JSON persistente
+        // Asegurar que el nombre completo esté construido correctamente
+        if (empty($nombreCompleto) || $nombreCompleto === $nombreBeneficiario) {
+            if (!empty($nombre) && !empty($apellidos)) {
+                $nombreCompleto = trim($nombre . ' ' . $apellidos);
+            } elseif (!empty($nombre)) {
+                $nombreCompleto = $nombre;
+            } else {
+                $nombreCompleto = trim($nombreBeneficiario);
+            }
+        }
+
+        // Validación final: asegurar que siempre haya al menos un nombre
+        if (empty($nombre)) {
+            $nombre = trim($nombreBeneficiario);
+        }
+
+        // Limpiar espacios extra
+        $nombre = trim($nombre);
+        $apellidos = trim($apellidos);
+        $nombreCompleto = trim($nombreCompleto);
+
+        // Almacenar en archivo JSON persistente - SIEMPRE con todos los campos rellenados
         $beneficiarioData = [
             'nombre_completo' => $nombreCompleto,
-            'nombre' => $nombre ?: $nombreBeneficiario,
-            'apellidos' => $apellidos,
+            'nombre' => $nombre,
+            'apellidos' => $apellidos ?: '', // Asegurar que apellidos sea al menos una cadena vacía
             'fecha_actualizacion' => now()->toDateTimeString()
         ];
 
