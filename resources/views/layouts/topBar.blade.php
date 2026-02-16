@@ -1,5 +1,5 @@
-<nav id="topbar" class="navbar" style="overflow: visible !important;">
-    <div class="d-flex align-items-center flex-nowrap" style="overflow: visible !important; width: 100%; min-width: 0; flex-wrap: nowrap !important;">
+<nav id="topbar" class="navbar">
+    <div class="d-flex align-items-center">
         @php
             // Verificar si estamos en la ruta de logs usando múltiples métodos más robustos
             $currentPath = request()->path();
@@ -112,11 +112,11 @@
                 }
             @endphp
             @if(!empty($beneficiarioNombreCompleto))
-                <div class="beneficiario-logo-topbar" style="display: flex !important; align-items: center; gap: 8px; border: 2px solid #dc3545; border-radius: 8px; padding: 6px 10px; margin-left: 8px !important; background-color: rgba(220, 53, 69, 0.05); flex-shrink: 0; visibility: visible !important; opacity: 1 !important; position: relative; z-index: 10;">
-                    <div class="beneficiario-logo-circle" style="width: 45px; height: 45px; min-width: 45px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex !important; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); flex-shrink: 0; transition: transform 0.2s ease; border: 2px solid rgba(255, 255, 255, 0.2); visibility: visible !important; opacity: 1 !important;">
+                <div class="beneficiario-logo-topbar d-flex align-items-center ms-2 ms-md-4" style="gap: 8px; border: 2px solid #dc3545; border-radius: 8px; padding: 6px 10px; margin-left: 8px !important; background-color: rgba(220, 53, 69, 0.05); flex-shrink: 0;">
+                    <div class="beneficiario-logo-circle" style="width: 45px; height: 45px; min-width: 45px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); flex-shrink: 0; transition: transform 0.2s ease; border: 2px solid rgba(255, 255, 255, 0.2);">
                         <span style="font-size: 16px; line-height: 1; letter-spacing: 0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">{{ !empty($iniciales) ? $iniciales : '??' }}</span>
                     </div>
-                    <div class="beneficiario-nombre-topbar d-none d-sm-block" style="font-size: 14px; color: #2c3e50; font-weight: 600; white-space: nowrap; letter-spacing: 0.3px; flex-shrink: 0; visibility: visible !important; opacity: 1 !important;">
+                    <div class="beneficiario-nombre-topbar d-none d-sm-block" style="font-size: 14px; color: #2c3e50; font-weight: 600; white-space: nowrap; letter-spacing: 0.3px; flex-shrink: 0;">
                         {{ $beneficiarioNombreCompleto }}
                     </div>
                 </div>
@@ -1488,101 +1488,92 @@
         });
     </script>
     <style>
-    /* Asegurar que el logo del beneficiario sea siempre visible en todas las pantallas */
-    .beneficiario-logo-topbar {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative !important;
-        z-index: 100 !important;
-        flex-shrink: 0 !important;
-        flex-grow: 0 !important;
-        min-width: fit-content !important;
-        max-width: none !important;
-        width: auto !important;
-        height: auto !important;
-    }
-    
-    /* Asegurar que el contenedor padre no oculte el elemento */
-    #topbar > .d-flex.align-items-center {
-        overflow: visible !important;
-        min-width: 0 !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-    }
-    
-    /* Asegurar que el navbar no tenga overflow hidden */
-    #topbar.navbar {
-        overflow: visible !important;
-        overflow-x: visible !important;
-        overflow-y: visible !important;
-    }
-    
-    /* Media queries para todos los tamaños de pantalla */
-    @media (max-width: 575.98px) {
-        .beneficiario-logo-topbar {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            flex-shrink: 0 !important;
-            position: relative !important;
-            z-index: 100 !important;
+        .li-flex {
+            display: flex;
+            justify-content: space-between;
         }
-        #topbar > .d-flex.align-items-center {
-            overflow-x: auto !important;
-            overflow-y: visible !important;
+
+        .li-mensaje {
+            flex: 0 0 80%; /* Asigna el 80% del espacio disponible */
         }
-        #topbar.navbar {
-            overflow-x: auto !important;
-            overflow-y: visible !important;
+
+        .li-boton {
+            flex: 0 0 20%; /* Asigna el 20% del espacio restante */
+            display: flex;
+            justify-content: space-around; /* Distribuye uniformemente los botones dentro del contenedor */
         }
-    }
-    }
-    
-    @media (min-width: 576px) and (max-width: 767.98px) {
-        .beneficiario-logo-topbar {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            flex-shrink: 0 !important;
+        .tituloalertas {
+            font-size: 24px;
+            color: #3078d6; /* Cambia el color del título */
+            font-weight: bold; /* Hace el título en negrita */
         }
-    }
-    
-    @media (min-width: 768px) and (max-width: 991.98px) {
-        .beneficiario-logo-topbar {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            flex-shrink: 0 !important;
+
+        .popupaletas {
+            background-color: #ffffff; /* Cambia el color de fondo del popup */
+            width: 900px; /* Aumenta el ancho del popup */
+            max-height: 700px;     /* Altura máxima de 700px */
+            overflow-y: auto;      /* Habilita el scroll si se excede la altura */
+            border-radius: 10px;   /* Bordes redondeados */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave */
+            background-color: white; /* Fondo blanco */
         }
-    }
-    
-    @media (min-width: 992px) and (max-width: 1199.98px) {
-        .beneficiario-logo-topbar {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            flex-shrink: 0 !important;
+
+        .contenidoalerta ul li {
+        margin-bottom: 10px;
+        list-style-type: none;
+        padding: 5px;
+        border-bottom: 1px solid #ffffff;
         }
-    }
-    
-    @media (min-width: 1200px) {
-        .beneficiario-logo-topbar {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            flex-shrink: 0 !important;
+
+        .btn-pop {
+            background-color: #4CAF50; /* Color de fondo */
+            color: white;             /* Color del texto */
+            padding: 10px 20px;       /* Relleno: arriba-abajo, izquierda-derecha */
+            border: none;             /* Sin borde */
+            border-radius: 5px;       /* Bordes redondeados */
+            cursor: pointer;          /* Cambiar el cursor a una mano */
+            font-size: 16px;          /* Tamaño de fuente */
         }
-    }
-    
-    /* Asegurar que el logo circle también sea visible */
-    .beneficiario-logo-circle {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        flex-shrink: 0 !important;
-    }
-</style>
+
+        .btn-pop:hover {
+            background-color: #45a049; /* Color de fondo al pasar el mouse */
+        }
+
+        .li-flex {
+            display: flex;
+            justify-content: space-between; /* Distribuye el espacio entre los elementos */
+            align-items: center;            /* Alinea los elementos verticalmente */
+            padding: 5px;                   /* Agrega algo de relleno */
+        }
+
+    </style>
+</nav>
 
 
+<script>
+    // document.getElementById('light-dark-mode').addEventListener('click', function() {
+    //     const body = document.body;
+    //     body.classList.toggle('dark-mode');
+    //     const isDarkMode = body.classList.contains('dark-mode');
 
+    //     // Guardar preferencia en la base de datos
+    //     fetch('/save-theme-preference', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    //         },
+    //         body: JSON.stringify({ is_dark: isDarkMode })
+    //     }).then(response => {
+    //         if (response.ok) {
+    //             console.log('Preferencia de tema guardada.');
+    //             console.log(isDarkMode)
+    //             console.log(this)
+    //             window.location.reload();
+    //         } else {
+    //             console.error('Error al guardar la preferencia de tema.');
+    //         }
+    //     });
+    // });
+
+</script>
