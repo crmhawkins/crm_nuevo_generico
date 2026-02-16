@@ -1,6 +1,45 @@
 <nav id="topbar" class="navbar">
     <div class="d-flex align-items-center">
-        @if(!request()->routeIs('logs.index') && !request()->routeIs('logs.clasificado'))
+        @php
+            // Verificar si estamos en la ruta de logs usando múltiples métodos más robustos
+            $currentPath = request()->path();
+            $currentUrl = request()->url();
+            $currentRoute = request()->route() ? request()->route()->getName() : null;
+            $requestUri = request()->getRequestUri();
+            
+            // Detectar si estamos en cualquier página de logs - verificación más amplia
+            $isLogsPage = false;
+            
+            // Verificar por nombre de ruta
+            if ($currentRoute) {
+                $isLogsPage = str_contains(strtolower($currentRoute), 'logs');
+            }
+            
+            // Verificar por path
+            if (!$isLogsPage) {
+                $isLogsPage = str_contains(strtolower($currentPath), 'logs');
+            }
+            
+            // Verificar por URL completa
+            if (!$isLogsPage) {
+                $isLogsPage = str_contains(strtolower($currentUrl), '/logs');
+            }
+            
+            // Verificar por URI
+            if (!$isLogsPage) {
+                $isLogsPage = str_contains(strtolower($requestUri), '/logs');
+            }
+            
+            // Verificaciones específicas de Laravel
+            if (!$isLogsPage) {
+                $isLogsPage = request()->routeIs('logs.*') || 
+                             request()->routeIs('logs.index') || 
+                             request()->routeIs('logs.clasificado') ||
+                             request()->is('logs') || 
+                             request()->is('logs/*');
+            }
+        @endphp
+        @if(!$isLogsPage)
             <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="d-none d-lg-block" style="max-width: 150px; height: auto;" alt="Logo_hera">
             <div class="d-flex d-lg-none" style="width: 100px;">
                 <header class="top-burguer">
@@ -11,7 +50,7 @@
                 <img src="{{asset('assets/images/logo/LogoHera.svg')}}" class="ml-3 p-0" style="max-width: 150px; height: auto;" alt="Logo_hera">
             </div>
         @endif
-        @if(request()->routeIs('logs.index') || request()->routeIs('logs.clasificado'))
+        @if($isLogsPage)
             @php
                 // Obtener datos del beneficiario del archivo JSON
                 $beneficiarioNombreCompleto = '';
@@ -27,22 +66,43 @@
                             $beneficiarioNombre = $beneficiarioData['nombre'] ?? '';
                             $beneficiarioApellidos = $beneficiarioData['apellidos'] ?? '';
 
-                            // Calcular iniciales
+                            // Calcular iniciales - lógica mejorada
                             if (!empty($beneficiarioNombreCompleto)) {
+                                // Si tenemos nombre y apellidos separados, usarlos
                                 if (!empty($beneficiarioNombre) && !empty($beneficiarioApellidos)) {
                                     $inicialNombre = mb_substr(trim($beneficiarioNombre), 0, 1, 'UTF-8');
                                     $inicialApellido = mb_substr(trim($beneficiarioApellidos), 0, 1, 'UTF-8');
                                     $iniciales = strtoupper($inicialNombre . $inicialApellido);
-                                } else {
+                                } 
+                                // Si solo tenemos nombre completo, extraer de ahí
+                                else {
                                     $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
                                     $palabras = array_values($palabras);
                                     if (count($palabras) >= 2) {
+                                        // Primera y última palabra
                                         $inicialNombre = mb_substr($palabras[0], 0, 1, 'UTF-8');
                                         $inicialApellido = mb_substr($palabras[count($palabras) - 1], 0, 1, 'UTF-8');
                                         $iniciales = strtoupper($inicialNombre . $inicialApellido);
                                     } elseif (count($palabras) == 1) {
+                                        // Solo una palabra, usar la primera letra
                                         $iniciales = strtoupper(mb_substr($palabras[0], 0, 1, 'UTF-8'));
+                                    } else {
+                                        // Si no hay palabras, usar las primeras dos letras del nombre completo
+                                        $iniciales = strtoupper(mb_substr($beneficiarioNombreCompleto, 0, 2, 'UTF-8'));
                                     }
+                                }
+                            }
+                            // Si aún no hay iniciales pero hay nombre, calcular desde el nombre
+                            if (empty($iniciales) && !empty($beneficiarioNombre)) {
+                                $iniciales = strtoupper(mb_substr(trim($beneficiarioNombre), 0, 1, 'UTF-8'));
+                            }
+                            // Si aún no hay iniciales, usar las primeras letras del nombre completo
+                            if (empty($iniciales) && !empty($beneficiarioNombreCompleto)) {
+                                $palabras = array_filter(explode(' ', trim($beneficiarioNombreCompleto)));
+                                if (count($palabras) >= 2) {
+                                    $iniciales = strtoupper(mb_substr($palabras[0], 0, 1, 'UTF-8') . mb_substr($palabras[count($palabras) - 1], 0, 1, 'UTF-8'));
+                                } else {
+                                    $iniciales = strtoupper(mb_substr($beneficiarioNombreCompleto, 0, 2, 'UTF-8'));
                                 }
                             }
                         }
@@ -51,12 +111,12 @@
                     }
                 }
             @endphp
-            @if(!empty($beneficiarioNombreCompleto) && !empty($iniciales))
-                <div class="beneficiario-logo-topbar d-flex align-items-center ms-4" style="gap: 12px; border: 2px solid #dc3545; border-radius: 8px; padding: 8px 12px; margin-left: 16px !important; background-color: rgba(220, 53, 69, 0.05);">
-                    <div class="beneficiario-logo-circle" style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); flex-shrink: 0; transition: transform 0.2s ease; border: 2px solid rgba(255, 255, 255, 0.2);">
-                        <span style="font-size: 18px; line-height: 1; letter-spacing: 0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">{{ $iniciales }}</span>
+            @if(!empty($beneficiarioNombreCompleto))
+                <div class="beneficiario-logo-topbar d-flex align-items-center ms-2 ms-md-4" style="gap: 8px; border: 2px solid #dc3545; border-radius: 8px; padding: 6px 10px; margin-left: 8px !important; background-color: rgba(220, 53, 69, 0.05); flex-shrink: 0;">
+                    <div class="beneficiario-logo-circle" style="width: 45px; height: 45px; min-width: 45px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); flex-shrink: 0; transition: transform 0.2s ease; border: 2px solid rgba(255, 255, 255, 0.2);">
+                        <span style="font-size: 16px; line-height: 1; letter-spacing: 0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">{{ !empty($iniciales) ? $iniciales : '??' }}</span>
                     </div>
-                    <div class="beneficiario-nombre-topbar d-none d-md-block" style="font-size: 15px; color: #2c3e50; font-weight: 600; white-space: nowrap; letter-spacing: 0.3px;">
+                    <div class="beneficiario-nombre-topbar d-none d-sm-block" style="font-size: 14px; color: #2c3e50; font-weight: 600; white-space: nowrap; letter-spacing: 0.3px; flex-shrink: 0;">
                         {{ $beneficiarioNombreCompleto }}
                     </div>
                 </div>
