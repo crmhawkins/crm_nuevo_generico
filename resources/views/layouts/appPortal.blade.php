@@ -32,7 +32,7 @@
         @vite(['resources/sass/light-mode.scss'])
     @endif --}}
     @yield('css')
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @vite(['resources/sass/app.scss'])
     @laravelViewsStyles
 </head>
 <body class="fondoPortal">

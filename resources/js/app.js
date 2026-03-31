@@ -1,12 +1,6 @@
 import './bootstrap';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-import Vue from 'vue';
-
-window.Vue = Vue;
-const app = new Vue({
-    el: '#app',
-});
 //window.Pusher = Pusher;
 
 // window.Echo = new Echo({
