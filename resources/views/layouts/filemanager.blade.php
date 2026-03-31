@@ -40,13 +40,6 @@
 </head>
 <body class="" style="overflow-x: hidden">
     <div id="app">
-        <div id="loadingOverlay" style="display: block; position: fixed; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.5); z-index: 50000; cursor: pointer;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                <div class="spinner-border text-black" role="status">
-                    <span class="sr-only">Cargando...</span>
-                </div>
-            </div>
-        </div>
         @include('layouts.sidebar')
 
         <main id="main">
@@ -77,23 +70,6 @@
                 $("#main").css("margin-left", "0px");
             }
         });
-        function hideLoadingOverlay() {
-            var loader = document.getElementById('loadingOverlay');
-            if (!loader) {
-                return;
-            }
-
-            loader.style.display = 'none';
-            loader.style.visibility = 'hidden';
-            loader.style.pointerEvents = 'none';
-        }
-
-        document.addEventListener('DOMContentLoaded', hideLoadingOverlay);
-        window.addEventListener('load', hideLoadingOverlay);
-        window.addEventListener('pageshow', hideLoadingOverlay);
-        setTimeout(hideLoadingOverlay, 1200);
-
-
         // function saveThemePreference(isDark) {
         //     $.ajax({
         //         url: '{{ route("saveThemePreference") }}',
