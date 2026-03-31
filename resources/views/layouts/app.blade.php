@@ -191,12 +191,21 @@
                 });
             });
         });
-        document.addEventListener("DOMContentLoaded", function() {
+        function hideLoadingOverlay() {
             var loader = document.getElementById('loadingOverlay');
-            if (loader) {
-                    loader.style.display = 'none';
+            if (!loader) {
+                return;
             }
-        });
+
+            loader.style.display = 'none';
+            loader.style.visibility = 'hidden';
+            loader.style.pointerEvents = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', hideLoadingOverlay);
+        window.addEventListener('load', hideLoadingOverlay);
+        window.addEventListener('pageshow', hideLoadingOverlay);
+        setTimeout(hideLoadingOverlay, 1200);
 
 
         // function saveThemePreference(isDark) {
