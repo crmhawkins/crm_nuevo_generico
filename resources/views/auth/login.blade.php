@@ -29,11 +29,17 @@
             <div class="card-body">
                 <h5 class="card-title text-center mb-4">Iniciar Sesión</h5>
 
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group">
-                        <label for="username">Usuario</label>
-                        <input id="username" type="text" class="form-control" name="username" required autocomplete="username" autofocus>
+                        <label for="username">Usuario o Email</label>
+                        <input id="username" type="text" class="form-control" name="username" value="{{ old('username') }}" required autocomplete="username" autofocus>
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña</label>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
+use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
@@ -36,6 +37,18 @@ class LoginController extends Controller
     public function username()
     {
         return 'username';
+    }
+
+    protected function credentials(Request $request): array
+    {
+        $login = (string) $request->input($this->username());
+        $loginField = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        return [
+            $loginField => $login,
+            'password' => $request->input('password'),
+            'inactive' => 0,
+        ];
     }
 
     /**
