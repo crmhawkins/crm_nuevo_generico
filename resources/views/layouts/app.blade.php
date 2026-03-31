@@ -91,13 +91,6 @@
                 display: none !important;
             }
             
-            /* Hide any LOGO text that might be appearing */
-            .logo-text-large,
-            .header-logo,
-            .main-logo {
-                display: none !important;
-            }
-            
             /* Force full width layout */
             .contenedor {
                 margin-left: 0 !important;
@@ -148,14 +141,6 @@
          document.addEventListener('DOMContentLoaded', function() {
             // El navbar ya está configurado para mostrar/ocultar elementos según el nivel de acceso
             // No necesitamos lógica adicional aquí para el sidebar ya que usamos navbar
-            
-            // Ocultar cualquier elemento que contenga "LOGO" gigante
-            const elements = document.querySelectorAll('*');
-            elements.forEach(element => {
-                if (element.textContent && element.textContent.trim() === 'LOGO' && element.tagName !== 'SCRIPT') {
-                    element.style.display = 'none';
-                }
-            });
             
             // Inicializar todos los dropdowns de Bootstrap
             var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
