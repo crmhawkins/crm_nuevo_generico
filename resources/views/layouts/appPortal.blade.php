@@ -32,8 +32,7 @@
         @vite(['resources/sass/light-mode.scss'])
     @endif --}}
     @yield('css')
-    <link rel="stylesheet" href="{{ asset('build/assets/app-d2e38ed8.css') }}" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <script src="{{ asset('build/assets/app-bf7e6802.js') }}"></script>
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     @laravelViewsStyles
 </head>
 <body class="fondoPortal">

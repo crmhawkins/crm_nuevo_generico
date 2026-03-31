@@ -2,10 +2,8 @@ import './bootstrap';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import Vue from 'vue';
-import FileManager from 'laravel-file-manager';
 
 window.Vue = Vue;
-Vue.component('file-manager', FileManager);
 const app = new Vue({
     el: '#app',
 });
