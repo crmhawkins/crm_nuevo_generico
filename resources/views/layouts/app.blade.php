@@ -129,8 +129,6 @@
                 </div>
             </div>
         </div>
-        <div class="css-96uzu9"></div>
-
         <!-- Navbar -->
         @include('layouts.navbar')
 

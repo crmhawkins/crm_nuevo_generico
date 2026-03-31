@@ -47,8 +47,6 @@
                 </div>
             </div>
         </div>
-        <div class="css-96uzu9"></div>
-
         @include('layouts.sidebar')
 
         <main id="main">
