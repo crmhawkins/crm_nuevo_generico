@@ -52,12 +52,6 @@
                     $comercial = (Auth::user()->access_level_id == 6);
                 @endphp
 
-                <li class="sidebar-item {{ request()->routeIs('calendar.index') ? 'active' : '' }}">
-                    <a href="{{route('calendar.index')}}" class='sidebar-link'>
-                        <i class="fa-solid fa-calendar fs-5"></i>
-                        <span>Calendario</span>
-                    </a>
-                </li>
                 <li class="sidebar-item has-sub {{ $clientesActive ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="fa-solid fa-people-group fs-5"></i>
@@ -201,22 +195,6 @@
                         </li>
                     </ul>
                 </li>
-                <li class="sidebar-item has-sub {{ request()->routeIs('logs.*') ? 'active' : '' }}">
-                    <a href="#" class='sidebar-link'>
-                        <i class="fa-solid fa-list"></i>
-                        <span>Logs</span>
-                    </a>
-                    <ul class="submenu" style="{{ request()->routeIs('logs.*') ? 'display:block;' : 'display:none;' }}">
-                        <li class="submenu-item {{ request()->routeIs('logs.index') ? 'active' : '' }}">
-                            <a href="{{route('logs.index')}}">
-                                <i class="fa-solid fa-list"></i>
-                                <span>
-                                    Ver Logs
-                                </span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
                 <li class="sidebar-item has-sub {{ $cofiguracionActive ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="fa-solid fa-list"></i>
@@ -227,12 +205,6 @@
                             <a href="{{route('configuracion.index')}}" class='sidebar-link'>
                                 <i class="fa-solid fa-gears fs-5"></i>
                                 <span>Cofiguracion Empresa</span>
-                            </a>
-                        </li>
-                        <li class="submenu-item {{ request()->routeIs('backup.index') ? 'active' : '' }}">
-                            <a href="{{route('backup.index')}}" class='sidebar-link'>
-                                <i class="fa-solid fa-gears fs-5"></i>
-                                <span>Cofiguracion Backup</span>
                             </a>
                         </li>
                     </ul>
