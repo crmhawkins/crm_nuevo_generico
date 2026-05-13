@@ -634,3 +634,187 @@ section.section > .row {
   .contenedor { padding: 0.85rem !important; }
   .card-body  { padding: 0.9rem; }
 }
+
+/* ===== TOPBAR REFINADO ===== */
+#topbar {
+  border-bottom: 1px solid var(--hs-border) !important;
+  background: #fff !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06) !important;
+  padding: 0 1.5rem !important;
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+#topbar .topbar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#topbar .topbar-menu .nav-link {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid var(--hs-border);
+  color: var(--hs-text-sec) !important;
+  font-size: 1rem;
+  transition: all 0.15s ease;
+}
+
+#topbar .topbar-menu .nav-link:hover {
+  background: var(--hs-primary-light) !important;
+  border-color: var(--hs-primary) !important;
+  color: var(--hs-primary) !important;
+}
+
+#topbar .topbar-menu .nav-link .position-absolute {
+  top: 2px !important;
+  right: 2px !important;
+  left: auto !important;
+  transform: none !important;
+  font-size: 0.6rem !important;
+  padding: 1px 4px !important;
+  min-width: unset;
+  height: auto;
+}
+
+/* ===== PAGE HEADING / CONTENEDOR ===== */
+.page-heading.card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+.page-heading .page-title {
+  background: #fff;
+  border-radius: var(--hs-radius-lg);
+  border: 1px solid var(--hs-border);
+  margin-bottom: 1.2rem;
+  box-shadow: var(--hs-shadow-sm);
+}
+
+.page-heading .page-title h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--hs-text);
+  margin: 0;
+}
+
+/* ===== DASHBOARD PROFILE CARD ===== */
+.page-heading .card .card-body .d-flex.flex-wrap .col-12.d-flex.justify-content-center {
+  padding: 1rem 0;
+}
+
+.page-heading .card .card-body img.rounded-circle {
+  border: 3px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* ===== DASHBOARD STAT CARDS ===== */
+.card2, .card-body2 {
+  background: transparent;
+}
+
+/* Stat section titles */
+.card-body > h5.card-title.fw-bold,
+.mb-3 > h5.card-title.fw-bold {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--hs-text-sec);
+  margin-bottom: 0.8rem !important;
+  padding-left: 0.1rem;
+}
+
+/* Stat number */
+.card .card-body .display-6 {
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  color: var(--hs-primary) !important;
+  line-height: 1.1;
+}
+
+/* Stat card title */
+.card .card-body h5.card-title.text-color-4 {
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  color: var(--hs-text-sec) !important;
+  margin-bottom: 0.5rem !important;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Stat cards: left accent + hover lift */
+.row-cols-xl-3 .card,
+.row-cols-xl-5 .card {
+  border-left: 3px solid var(--hs-primary) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.row-cols-xl-3 .card:hover,
+.row-cols-xl-5 .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79,70,229,0.12) !important;
+}
+
+/* ===== TABLES — page header area ===== */
+.page-heading > .card-body > .row,
+.page-heading > div > .row {
+  gap: 0;
+}
+
+/* ===== LIST PAGE HEADERS ===== */
+.d-flex.justify-content-between.align-items-center,
+.d-flex.justify-content-between.align-items-start {
+  margin-bottom: 1rem;
+}
+
+/* ===== SECTION DIVIDERS ===== */
+hr {
+  border-color: var(--hs-border);
+  opacity: 1;
+}
+
+/* ===== TOPBAR LOGO ===== */
+#topbar img {
+  height: 28px;
+  width: auto;
+  opacity: 0.85;
+}
+
+/* ===== PAGE HEADING CARD OVERRIDE — fill area with bg ===== */
+main#main .contenedor {
+  background: var(--hs-body-bg);
+  min-height: calc(100vh - 60px);
+}
+
+/* ===== FORM SECTIONS ===== */
+.card > .card-header {
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: var(--hs-text);
+  letter-spacing: 0.01em;
+}
+
+/* ===== LIVEWIRE TABLE WRAPPER ===== */
+.table-responsive {
+  border-radius: var(--hs-radius) !important;
+  overflow: hidden;
+}
+
+/* ===== STATUS BADGES DASHBOARD ===== */
+.badge.bg-warning { color: #fff !important; }
+.badge.bg-secondary { background: #94a3b8 !important; }
+
+/* ===== TEXT HELPERS ===== */
+.fw-bold { font-weight: 700 !important; }
+h1, h2, h3, h4, h5, h6 { color: var(--hs-text); }
+.text-secondary { color: var(--hs-text-sec) !important; }
