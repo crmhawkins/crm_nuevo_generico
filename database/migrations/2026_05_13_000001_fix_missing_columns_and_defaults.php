@@ -13,6 +13,11 @@ return new class extends Migration
             DB::statement('ALTER TABLE services_categories ADD COLUMN inactive TINYINT(1) NOT NULL DEFAULT 0');
         }
 
+        // services: add inactive column if missing
+        if (!Schema::hasColumn('services', 'inactive')) {
+            DB::statement('ALTER TABLE services ADD COLUMN inactive TINYINT(1) NOT NULL DEFAULT 0');
+        }
+
         // emails: add admin_user_id column if missing
         if (!Schema::hasColumn('emails', 'admin_user_id')) {
             DB::statement('ALTER TABLE emails ADD COLUMN admin_user_id BIGINT UNSIGNED NULL');
@@ -33,6 +38,9 @@ return new class extends Migration
         }
         if (Schema::hasColumn('emails', 'admin_user_id')) {
             DB::statement('ALTER TABLE emails DROP COLUMN admin_user_id');
+        }
+        if (Schema::hasColumn('services', 'inactive')) {
+            DB::statement('ALTER TABLE services DROP COLUMN inactive');
         }
     }
 };
