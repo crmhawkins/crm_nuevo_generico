@@ -7,6 +7,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $now = now();
+
         // budget_status: ensure all 7 statuses exist
         $statuses = [
             ['id' => 1, 'name' => 'Pendiente de confirmar'],
@@ -18,7 +20,7 @@ return new class extends Migration
             ['id' => 7, 'name' => 'Facturado parcialmente'],
         ];
         foreach ($statuses as $s) {
-            DB::table('budget_status')->insertOrIgnore($s);
+            DB::table('budget_status')->insertOrIgnore(array_merge($s, ['created_at' => $now, 'updated_at' => $now]));
         }
 
         // invoice_status: ensure all 5 statuses exist
@@ -30,7 +32,20 @@ return new class extends Migration
             ['id' => 5, 'name' => 'Cancelada'],
         ];
         foreach ($invoiceStatuses as $s) {
-            DB::table('invoice_status')->insertOrIgnore($s);
+            DB::table('invoice_status')->insertOrIgnore(array_merge($s, ['created_at' => $now, 'updated_at' => $now]));
+        }
+
+        // payment_method: seed basic methods
+        $paymentMethods = [
+            ['id' => 1, 'name' => 'Transferencia bancaria'],
+            ['id' => 2, 'name' => 'Tarjeta de crédito'],
+            ['id' => 3, 'name' => 'Efectivo'],
+            ['id' => 4, 'name' => 'Domiciliación bancaria'],
+            ['id' => 5, 'name' => 'Cheque'],
+            ['id' => 9, 'name' => 'Transferencia'],
+        ];
+        foreach ($paymentMethods as $pm) {
+            DB::table('payment_method')->insertOrIgnore(array_merge($pm, ['created_at' => $now, 'updated_at' => $now]));
         }
 
         // company_details: insert default row if empty
