@@ -58,7 +58,7 @@
                                         <p class="inv-street-addr">{{ $invoice->cliente->address }}, {{ $invoice->cliente->city }}, {{ $invoice->cliente->province }} - {{ $invoice->cliente->zipcode }}</p>
                                         <p class="inv-email-address">{{ $invoice->cliente->email }}</p>
                                         <p class="inv-email-address">{{ $invoice->cliente->phone }}</p>
-                                        <p><strong>Forma de Pago:</strong> {{ $invoice->payment_method_id == 9 ? 'Transferencia' : $invoice->paymentMethod->name }}</p>
+                                        <p><strong>Forma de Pago:</strong> {{ $invoice->payment_method_id == 9 ? "Transferencia" : ($invoice->paymentMethod ? $invoice->paymentMethod->name : "Sin especificar") }}</p>
                                     </div>
                                 </div>
                             </div>

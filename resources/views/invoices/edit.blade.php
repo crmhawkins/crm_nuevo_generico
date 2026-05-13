@@ -70,7 +70,7 @@
                                     <div class="col-md-6 col-sm-12">
                                         <div class="form-group mb-3">
                                             <label class="text-left mb-2" for="payment_method_id">Forma de pago:</label>
-                                            <input type="text" class="form-control @error('payment_method_id') is-invalid @enderror" id="payment_method_id" value="{{ $factura->paymentMethod->name }}" name="payment_method_id" disabled>
+                                            <input type="text" class="form-control @error('payment_method_id') is-invalid @enderror" id="payment_method_id" value="{{ $factura->paymentMethod ? $factura->paymentMethod->name : "Sin especificar" }}" name="payment_method_id" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-sm-12">

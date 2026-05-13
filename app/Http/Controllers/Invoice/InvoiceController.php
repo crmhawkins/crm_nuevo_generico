@@ -30,6 +30,14 @@ class InvoiceController extends Controller
         $facturas = Invoice::all();
         return view('invoices.index', compact('facturas'));
     }
+
+    public function create()
+    {
+        $clientes = Client::where('is_client', 1)->get();
+        $formasPago = \App\Models\Budgets\PaymentMethod::all();
+        return view('invoices.create', compact('clientes', 'formasPago'));
+    }
+
     public function edit(string $id)
     {
         $factura = Invoice::where('id', $id)->get()->first();

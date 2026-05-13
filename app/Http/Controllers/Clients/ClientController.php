@@ -78,6 +78,7 @@ class ClientController extends Controller
         ]);
 
         $data = $request->all();
+        $data['is_client'] = true;
         $clienteCreado = Client::create($data);
         if($clienteCreado->pin == null){
             $clienteCreado->pin = rand(100000, 999999);
@@ -207,6 +208,7 @@ class ClientController extends Controller
         ]);
 
         $data = $request->all();
+        $data['is_client'] = true;
         $clienteCreado = Client::create($data);
         // dd($clienteCreado);
         if($clienteCreado->pin == null){
