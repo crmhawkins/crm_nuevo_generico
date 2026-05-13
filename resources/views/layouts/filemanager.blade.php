@@ -39,6 +39,7 @@
         {{-- <script src="{{ asset('build/assets/app-bf7e6802.js') }}"></script> --}}
         @laravelViewsStyles
         {{-- @vite(['resources/sass/app.scss', 'resources/js/app.js']) --}}
+        <link rel="stylesheet" href="{{ asset('assets/css/custom-theme.css') }}">
 </head>
 <body class="" style="overflow-x: hidden">
     <div id="app">

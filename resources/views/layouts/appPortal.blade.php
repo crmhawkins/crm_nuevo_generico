@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="{{ asset('build/assets/app-d2e38ed8.css') }}" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="{{ asset('build/assets/app-bf7e6802.js') }}"></script>
     @laravelViewsStyles
+    <link rel="stylesheet" href="{{ asset('assets/css/custom-theme.css') }}">
 </head>
 <body class="fondoPortal">
     <div id="appPortal">
