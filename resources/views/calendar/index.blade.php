@@ -2,42 +2,26 @@
 
 @section('titulo', 'Calendario')
 
-@section('css')
-<link rel="stylesheet" href="assets/vendors/simple-datatables/style.css">
-
-@endsection
-
 @section('content')
-<div class="page-heading card" style="box-shadow: none !important" >
 
-    {{-- Titulos --}}
+<div class="page-heading card" style="box-shadow:none!important">
+
     <div class="page-title card-body">
-        <div class="row justify-content-between">
-            <div class="col-12 col-md-4 order-md-1 order-last">
-                <h3><i class="bi bi-diagram-2"></i> Calendario</h3>
-                <p class="text-subtitle text-muted">Google Calendar</p>
-                {{-- {{$campanias->count()}} --}}
-            </div>
-            <div class="col-12 col-md-4 order-md-2 order-first">
-                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Calendario</li>
-                    </ol>
-                </nav>
-
-            </div>
+        <div>
+            <h3><i class="bi bi-calendar3"></i> Calendario</h3>
+            <p class="text-subtitle text-muted">Calendario de eventos</p>
         </div>
-        {{-- <div class="row mt-3">
-            <div class="col-12 col-md-4 order-md-1 order-last">
-                @if($campanias->count() >= 0)
-                    <a href="{{route('campania.create')}}" class="btn btn-primary"><i class="fa-solid fa-plus me-2 mx-auto"></i>  Crear campaña</a>
-                @endif
-            </div>
-        </div> --}}
+        <div class="d-flex align-items-center gap-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Calendario</li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-    <section class="section pt-4">
+    <section class="section">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex space-around justify-content-between">
@@ -49,9 +33,8 @@
                     </button>
                 </div>
 
-                <div id="calendar" class="p-4" style="min-height: 600px; margin-top: 0.75rem; margin-bottom: 0.75rem; overflow-y: auto; border-color:black; border-width: thin; border-radius: 20px;" >
-                    <!-- Aquí se renderizarán las tareas según la vista seleccionada -->
-                </div>
+                <div id="calendar" class="p-4" style="min-height: 600px; margin-top: 0.75rem; margin-bottom: 0.75rem; overflow-y: auto; border-color:black; border-width: thin; border-radius: 20px;"></div>
+
                 <div class="list-group mt-3">
                     @foreach($feed as $f)
                         <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -65,7 +48,7 @@
             </div>
         </div>
     </section>
-    <!-- Modal para añadir feed de calendario -->
+
     <div class="modal fade" id="calendarFeedModal" tabindex="-1" aria-labelledby="calendarFeedModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -94,6 +77,7 @@
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="calendarApiModal" tabindex="-1" aria-labelledby="calendarApiModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -102,7 +86,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="feedForm" method="POST" action="{{ route('api.store') }}">
+                    <form method="POST" action="{{ route('api.store') }}">
                         @csrf
                         <div class="mb-3">
                             <label for="api_key" class="form-label">Api Key Google</label>
@@ -114,7 +98,9 @@
             </div>
         </div>
     </div>
+
 </div>
+
 @endsection
 
 @section('scripts')
@@ -126,10 +112,8 @@
         var feed = @json($feed);
         var api = @json(optional($api)->api_key);
 
-        console.log(feed);
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
-            var tooltip = document.getElementById('tooltip');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 googleCalendarApiKey: api,
                 initialView: 'dayGridMonth',
@@ -148,10 +132,8 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridDay,listWeek'
                 },
-                eventSources:feed,
-
-
-        });
+                eventSources: feed,
+            });
             calendar.render();
         });
 
@@ -175,31 +157,17 @@
                         }
                     }).then(response => {
                         if (response.ok) {
-                            Swal.fire(
-                                '¡Eliminado!',
-                                'El feed ha sido eliminado.',
-                                'success'
-                            ).then(() => {
+                            Swal.fire('¡Eliminado!', 'El feed ha sido eliminado.', 'success').then(() => {
                                 window.location.reload();
                             });
                         } else {
-                            Swal.fire(
-                                'Error!',
-                                'Algo salió mal al intentar eliminar el feed.',
-                                'error'
-                            );
+                            Swal.fire('Error!', 'Algo salió mal al intentar eliminar el feed.', 'error');
                         }
                     }).catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire(
-                            'Error!',
-                            'Algo salió mal al intentar eliminar el feed.',
-                            'error'
-                        );
+                        Swal.fire('Error!', 'Algo salió mal al intentar eliminar el feed.', 'error');
                     });
                 }
-            })
+            });
         }
-</script>
+    </script>
 @endsection
-

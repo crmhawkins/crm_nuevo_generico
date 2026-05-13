@@ -1,31 +1,27 @@
 @extends('layouts.app')
 
-@section('titulo', 'Backup de Datos')
-
-@section('css')
-<link rel="stylesheet" href="assets/vendors/simple-datatables/style.css">
-@endsection
+@section('titulo', 'Backup')
 
 @section('content')
-<div class="page-heading card" style="box-shadow: none !important">
+
+<div class="page-heading card" style="box-shadow:none!important">
+
     <div class="page-title card-body">
-        <div class="row justify-content-between">
-            <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3><i class="bi bi-archive"></i> Backup de Datos</h3>
-                <p class="text-subtitle text-muted">Programa y descarga backups de la base de datos.</p>
-            </div>
-            <div class="col-12 col-md-6 order-md-2 order-first">
-                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Backup de Datos</li>
-                    </ol>
-                </nav>
-            </div>
+        <div>
+            <h3><i class="bi bi-database"></i> Backup</h3>
+            <p class="text-subtitle text-muted">Gestión de copias de seguridad</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Backup</li>
+                </ol>
+            </nav>
         </div>
     </div>
 
-    <section class="section pt-4">
+    <section class="section">
         <div class="card">
             <div class="card-body">
                 <form action="" method="">
@@ -48,9 +44,11 @@
             </div>
         </div>
     </section>
+
 </div>
+
 @endsection
 
 @section('scripts')
-<script src="assets/vendors/simple-datatables/simple-datatables.js"></script>
+    @include('partials.toast')
 @endsection

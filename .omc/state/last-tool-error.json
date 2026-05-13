@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ssh -o ControlMaster=no -o ControlPath=none hawkins-ext \\\"docker exec ts8o8kckk84ogkokkwgo8wsw-092623535344 ls /var/www/html/public/\\\" 2>&1\",\"description\":\"Listar raíz public del container...",
+  "error": "Exit code 2\nls: cannot access '/var/www/html/public/': No such file or directory",
+  "timestamp": "2026-05-13T10:04:32.845Z",
+  "retry_count": 3
+}

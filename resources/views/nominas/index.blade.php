@@ -1,68 +1,38 @@
 @extends('layouts.app')
 
-@section('titulo', 'Nominas')
-
-@section('css')
-<link rel="stylesheet" href="assets/vendors/simple-datatables/style.css">
-<link rel="stylesheet" href="{{asset('assets/vendors/choices.js/choices.min.css')}}" />
-
-@endsection
+@section('titulo', 'Nóminas')
 
 @section('content')
 
-    <div class="page-heading card" style="box-shadow: none !important" >
+<div class="page-heading card" style="box-shadow:none!important">
 
-        {{-- Titulos --}}
-        <div class="page-title card-body">
-            <div class="row justify-content-between">
-                <div class="col-sm-12 col-md-4 order-md-1 order-last">
-                    <h3><i class="bi bi-globe-americas"></i> Nominas</h3>
-                    <p class="text-subtitle text-muted">Listado de nominas</p>
-                </div>
-                <div class="col-sm-12 col-md-4 order-md-2 order-first">
-                    <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Nominas</li>
-                        </ol>
-                    </nav>
+    <div class="page-title card-body">
+        <div>
+            <h3><i class="bi bi-cash-stack"></i> Nóminas</h3>
+            <p class="text-subtitle text-muted">Gestión de nóminas</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Nóminas</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 
-                </div>
+    <section class="section">
+        <div class="card">
+            <div class="card-body">
+                @livewire('nominas-table')
             </div>
         </div>
+    </section>
 
-        <section class="section pt-4">
-            <div class="card">
+</div>
 
-                <div class="card-body">
-                    {{-- <livewire:users-table-view> --}}
-                    @php
-                        use Jenssegers\Agent\Agent;
-
-                        $agent = new Agent();
-                    @endphp
-                    @if ($agent->isMobile())
-                        {{-- Contenido para dispositivos móviles --}}
-
-                        @livewire('nominas-table')
-
-                    @else
-                        {{-- Contenido para dispositivos de escritorio --}}
-                        {{-- <livewire:users-table-view> --}}
-                        @livewire('nominas-table')
-                    @endif
-                </div>
-            </div>
-
-        </section>
-
-    </div>
 @endsection
 
 @section('scripts')
-
-
     @include('partials.toast')
-
 @endsection
-

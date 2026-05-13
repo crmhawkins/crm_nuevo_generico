@@ -1,126 +1,109 @@
 @extends('layouts.app')
 
+@section('titulo', 'Diario de Caja')
+
 @section('content')
-<style>
-    .inactive-sort {
-        color: #0F1739;
-        text-decoration: none;
-    }
-    .active-sort {
-        color: #757191;
-    }
-    .custom-tooltip {
-        --bs-tooltip-bg: var(--bd-violet-bg);
-        --bs-tooltip-color: var(--bs-white);
-    }
-</style>
-<!-- Incluir jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Incluir Bootstrap JS -->
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<div class="page-heading card" style="box-shadow:none!important">
 
-<div class="container-fluid">
-    <h2 class="mb-3">Diario de Caja</h2>
-    {{-- route('diarioCaja.create')route('diarioCaja.create') --}}
-    {{-- <a href="{{ route('diarioCaja.create') }}" class="btn bg-color-quinto">Añadir al diario de caja</a> --}}
-    <button type="button" class="btn bg-color-quinto" data-toggle="modal" data-target="#modalDiarioCaja">
-        Añadir al diario de caja
-    </button>
-    <!-- Modal -->
-    <div class="modal fade" id="modalDiarioCaja" tabindex="-1" role="dialog" aria-labelledby="modalDiarioCajaLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title" id="modalDiarioCajaLabel">Añadir al Diario de Caja</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-            </div>
-            <div class="modal-body">
-            <a href="{{ route('diarioCaja.ingreso') }}" class="btn btn-primary">Añadir Ingreso</a>
-            <a href="{{ route('diarioCaja.gasto') }}" class="btn btn-secondary">Añadir Gasto</a>
-            </div>
+    <div class="page-title card-body">
+        <div>
+            <h3><i class="bi bi-cash-coin"></i> Diario de Caja</h3>
+            <p class="text-subtitle text-muted">Registro diario</p>
         </div>
+        <div class="d-flex align-items-center gap-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item">Contabilidad</li>
+                    <li class="breadcrumb-item active">Diario de caja</li>
+                </ol>
+            </nav>
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalDiarioCaja">
+                <i class="bi bi-plus-lg"></i> Añadir al diario de caja
+            </button>
         </div>
     </div>
 
-    <hr class="mb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-          <div class="jumbotron">
-            <div class="row">
-                <div class="col">
-                    <div class="col-md-6">
-                    </div>
-                    <div class="table-responsive">
-                      <table id="cuentas" class="table table-striped table-hover" style="width:100%">
-                          <thead>
-                              <tr>
-                                  <th>Asiento</th>
-                                  {{-- <th>Nº Factura</th> --}}
-                                  <th>Estado</th>
-                                  <th>Cuenta</th>
-                                  <th>Fecha</th>
-                                  <th>Concepto</th>
-                                  <th>Forma de Pago</th>
-                                  <th>Debe</th>
-                                  <th>Haber</th>
-                                  <th>Saldo</th>
-                                  <th>Editar</th>
-                                  </tr>
-                          </thead>
-                          <tbody>
+    <!-- Modal -->
+    <div class="modal fade" id="modalDiarioCaja" tabindex="-1" aria-labelledby="modalDiarioCajaLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDiarioCajaLabel">Añadir al Diario de Caja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <a href="{{ route('diarioCaja.ingreso') }}" class="btn btn-primary">Añadir Ingreso</a>
+                    <a href="{{ route('diarioCaja.gasto') }}" class="btn btn-secondary">Añadir Gasto</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Asiento</th>
+                                <th>Estado</th>
+                                <th>Cuenta</th>
+                                <th>Fecha</th>
+                                <th>Concepto</th>
+                                <th>Forma de Pago</th>
+                                <th>Debe</th>
+                                <th>Haber</th>
+                                <th>Saldo</th>
+                                <th>Editar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             @if (count($response) > 0)
                                 @foreach ($response as $linea)
                                 <tr>
-                                    <td>{{$linea->asiento_contable}}</td>
-                                    <td>{{$linea->estado->nombre}}</td>
+                                    <td>{{ $linea->asiento_contable }}</td>
+                                    <td>{{ $linea->estado->nombre }}</td>
                                     <td
                                         style="cursor: pointer"
                                         data-bs-toggle="tooltip"
                                         data-bs-placement="top"
-                                        data-bs-title="{{$linea->determineCuenta()->nombre}}">
-                                        {{$linea->determineCuenta()->numero}}
+                                        data-bs-title="{{ $linea->determineCuenta()->nombre }}">
+                                        {{ $linea->determineCuenta()->numero }}
                                     </td>
-                                    <td>{{$linea->date}}</td>
-                                    <td>{{$linea->concepto}}</td>
-                                    <td>{{$linea->forma_pago}}</td>
-                                    <td>{{$linea->debe}} €</td>
-                                    <td>{{$linea->haber}} €</td>
+                                    <td>{{ $linea->date }}</td>
+                                    <td>{{ $linea->concepto }}</td>
+                                    <td>{{ $linea->forma_pago }}</td>
+                                    <td>{{ $linea->debe }} €</td>
+                                    <td>{{ $linea->haber }} €</td>
                                     <td></td>
                                     <td>
                                         <button class="btn btn-warning">Editar</button>
                                         <button class="btn btn-danger">Eliminar</button>
                                     </td>
-                                    {{-- <td>{{}}</td> --}}
                                 </tr>
                                 @endforeach
                             @endif
-                          </tbody>
-                      </table>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-          </div>
         </div>
-    </div>
+    </section>
+
 </div>
 
-@include('sweetalert::alert')
+@endsection
 
 @section('scripts')
+@include('partials.toast')
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-      // Verificar si SweetAlert2 está definido
-      if (typeof Swal === 'undefined') {
-          console.error('SweetAlert2 is not loaded');
-          return;
-      }
-      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
 
-      // Botones de eliminar
       const deleteButtons = document.querySelectorAll('.delete-btn');
       deleteButtons.forEach(button => {
           button.addEventListener('click', function (event) {
@@ -136,13 +119,10 @@
                   confirmButtonText: 'Sí, eliminar!',
                   cancelButtonText: 'Cancelar'
               }).then((result) => {
-                  if (result.isConfirmed) {
-                      form.submit();
-                  }
+                  if (result.isConfirmed) { form.submit(); }
               });
           });
       });
   });
 </script>
-@endsection
 @endsection
