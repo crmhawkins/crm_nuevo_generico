@@ -12,11 +12,11 @@
   --p-lt2:      rgba(79,70,229,.06);
 
   --sb-bg:      #2c3e55;
-  --sb-txt:     #c8d6e5;
-  --sb-active:  rgba(79,70,229,.25);
+  --sb-txt:     #ffffff;
+  --sb-active:  rgba(79,70,229,.30);
   --sb-act-t:   #a5b4fc;
-  --sb-hover:   rgba(255,255,255,.08);
-  --sb-border:  rgba(255,255,255,.10);
+  --sb-hover:   rgba(255,255,255,.18);
+  --sb-border:  rgba(255,255,255,.12);
 
   --body-bg:    #f0f4f8;
   --card:       #ffffff;
@@ -107,8 +107,8 @@ a { text-decoration: none; }
 
 #sidebar .sidebar-link i,
 #sidebar .sidebar-link svg {
-  color: var(--sb-txt) !important;
-  opacity: .55;
+  color: #ffffff !important;
+  opacity: .80;
   font-size: .92rem;
   margin-right: .42rem;
   transition: all .14s;
@@ -119,7 +119,7 @@ a { text-decoration: none; }
   color: #f1f5f9 !important;
 }
 #sidebar .sidebar-link:hover i,
-#sidebar .sidebar-link:hover svg { color: #f1f5f9 !important; opacity: 1; }
+#sidebar .sidebar-link:hover svg { color: #ffffff !important; opacity: 1; }
 
 #sidebar .sidebar-item.active > .sidebar-link {
   background: var(--sb-active) !important;
