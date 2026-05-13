@@ -309,7 +309,7 @@ class BudgetController extends Controller
             // Calculo los valores del presupuesto y de sus conceptos (descuento, total, etc)
             $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage);
         }else {
-            $conceptsDiscounts = 0;
+            $conceptsDiscounts = [];
             // Calculo los valores del presupuesto y de sus conceptos (descuento, total, etc)
             $updateBudgetQuantities = $this->updateBudgetQuantities($budget, $conceptsDiscounts,  $ivaPercentage);
         }
