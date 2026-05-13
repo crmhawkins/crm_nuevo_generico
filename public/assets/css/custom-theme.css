@@ -429,6 +429,29 @@ td .flex { display: flex !important; align-items: center; justify-content: cente
 .text-center.py-4 p  { font-size: .82rem; color: var(--txt-3); }
 
 /* ================================================================
+   BUTTON TOOLBAR (antes de tablas livewire)
+================================================================ */
+
+/* Cualquier fila de botones "justify-end" necesita separación inferior */
+.flex.flex-row.justify-end,
+.d-flex.flex-row.justify-end,
+.d-flex.justify-end {
+  margin-bottom: .85rem;
+}
+
+/* Si el filtros ya tiene mb-4, la fila de botones posterior necesita gap adicional */
+.flex.flex-row.justify-end + .table-responsive,
+.d-flex.justify-end + .table-responsive {
+  margin-top: 0;
+}
+
+/* Separación entre el bloque de filtros y la tabla cuando no hay botones intermedios */
+.filtros + .table-responsive,
+.filtros + div > .table-responsive {
+  margin-top: .25rem;
+}
+
+/* ================================================================
    PAGINATION
 ================================================================ */
 .pagination { gap: 3px; margin-top: 1rem; }
