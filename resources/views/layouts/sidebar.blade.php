@@ -711,25 +711,7 @@
 
 
             </ul>
-            <div class="sidebar-footer mt-3">
-                <p>
-                    <b>Clientes:</b> <br> {{App\Models\Clients\Client::all()->count()}} / ILIMITADO<br>
-                    <b>Facturas:</b> <br> {{App\Models\Invoices\Invoice::all()->count()}} / ILIMITADO<br>
-                    <b>Categorias:</b> <br> {{App\Models\Services\ServiceCategories::all()->count()}} / ILIMITADO<br>
-                    <b>Servicos:</b> <br> {{App\Models\Services\Service::all()->count()}} / ILIMITADO<br>
-                </p>
-
-                <p>
-                    <b>Versión de software:</b> <br> 5.0.1<br>
-                    <b>Build:</b> <br> 3.0.1<br>
-                    <b>Versión de la IU:</b> <br> 2.5
-                </p>
-            </div>
         </div>
-        {{-- <button class="sidebar-toggler btn x"><i data-feather="x"></i></button> --}}
-        <button type="button" class="btn btn-outline-secondary mt-1" data-bs-toggle="modal" data-bs-target="#textoModal">
-            Ficha técnica
-          </button>
         </div>
     </div>
     <div class="modal fade" id="textoModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
